@@ -32,58 +32,61 @@ def main():
     UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
-
-    eth = deployer.deploy(MockToken, "ETH", "ETH", 18)
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
-    #eth = Contract('0x3D6e2F3cfd4d75192B0F013bAC71ea88c180BE57')
-    #usdc = Contract('0xfa940418EC9619631DE63a37629956FeeCE7EFCe')
+    #gas_strategy = GasNowScalingStrategy()
 
 
+    #eth = deployer.deploy(MockToken, "ETH", "ETH", 18)
+    #usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    eth = Contract('0x55279F74D076A49722AdcD20695F224F49D777eC')
+    usdc = Contract('0x91c39df30F754c371110E80Dc6Cb51E4F06BC86B')
+    '''
     eth.mint(deployer, 100 * 1e18, {"from": deployer })
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
+    '''
+    print(eth.balanceOf('0x96DCBf8c95930dcAa67bC1eED55e9c680831aD3b'))
 
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
     print(factory.address)
-    factory.createPool(eth, usdc, 3000, { "from": deployer, "gas_price": gas_strategy })
-    time.sleep(15)
+    #factory.createPool(eth, usdc, 3000, { "from": deployer})
 
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, usdc, 3000))
 
-    inverse = pool.token0() == usdc
-    price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
+    #inverse = pool.token0() == usdc
+    #price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
 
     # Set ETH/USDC price to 2000
-    pool.initialize(
-        floor(sqrt(price) * (1 << 96)), {"from": deployer }
-    )
+    #pool.initialize(
+    #    floor(sqrt(price) * (1 << 96)), {"from": deployer }
+    #)
 
     # Increase cardinality so TWAP works
-    pool.increaseObservationCardinalityNext(
-        100, {"from": deployer, "gas_price": gas_strategy}
-    )
+    #pool.increaseObservationCardinalityNext(
+    #    100, {"from": deployer }
+    #)
 
-    router = deployer.deploy(TestRouter)
-    MockToken.at(eth).approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
+    #router = deployer.deploy(TestRouter)
+    router = Contract('0xfa940418EC9619631DE63a37629956FeeCE7EFCe')
+    '''MockToken.at(eth).approve(
+        router, 1 << 255, {"from": deployer }
     )
     MockToken.at(usdc).approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
-    )
-    time.sleep(15)
+        router, 1 << 255, {"from": deployer }
+    )'''
 
     max_tick = 887272 // 60 * 60
-    router.mint(
-        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
-    )
+    '''router.mint(
+        pool, -max_tick, max_tick, 1e14, { "from": deployer }
+    )'''
 
-    vault = deployer.deploy(
+    vault = Contract('0x341a480448283b33Fb357daFBf95dBAe2c6198a5')
+    '''vault = deployer.deploy(
         AlphaVault,
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
-        publish_source=True,
-        gas_price=gas_strategy,
-    )
+        gas_limit = 1000000000,
+        gas_price = "0.020112556 gwei"
+    )'''
 
     strategy = deployer.deploy(
         PassiveStrategy,
@@ -95,10 +98,10 @@ def main():
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
         deployer,
-        publish_source=True,
-        gas_price=gas_strategy,
+        gas_limit = 1000000000,
+        gas_price = "0.020127202 gwei"
     )
-    vault.setStrategy(strategy, {"from": deployer, "gas_price": gas_strategy})
+    vault.setStrategy(strategy, {"from": deployer })
 
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
