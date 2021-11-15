@@ -83,7 +83,7 @@ export async function Deposit(vault, val1, val2) {
   const accounts = await window.ethereum.request({ method: 'eth_accounts' });
   
   return vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0]).then((r) => {
-    //setResult(r.toString());
+     //setResult(r.toString());
      console.log(r);
      return r.wait();
   }).then((r) => {

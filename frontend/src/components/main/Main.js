@@ -39,11 +39,15 @@ export default function Main(props) {
   const [loader, setLoader] = useState(false);
 
   const onDepositClick = async () => {
+    console.log('deposit')
     setLoader(true);
-    const val1 = parseFloat(input1) * Math.pow(10,ethDecimals)
-    const val2 = parseFloat(input2) * Math.pow(10,daiDecimals)
+    const val1 = parseFloat(input1 || 0) * Math.pow(10,ethDecimals)
+    const val2 = parseFloat(input2 || 0) * Math.pow(10,daiDecimals)
+    console.log(vault)
+    console.log(val1)
+    console.log(val2)
     await Deposit(vault, val2, val1)
-    window.location.reload(false);
+    //window.location.reload(false);
   }
   const onWithdrawClick = async () => {
     setLoader(true);
