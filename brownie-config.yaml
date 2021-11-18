@@ -5,6 +5,7 @@ dependencies:
   - Uniswap/uniswap-v3-periphery@1.0.0
 
 autofetch_sources: true
+dev_deployment_artifacts: true
 
 compiler:
   solc:
