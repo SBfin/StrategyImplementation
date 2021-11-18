@@ -36,18 +36,16 @@ def main():
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
     gas_price(gas_strategy)
 
-    #eth = MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
-    eth = Contract('0xC1A4D433D04112e2b80FFE15C892D6312D5fEF8E')
-    #dai = MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
-    dai = Contract('0x5c05142931c8F52274ca9C33CA6E96F37732846e')
-    '''
+    eth = MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
+    dai = MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
+    
     eth.mint(deployer, 100 * 1e18, {"from": deployer, "gas_price": '4 gwei'})
     dai.mint(deployer, 100000 * 1e6, {"from": deployer, "gas_price": '4 gwei'})
-    '''
+    
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
-    '''
+    
     factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": '4 gwei'})
-    '''
+    
     time.sleep(15)
 
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, dai, 3000))
@@ -56,41 +54,39 @@ def main():
     price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
 
     # Set ETH/DAI price to 2000
-    '''pool.initialize(
+    pool.initialize(
         floor(sqrt(price) * (1 << 96)), {"from": deployer, "gas_price": '4 gwei'}
-    )'''
+    )
 
     # Increase cardinality so TWAP works
-    '''pool.increaseObservationCardinalityNext(
+    pool.increaseObservationCardinalityNext(
         100, {"from": deployer, "gas_price": '4 gwei'}
-    )'''
+    )
 
-    #router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
-    router = Contract('0x5290Fc770b558B530048ac20e898227cA3B9dd45')
-    '''
+    router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
+    
     eth.approve(
         router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
     )
     dai.approve(
         router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
-    )'''
+    )
 
     max_tick = 887272 // 60 * 60 ## 246
-    '''
+    
     router.mint(
         pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": '4 gwei'}
-    )'''
+    )
 
-    '''
+    
     vault = AlphaVault.deploy(
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
         {"from": deployer, "gas_price": '4 gwei'}
-    )'''
-    vault = Contract('0x186De9D7962743f46ae2666c1dA9B30e99C00ea3')
+    )
     
-    '''
+    
     strategy = deployer.deploy(
         DynamicRangesStrategy,
         vault,
@@ -100,8 +96,7 @@ def main():
         TWAP_DURATION,
         deployer,
         gas_price='4 gwei'
-    )'''
-    strategy = Contract('0xDdEfBECa9280C9340B363013C9E8633431A714a8')
+    )
     
     vault.setStrategy(strategy, {"from": deployer, "gas_price": '4 gwei'})
 
