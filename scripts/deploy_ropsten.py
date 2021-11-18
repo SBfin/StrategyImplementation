@@ -2,9 +2,10 @@ from brownie import (
     accounts,
     project,
     MockToken,
-    UniVault,
-    UniStrategy,
+    AlphaVault,
+    DynamicRangesStrategy,
     TestRouter,
+    Contract,
     ZERO_ADDRESS,
 )
 from brownie.network.gas.strategies import ExponentialScalingStrategy
@@ -28,21 +29,25 @@ TWAP_DURATION = 60  # 60 seconds
 
 
 def main():
-    deployer = accounts.load("test1")
+    deployer = accounts.load("6000e057971f9f094145f7f5a088b6a277eb904ec77288ec873aedca9fafcb7f")
     print(deployer)
     UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
     gas_price(gas_strategy)
 
-    eth = MockToken.deploy("ETH", "ETH", "18", {"from": deployer})
-    dai = MockToken.deploy("DAI", "DAI", "6", {"from": deployer})
-
-    eth.mint(deployer, 100 * 1e18, {"from": deployer})
-    dai.mint(deployer, 100000 * 1e6, {"from": deployer})
-    
+    #eth = MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
+    eth = Contract('0xC1A4D433D04112e2b80FFE15C892D6312D5fEF8E')
+    #dai = MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
+    dai = Contract('0x5c05142931c8F52274ca9C33CA6E96F37732846e')
+    '''
+    eth.mint(deployer, 100 * 1e18, {"from": deployer, "gas_price": '4 gwei'})
+    dai.mint(deployer, 100000 * 1e6, {"from": deployer, "gas_price": '4 gwei'})
+    '''
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
-    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": gas_strategy})
+    '''
+    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": '4 gwei'})
+    '''
     time.sleep(15)
 
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, dai, 3000))
@@ -51,46 +56,64 @@ def main():
     price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
 
     # Set ETH/DAI price to 2000
-    pool.initialize(
-        floor(sqrt(price) * (1 << 96)), {"from": deployer, "gas_price": gas_strategy}
-    )
+    '''pool.initialize(
+        floor(sqrt(price) * (1 << 96)), {"from": deployer, "gas_price": '4 gwei'}
+    )'''
 
     # Increase cardinality so TWAP works
-    pool.increaseObservationCardinalityNext(
-        100, {"from": deployer, "gas_price": gas_strategy}
-    )
+    '''pool.increaseObservationCardinalityNext(
+        100, {"from": deployer, "gas_price": '4 gwei'}
+    )'''
 
-    router = TestRouter.deploy({"from": deployer})
+    #router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
+    router = Contract('0x5290Fc770b558B530048ac20e898227cA3B9dd45')
+    '''
     eth.approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
     )
     dai.approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
-    )
-    time.sleep(15)
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
+    )'''
 
     max_tick = 887272 // 60 * 60 ## 246
+    '''
     router.mint(
-        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
-    )
+        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": '4 gwei'}
+    )'''
 
-    vault = UniVault.deploy(
+    '''
+    vault = AlphaVault.deploy(
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
-        {"from": deployer}
-    )
+        {"from": deployer, "gas_price": '4 gwei'}
+    )'''
+    vault = Contract('0x186De9D7962743f46ae2666c1dA9B30e99C00ea3')
     
-    strategy = UniStrategy.deploy(
+    '''
+    strategy = deployer.deploy(
+        DynamicRangesStrategy,
         vault,
         BASE_THRESHOLD,
+        LIMIT_THRESHOLD,
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
         deployer,
-        {"from": deployer}
-    )
+        gas_price='4 gwei'
+    )'''
+    strategy = Contract('0xDdEfBECa9280C9340B363013C9E8633431A714a8')
     
-    vault.setStrategy(strategy, {"from": deployer, "gas_price": gas_strategy})
+    vault.setStrategy(strategy, {"from": deployer, "gas_price": '4 gwei'})
+
+    print(strategy.baseThreshold())
+    print(strategy.limitThreshold())
+
+    strategy.setBaseThreshold(4800, {"from": deployer, "gas_price": '4 gwei'})
+    strategy.setLimitThreshold(2400, {"from": deployer, "gas_price": '4 gwei'})
+    print(strategy.baseThreshold())
+    print(strategy.limitThreshold())
+
+
 
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")

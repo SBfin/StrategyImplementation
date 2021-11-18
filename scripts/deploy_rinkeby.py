@@ -90,7 +90,7 @@ def main():
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
         publish_source=True,
-        gas_price=gas_strategy,
+        gas_price='10000000000',
     )
 
     strategy = deployer.deploy(
