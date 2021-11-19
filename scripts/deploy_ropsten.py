@@ -2,9 +2,10 @@ from brownie import (
     accounts,
     project,
     MockToken,
-    UniVault,
-    UniStrategy,
+    AlphaVault,
+    DynamicRangesStrategy,
     TestRouter,
+    Contract,
     ZERO_ADDRESS,
 )
 from brownie.network.gas.strategies import ExponentialScalingStrategy
@@ -28,21 +29,23 @@ TWAP_DURATION = 60  # 60 seconds
 
 
 def main():
-    deployer = accounts.load("test1")
+    deployer = accounts.load("6000e057971f9f094145f7f5a088b6a277eb904ec77288ec873aedca9fafcb7f")
     print(deployer)
     UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
     gas_price(gas_strategy)
 
-    eth = MockToken.deploy("ETH", "ETH", "18", {"from": deployer})
-    dai = MockToken.deploy("DAI", "DAI", "6", {"from": deployer})
-
-    eth.mint(deployer, 100 * 1e18, {"from": deployer})
-    dai.mint(deployer, 100000 * 1e6, {"from": deployer})
+    eth = MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
+    dai = MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
+    
+    eth.mint(deployer, 100 * 1e18, {"from": deployer, "gas_price": '4 gwei'})
+    dai.mint(deployer, 100000 * 1e6, {"from": deployer, "gas_price": '4 gwei'})
     
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
-    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": gas_strategy})
+    
+    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": '4 gwei'})
+    
     time.sleep(15)
 
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, dai, 3000))
@@ -52,45 +55,60 @@ def main():
 
     # Set ETH/DAI price to 2000
     pool.initialize(
-        floor(sqrt(price) * (1 << 96)), {"from": deployer, "gas_price": gas_strategy}
+        floor(sqrt(price) * (1 << 96)), {"from": deployer, "gas_price": '4 gwei'}
     )
 
     # Increase cardinality so TWAP works
     pool.increaseObservationCardinalityNext(
-        100, {"from": deployer, "gas_price": gas_strategy}
+        100, {"from": deployer, "gas_price": '4 gwei'}
     )
 
-    router = TestRouter.deploy({"from": deployer})
+    router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
+    
     eth.approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
     )
     dai.approve(
-        router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
     )
-    time.sleep(15)
 
     max_tick = 887272 // 60 * 60 ## 246
+    
     router.mint(
-        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
+        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": '4 gwei'}
     )
 
-    vault = UniVault.deploy(
+    
+    vault = AlphaVault.deploy(
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
-        {"from": deployer}
+        {"from": deployer, "gas_price": '4 gwei'}
     )
     
-    strategy = UniStrategy.deploy(
+    
+    strategy = deployer.deploy(
+        DynamicRangesStrategy,
         vault,
         BASE_THRESHOLD,
+        LIMIT_THRESHOLD,
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
         deployer,
-        {"from": deployer}
+        gas_price='4 gwei'
     )
     
-    vault.setStrategy(strategy, {"from": deployer, "gas_price": gas_strategy})
+    vault.setStrategy(strategy, {"from": deployer, "gas_price": '4 gwei'})
+
+    print(strategy.baseThreshold())
+    print(strategy.limitThreshold())
+
+    strategy.setBaseThreshold(4800, {"from": deployer, "gas_price": '4 gwei'})
+    strategy.setLimitThreshold(2400, {"from": deployer, "gas_price": '4 gwei'})
+    print(strategy.baseThreshold())
+    print(strategy.limitThreshold())
+
+
 
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
