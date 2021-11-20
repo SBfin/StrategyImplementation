@@ -2,23 +2,32 @@ import Loader from '../loader/Loader';
 import {TokenBalance,Balance,Token,Decimals,Allowance,Approve} from '../eth/TokenBalance';
 import EthBalance from '../eth/EthBalance';
 import {TotalSupply,GetVault,GetStrategy, Deposit,BalanceOf,Withdraw,GetTotalAmounts} from '../eth/vault';
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
-
-
+import { useSelector, useDispatch } from 'react-redux';
+import {vaultSlice,fetchActions} from '../eth/vault';
 import './Main.scss';
-
+import { useWeb3React } from '@web3-react/core'
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
 
 export default function Main(props) {
+  const {account, library, chainId} = useWeb3React();
+
+  const vaultStore = useSelector((state) => state.vault);
+  const dispatch = useDispatch();
+
   const isButtonDisabled = props.fetching;
   const vaultContractAddress = ContractAddress("vault")
   const vault = GetVault(vaultContractAddress)
   const vaultDecimals = Decimals(vault)
   const balanceUser = BalanceOf(vault,vaultDecimals)
 
+  useEffect(() => {
+     dispatch(fetchActions.totalSupply(vault));
+     dispatch(fetchActions.totalAmounts(vault));
+  }, [vault]);
   //const vaultTotalAmounts = GetTotalAmounts(vault);
 
   const eth = Token(ContractAddress("eth"))
@@ -63,6 +72,7 @@ export default function Main(props) {
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
+      <span>Total Amounts: {vaultStore.totalAmounts.value[0]} eth, {vaultStore.totalAmounts.value[1]} dai</span>
 
       { vaultContractAddress==null &&
       <div className="main-container" style={{background: 'red'}}>

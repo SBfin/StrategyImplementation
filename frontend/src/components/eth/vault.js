@@ -3,26 +3,69 @@ import { useWeb3React } from '@web3-react/core'
 import UniVault from "./abi/UniVault.json";
 import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 
-export function GetTotalAmounts(vault) {
-  const [result, setResult] = useState(0)
-  useEffect(() => {
-    if (!vault){
-      return;
-    }
+const initialState = {
+  totalSupply: {
+      value: 0,
+      status: 'idle',
+  },
+  totalAmounts: {
+      value: [0, 0],
+      status: 'idle',
+  }
+};
 
-    vault.getTotalAmounts()
-    .then((r) => {
-      setResult(r);
-      console.log("total0:",r.total0.toNumber())
-      console.log("total1",r.total1.toString())
-    }).catch((err) => {
-        console.log(err);
-    }) 
-  }, [vault])
-  return result
-}
+export const fetchActions = {
+    totalSupply: createAsyncThunk(
+      'vault/fetchTotalSupply',
+      async (vault) => {
+         const totalSupply = await vault.totalSupply();
+         return totalSupply.toString();
+    }),
+    totalAmounts: createAsyncThunk(
+      'vault/fetchTotalAmounts',
+      async (vault) => {
+         const totalAmounts = await vault.getTotalAmounts();
+         return [totalAmounts[0].toString(), totalAmounts[1].toString()];
+    })
+};
+
+export const vaultSlice = createSlice({
+    name: 'vault',
+    initialState,
+    reducers: {
+        increment: (state) => {
+          state.value += 1;
+        },
+        decrement: (state) => {
+          state.value -= 1;
+        },
+        incrementByAmount: (state, action) => {
+          state.value += action.payload;
+        },
+    },
+    extraReducers: (builder) => {
+        builder
+          .addCase(fetchActions.totalAmounts.pending, (state) => {
+            state.totalAmounts.status = 'loading';
+          })
+          .addCase(fetchActions.totalAmounts.fulfilled, (state, action) => {
+            state.totalAmounts.status = 'idle';
+            state.totalAmounts.value = action.payload;
+          })
+
+          .addCase(fetchActions.totalSupply.pending, (state) => {
+            state.totalSupply.status = 'loading';
+          })
+          .addCase(fetchActions.totalSupply.fulfilled, (state, action) => {
+            state.totalSupply.status = 'idle';
+            state.totalSupply.value = action.payload;
+          });
+    },
+});
+export default vaultSlice.reducer;
 
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
@@ -37,6 +80,13 @@ export function GetVault(address) {
     
     const signer = library.getSigner(account).connectUnchecked()
     const contract = new Contract(address, UniVault.abi, signer)
+
+    const filterFrom = contract.filters.Transfer(account);
+    contract.on(filterFrom, (from, to, amount, event) => {
+      // The `from` will always be the signer address,  more info: https://docs.ethers.io/v5/api/contract/example/
+      // TODO: check and reload things from here
+        console.log(from, to, amount, event)
+    });
 
     setVault(contract)
   }, [account, library, chainId])

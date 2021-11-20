@@ -5,6 +5,9 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { Web3ReactProvider } from '@web3-react/core'
 import { Web3Provider } from '@ethersproject/providers'
+import { Provider } from 'react-redux'
+import { createStore} from 'redux'
+import { store } from './store';
 
 function getLibrary(provider) {
   const library = new Web3Provider(provider)
@@ -13,9 +16,11 @@ function getLibrary(provider) {
 }
 
 ReactDOM.render(
-  <Web3ReactProvider getLibrary={getLibrary}>
-    <App />
-  </Web3ReactProvider>,
+  <Provider store={store}>
+      <Web3ReactProvider getLibrary={getLibrary}>
+        <App />
+      </Web3ReactProvider>
+  </Provider>,
   document.getElementById('root')
 );
 
