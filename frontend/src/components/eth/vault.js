@@ -3,6 +3,7 @@ import { useWeb3React } from '@web3-react/core'
 import UniVault from "./abi/UniVault.json";
 import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
+import { decimalFormat } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 
@@ -14,6 +15,10 @@ const initialState = {
   totalAmounts: {
       value: [0, 0],
       status: 'idle',
+  },
+  balanceOf: {
+    value: 0,
+    status: 'idle'
   },
   decimals: 0,
 
@@ -31,7 +36,15 @@ export const fetchActions = {
       async (vault) => {
          const totalAmounts = await vault.getTotalAmounts();
          return [totalAmounts[0].toString(), totalAmounts[1].toString()];
-    })
+    }),
+    balanceOf: createAsyncThunk(
+      'vault/balanceOf',
+      async(vault, account) => {
+        const balanceOf = decimalFormat(await vault.balanceOf(account))
+        console.log(balanceOf)
+        return balanceOf;
+      }
+    )
 };
 
 export const vaultSlice = createSlice({
@@ -58,7 +71,15 @@ export const vaultSlice = createSlice({
           .addCase(fetchActions.totalSupply.fulfilled, (state, action) => {
             state.totalSupply.status = 'idle';
             state.totalSupply.value = action.payload;
-          });
+          })
+
+          .addCase(fetchActions.balanceOf.pending, (state) => {
+            state.balanceOf.status = 'loading'
+          })
+          .addCase(fetchActions.balanceOf.fulfilled, (state, action) => {
+            state.balanceOf.status = 'idle'
+            state.balanceOf.value = action.payload
+          })
     },
 });
 export default vaultSlice.reducer;

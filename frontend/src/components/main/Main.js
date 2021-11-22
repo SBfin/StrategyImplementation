@@ -23,7 +23,6 @@ export default function Main(props) {
   const vaultContractAddress = ContractAddress("vault")
   const vault = GetVault(vaultContractAddress)
   const vaultDecimals = Decimals(vault)
-  const balanceUser = BalanceOf(vault,vaultDecimals)
 
   useEffect(() => {
      if(!vault){
@@ -34,7 +33,11 @@ export default function Main(props) {
 
      dispatch(fetchActions.totalSupply(vault));
      dispatch(fetchActions.totalAmounts(vault));
+     dispatch(fetchActions.balanceOf(vault, account));
   }, [vault]);
+
+  const balanceUser = vaultStore.balanceOf.value
+
 
   const eth = Token(ContractAddress("eth"))
   const ethDecimals = Decimals(eth)
