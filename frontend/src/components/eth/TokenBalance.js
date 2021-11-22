@@ -4,6 +4,16 @@ import React, {useEffect, useState} from "react";
 import {Contract} from "@ethersproject/contracts";
 import ERC20ABI from "./abi/MockToken.json";
 import {formatUnits} from "@ethersproject/units";
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+
+export const fetchActionsToken = {
+    decimals: createAsyncThunk(
+      'token/fetchDecimals',
+      async (contract) => {
+         const decimals = await contract.decimals();
+         return decimals.toString();
+    }),
+};
 
 export function Token(address){
     const {account, library, chainId} = useWeb3React()

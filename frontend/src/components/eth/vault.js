@@ -14,7 +14,9 @@ const initialState = {
   totalAmounts: {
       value: [0, 0],
       status: 'idle',
-  }
+  },
+  decimals: 0,
+
 };
 
 export const fetchActions = {
@@ -36,14 +38,8 @@ export const vaultSlice = createSlice({
     name: 'vault',
     initialState,
     reducers: {
-        increment: (state) => {
-          state.value += 1;
-        },
-        decrement: (state) => {
-          state.value -= 1;
-        },
-        incrementByAmount: (state, action) => {
-          state.value += action.payload;
+        decimals: (state, action) => {
+          state.decimals = action.payload;
         },
     },
     extraReducers: (builder) => {
@@ -89,26 +85,10 @@ export function GetVault(address) {
     });
 
     setVault(contract)
-  }, [account, library, chainId])
+  }, [address, library, chainId])
   return vault
 }
 
-export function TotalSupply(vault, decimals) {
-  const [result, setResult] = useState(0)
-  useEffect(() => {
-    if (!vault){
-      return;
-    }
-
-    vault.totalSupply()
-    .then((r) => {
-      setResult(r.toString());
-    }).catch((err) => {
-        console.log(err);
-    }) 
-  }, [vault, decimals])
-  return Math.round(parseFloat(formatUnits(result, decimals)) * 100) / 100
-}
 
 export function BalanceOf(vault,decimals) {
   const {account, library, chainId} = useWeb3React()

@@ -1,13 +1,14 @@
 import Loader from '../loader/Loader';
-import {TokenBalance,Balance,Token,Decimals,Allowance,Approve} from '../eth/TokenBalance';
+import {TokenBalance,Balance,Token,Decimals,Allowance,Approve,fetchActionsToken} from '../eth/TokenBalance';
 import EthBalance from '../eth/EthBalance';
-import {TotalSupply,GetVault,GetStrategy, Deposit,BalanceOf,Withdraw,GetTotalAmounts} from '../eth/vault';
+import {TotalSupply,GetVault,GetStrategy, Deposit,BalanceOf,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import {vaultSlice,fetchActions} from '../eth/vault';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
+import {decimalFormat} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -25,10 +26,15 @@ export default function Main(props) {
   const balanceUser = BalanceOf(vault,vaultDecimals)
 
   useEffect(() => {
+     if(!vault){
+        return
+     }
+     console.log("selected contract: ", vault.address)
+     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
+
      dispatch(fetchActions.totalSupply(vault));
      dispatch(fetchActions.totalAmounts(vault));
   }, [vault]);
-  //const vaultTotalAmounts = GetTotalAmounts(vault);
 
   const eth = Token(ContractAddress("eth"))
   const ethDecimals = Decimals(eth)
@@ -85,7 +91,7 @@ export default function Main(props) {
 
         <div className="element">
           <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault Supply: 
-          <span style={{color: 'green'}}> {TotalSupply(vault,vaultDecimals)}</span></label>
+          <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
         </div>
         
         <div className="element">
