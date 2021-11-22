@@ -33,7 +33,7 @@ export default function Main(props) {
 
      dispatch(fetchActions.totalSupply(vault));
      dispatch(fetchActions.totalAmounts(vault));
-     dispatch(fetchActions.balanceOf(vault, account));
+     dispatch(fetchActions.balanceOf({account, vault}));
   }, [vault]);
 
   const eth = Token(ContractAddress("eth"))
@@ -162,7 +162,7 @@ export default function Main(props) {
       <div className="main-container">
         <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
-            <span style={{color: 'green'}}> {decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
+            <span style={{color: 'green'}}>{decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
           </div>
 
           <div className="element">
