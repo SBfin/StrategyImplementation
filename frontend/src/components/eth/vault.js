@@ -38,9 +38,9 @@ export const fetchActions = {
          return [totalAmounts[0].toString(), totalAmounts[1].toString()];
     }),
     balanceOf: createAsyncThunk(
-      'vault/balanceOf',
+      'vault/fetchBalanceOf',
       async(vault, account) => {
-        const balanceOf = decimalFormat(await vault.balanceOf(account))
+        const balanceOf = await vault.balanceOf(account)
         return balanceOf;
     }),
 };
