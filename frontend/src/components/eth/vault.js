@@ -41,10 +41,8 @@ export const fetchActions = {
       'vault/balanceOf',
       async(vault, account) => {
         const balanceOf = decimalFormat(await vault.balanceOf(account))
-        console.log(balanceOf)
         return balanceOf;
-      }
-    )
+    }),
 };
 
 export const vaultSlice = createSlice({
@@ -109,26 +107,6 @@ export function GetVault(address) {
   }, [address, library, chainId])
   return vault
 }
-
-
-export function BalanceOf(vault,decimals) {
-  const {account, library, chainId} = useWeb3React()
-  const [result, setResult] = useState(0)
-  useEffect(() => {
-    if (!vault){
-      return;
-    }
-
-    vault.balanceOf(account)
-    .then((r) => {
-      setResult(r.toString());
-    }).catch((err) => {
-        console.log(err);
-    }) 
-  }, [vault, decimals, account])
-  return Math.round(parseFloat(formatUnits(result, decimals)) * 100) / 100
-}
-
 
 export async function Deposit(vault, val1, val2) {
   const accounts = await window.ethereum.request({ method: 'eth_accounts' });

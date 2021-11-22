@@ -1,7 +1,7 @@
 import Loader from '../loader/Loader';
 import {TokenBalance,Balance,Token,Decimals,Allowance,Approve,fetchActionsToken} from '../eth/TokenBalance';
 import EthBalance from '../eth/EthBalance';
-import {TotalSupply,GetVault,GetStrategy, Deposit,BalanceOf,Withdraw} from '../eth/vault';
+import {TotalSupply,GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -35,9 +35,6 @@ export default function Main(props) {
      dispatch(fetchActions.totalAmounts(vault));
      dispatch(fetchActions.balanceOf(vault, account));
   }, [vault]);
-
-  const balanceUser = vaultStore.balanceOf.value
-
 
   const eth = Token(ContractAddress("eth"))
   const ethDecimals = Decimals(eth)
@@ -161,11 +158,11 @@ export default function Main(props) {
         }
         
       </div>
-      { balanceUser!=0 &&
+      { vaultStore.balanceOf.value!==0 &&
       <div className="main-container">
         <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
-            <span style={{color: 'green'}}> {balanceUser}</span></label>
+            <span style={{color: 'green'}}> {decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
           </div>
 
           <div className="element">
