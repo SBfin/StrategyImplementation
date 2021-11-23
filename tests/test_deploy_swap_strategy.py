@@ -48,37 +48,22 @@ def test_rebalance_negative_amount(SwapStrategy, vault, gov, keeper, user, pool)
     print('Case swapAmount is negative\n\n*************\n')
     swapAmount = -2400
     #minSQRTPrice = int(1.0001 ** (pool.slot0()[1] * 0.5) * (2 ** 96))
+    
     minSQRTPrice = 2 ** 96
     maxSQRTPrice = 2 ** 159
     SQRTPrice = minSQRTPrice if (swapAmount > 0) else maxSQRTPrice
-    print('SQRTPrice')
-    print(SQRTPrice)
+
 
     assert (maxSQRTPrice == SQRTPrice)
-
-    print(swapAmount)
-    print('minSQRTPrice')
-    print(minSQRTPrice)
-    print('tick')
-    print(strategy.getTick())
-    
 
     balance0 = vault.getBalance0()
     balance1 = vault.getBalance1()
 
-    print('balance0')
-    print(balance0)
-    print('balance1')
-    print(balance1)
 
     tx = strategy.rebalance(swapAmount, SQRTPrice, { "from": keeper })
     tx.wait(1)
 
     newAmount0, newAmount1 = vault.getTotalAmounts()
-    print('newAmount0')
-    print(newAmount0)
-    print('newAmount1')
-    print(newAmount1)
 
     assert(balance0 < newAmount0)
     assert(balance1 > newAmount1)
@@ -86,16 +71,9 @@ def test_rebalance_negative_amount(SwapStrategy, vault, gov, keeper, user, pool)
     newBalance0 = vault.getBalance0()
     newBalance1 = vault.getBalance1()
 
-    print('newBalance0')
-    print(newBalance0)
-    print('newBalance1')
-    print(newBalance1)
 
     assert newBalance0 != balance0
     assert newBalance1 != balance1
-
-    print('new tick')
-    print(strategy.getTick())
 
 
     with reverts("threshold > 0"):
@@ -122,33 +100,18 @@ def test_rebalance_positive_amount(SwapStrategy, vault, gov, keeper, user, pool)
     maxSQRTPrice = 2 ** 159   
 
     SQRTPrice = minSQRTPrice if (swapAmount > 0) else maxSQRTPrice
-    print('SQRTPrice')
-    print(SQRTPrice)
     
     assert (minSQRTPrice == SQRTPrice)
 
-    print(swapAmount)
-    print('minSQRTPrice')
-    print(minSQRTPrice)
-    print('tick')
-    print(strategy.getTick())
 
     balance0 = vault.getBalance0()
     balance1 = vault.getBalance1()
-
-    print('balance0')
-    print(balance0)
-    print('balance1')
-    print(balance1)
 
     tx = strategy.rebalance(swapAmount, SQRTPrice, { "from": keeper })
     tx.wait(1)
 
     newAmount0, newAmount1 = vault.getTotalAmounts()
-    print('newAmount0')
-    print(newAmount0)
-    print('newAmount1')
-    print(newAmount1)
+
 
     assert(balance0 > newAmount0)
     assert(balance1 < newAmount1)
@@ -156,13 +119,5 @@ def test_rebalance_positive_amount(SwapStrategy, vault, gov, keeper, user, pool)
     newBalance0 = vault.getBalance0()
     newBalance1 = vault.getBalance1()
 
-    print('newBalance0')
-    print(newBalance0)
-    print('newBalance1')
-    print(newBalance1)
-
     assert newBalance0 != balance0
     assert newBalance1 != balance1
-
-    print('new tick')
-    print(strategy.getTick())
