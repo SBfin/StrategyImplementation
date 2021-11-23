@@ -8,7 +8,7 @@ import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "./AlphaVault.sol";
 
 /**
- * @title   Dynamic Ranges Strategy
+ * @title   Swap Strategy
  * @notice  Rebalancing strategy for Alpha Vault that maintains the two
  *          following range orders:
  *
@@ -33,7 +33,7 @@ import "./AlphaVault.sol";
  *          achieves this without the need to swap directly on Uniswap and pay
  *          fees.
  */
-contract AlphaStrategy {
+contract SwapStrategy {
     AlphaVault public immutable vault;
     IUniswapV3Pool public immutable pool;
     int24 public immutable tickSpacing;
@@ -88,7 +88,7 @@ contract AlphaStrategy {
      * @notice Calculates new ranges for orders and calls `vault.rebalance()`
      * so that vault can update its positions. Can only be called by keeper.
      */
-    function rebalance() external {
+    function rebalance(int256 swapAmount, uint160 minSQRTPrice) external {
         require(msg.sender == keeper, "keeper");
 
         int24 _baseThreshold = baseThreshold;
@@ -112,9 +112,11 @@ contract AlphaStrategy {
         int24 tickFloor = _floor(tick);
         int24 tickCeil = tickFloor + tickSpacing;
 
+        // calculate first 2 params for swapping: swapAmount and minSQRTPrice
+
         vault.rebalance(
-            0,
-            0,
+            swapAmount,
+            minSQRTPrice,
             tickFloor - _baseThreshold,
             tickCeil + _baseThreshold,
             tickFloor - _limitThreshold,
@@ -184,6 +186,12 @@ contract AlphaStrategy {
     /// @dev Uses same governance as underlying vault.
     modifier onlyGovernance {
         require(msg.sender == vault.governance(), "governance");
+        _;
+    }
+
+    /// @dev Uses same keeper as underlying vault.
+    modifier onlyKeeper {
+        require(msg.sender == keeper, "keeper");
         _;
     }
 }
