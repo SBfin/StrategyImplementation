@@ -44,8 +44,8 @@ export default function Main(props) {
 
      dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));
      dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
-     dispatch(fetchActionsToken.allowanceEth({vault, account, contract: eth}));
-     dispatch(fetchActionsToken.allowanceDai({vault, account, contract: dai}));
+     dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
+     dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
 
   }, [vault]);
   
@@ -125,7 +125,7 @@ export default function Main(props) {
         </div>
       
         <div className="element">
-          { tokenStore.allowanceEth.value == '0' &&
+          { tokenStore.allowanceEth == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
             onClick={ () => onApproveClick(eth, tokenStore.balanceEth) }
@@ -134,7 +134,7 @@ export default function Main(props) {
             Approve WETH
           </button>
          }
-          {tokenStore.allowanceDai.value == '0' ?
+          {tokenStore.allowanceDai == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
             onClick={ () => onApproveClick(dai, tokenStore.balanceDai) }
@@ -142,7 +142,7 @@ export default function Main(props) {
           >
             Approve DAI
           </button>
-          :tokenStore.allowanceEth.value !='0' && tokenStore.allowanceDai.value !='0' &&
+          :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
           
           <button
             className={`search-button`}

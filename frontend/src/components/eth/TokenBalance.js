@@ -9,14 +9,8 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 const initialState = {
   balanceEth: 0,
   balanceDai: 0,
-  allowanceEth: {
-    value: 0,
-    status: 'idle'
-  },
-  allowanceDai: {
-    value: 0,
-    status: 'idle'
-  },
+  allowanceEth: 0,
+  allowanceDai: 0,
   decimalsEth: 0,
   decimalsDai: 0
 
@@ -36,21 +30,12 @@ export const fetchActionsToken = {
          const balance = await contract.balanceOf(account);
          return balance.toString();
     }),
-    allowanceEth: createAsyncThunk(
-      'token/fetchAllowanceEth',
+    allowance: createAsyncThunk(
+      'token/fetchAllowance',
       async (data) => {
         const {vault, account, contract} = data;
         const allowanceEth = await contract.allowance(account, vault.address);
         return allowanceEth.toString()
-
-    }),
-    allowanceDai: createAsyncThunk(
-      'token/fetchAllowanceDai',
-      async (data) => {
-        const {vault, account, contract} = data;
-        const allowanceDai = await contract.allowance(account, vault.address);
-        return allowanceDai.toString()
-
     }),
 };
 
@@ -70,23 +55,12 @@ export const tokenSlice = createSlice({
       balanceDai: (state, action) => {
         state.balanceDai = action.payload;
       },
-  },
-  extraReducers: (builder) => {
-      builder
-        .addCase(fetchActionsToken.allowanceEth.pending, (state) => {
-          state.allowanceEth.status = 'loading';
-        })
-        .addCase(fetchActionsToken.allowanceEth.fulfilled, (state, action) => {
-          state.allowanceEth.status = 'idle';
-          state.allowanceEth.value = action.payload;
-        })
-        .addCase(fetchActionsToken.allowanceDai.pending, (state) => {
-          state.allowanceDai.status = 'loading';
-        })
-        .addCase(fetchActionsToken.allowanceDai.fulfilled, (state, action) => {
-          state.allowanceDai.status = 'idle';
-          state.allowanceDai.value = action.payload;
-        })
+      allowanceEth: (state, action) => {
+        state.allowanceEth = action.payload;
+      },
+      allowanceDai: (state, action) => {
+        state.allowanceDai = action.payload;
+      },
   },
 });
 export default tokenSlice.reducer;
