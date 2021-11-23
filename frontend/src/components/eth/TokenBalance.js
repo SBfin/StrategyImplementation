@@ -7,11 +7,19 @@ import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  balance: {
+  balanceEth: {
     value: 0,
     status: 'idle'
   },
-  allowance: {
+  balanceDai: {
+    value: 0,
+    status: 'idle'
+  },
+  allowanceEth: {
+    value: 0,
+    status: 'idle'
+  },
+  allowanceDai: {
     value: 0,
     status: 'idle'
   },
@@ -30,18 +38,27 @@ export const fetchActionsToken = {
       'token/fetchBalance',
       async (data) => {
         const { account, contract } = data;
+        console.log(contract)
          const balance = await contract.balanceOf(account);
+         console.log(balance.toString())
          return balance.toString();
     }),
-    allowance: createAsyncThunk(
-      'token/fetchAllowance',
+    allowanceEth: createAsyncThunk(
+      'token/fetchAllowanceEth',
       async (data) => {
         const {vault, account, contract} = data;
-        const allowance = await contract.allowance(account, vault.address);
-        return allowance.toString()
+        const allowanceEth = await contract.allowance(account, vault.address);
+        return allowanceEth.toString()
 
-      }
-    )
+    }),
+    allowanceDai: createAsyncThunk(
+      'token/fetchAllowanceDai',
+      async (data) => {
+        const {vault, account, contract} = data;
+        const allowanceDai = await contract.allowance(account, vault.address);
+        return allowanceDai.toString()
+
+    }),
 };
 
 export const tokenSlice = createSlice({
@@ -50,6 +67,13 @@ export const tokenSlice = createSlice({
   reducers: {
       decimals: (state, action) => {
         state.decimals = action.payload;
+      },
+      balanceEth: (state, action) => {
+        console.log(action)
+        state.balanceEth = action.payload;
+      },
+      balanceDai: (state, action) => {
+        state.balanceDai = action.payload;
       },
   },
   extraReducers: (builder) => {
@@ -61,12 +85,19 @@ export const tokenSlice = createSlice({
           state.balance.status = 'idle';
           state.balance.value = action.payload;
         })
-        .addCase(fetchActionsToken.allowance.pending, (state) => {
-          state.allowance.status = 'loading';
+        .addCase(fetchActionsToken.allowanceEth.pending, (state) => {
+          state.allowanceEth.status = 'loading';
         })
-        .addCase(fetchActionsToken.allowance.fulfilled, (state, action) => {
-          state.allowance.status = 'idle';
-          state.allowance.value = action.payload;
+        .addCase(fetchActionsToken.allowanceEth.fulfilled, (state, action) => {
+          state.allowanceEth.status = 'idle';
+          state.allowanceEth.value = action.payload;
+        })
+        .addCase(fetchActionsToken.allowanceDai.pending, (state) => {
+          state.allowanceDai.status = 'loading';
+        })
+        .addCase(fetchActionsToken.allowanceDai.fulfilled, (state, action) => {
+          state.allowanceDai.status = 'idle';
+          state.allowanceDai.value = action.payload;
         })
   },
 });

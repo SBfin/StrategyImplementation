@@ -13,6 +13,7 @@ import {decimalFormat} from '../eth/helpers';
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
 
+
 export default function Main(props) {
   const {account, library, chainId} = useWeb3React();
 
@@ -24,31 +25,33 @@ export default function Main(props) {
   const vaultContractAddress = ContractAddress("vault")
   const vault = GetVault(vaultContractAddress)
   const vaultDecimals = Decimals(vault)
+  const eth = Token(ContractAddress("eth"))
+  const dai = Token(ContractAddress("dai"))
 
   useEffect(() => {
      if(!vault){
         return
      }
      console.log("selected contract: ", vault.address)
-     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
 
+     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
      dispatch(fetchActionsVault.totalSupply(vault));
      dispatch(fetchActionsVault.totalAmounts(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
-     dispatch(fetchActionsToken.allowance(vault, account, eth))
+     
+     dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
+     dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
+     dispatch(fetchActionsToken.allowanceEth({vault, account, contract: eth}));
+     dispatch(fetchActionsToken.allowanceDai({vault, account, contract: dai}));
 
   }, [vault]);
 
-  const eth = Token(ContractAddress("eth"))
+
   const ethDecimals = Decimals(eth)
   const ethBalance = Balance(eth)
-  console.log(tokenStore)
   
-  const dai = Token(ContractAddress("dai"))
   const daiDecimals = Decimals(dai)
-  const daiBalance = Balance(dai)
-  const daiAllowance = fetchActionsToken.allowance(vault, account, dai)
-  
+  const daiBalance = Balance(dai)  
   
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
@@ -107,7 +110,7 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) => setInput1(e.target.value) }
           />
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={ethBalance} decimals={ethDecimals} /></label>
+          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth.value} decimals={ethDecimals} /></label>
         </div>
         
         
@@ -123,28 +126,28 @@ export default function Main(props) {
             onChange={ (e) => setInput2(e.target.value) }
           />
 
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={daiBalance} decimals={daiDecimals} /></label>
+          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai.value} decimals={daiDecimals} /></label>
         </div>
       
         <div className="element">
-          { tokenStore.allowance.value == '0' &&
+          { tokenStore.allowanceEth.value == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(eth, ethBalance) }
+            onClick={ () => onApproveClick(eth, tokenStore.balanceEth.value) }
             disabled={ isButtonDisabled }
           >
             Approve WETH
           </button>
          }
-          {daiAllowance == '0' ?
+          {tokenStore.allowanceDai.value == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(dai, daiBalance) }
+            onClick={ () => onApproveClick(dai, tokenStore.balanceDai.value) }
             disabled={ isButtonDisabled }
           >
             Approve DAI
           </button>
-          :tokenStore.allowance.value !='0' && daiAllowance!='0' &&
+          :tokenStore.allowanceEth.value !='0' && tokenStore.allowanceDai.value !='0' &&
           
           <button
             className={`search-button`}

@@ -41,7 +41,6 @@ export const fetchActionsVault = {
       'vault/fetchBalanceOf',
       async(data) => {
         const { account, vault } = data
-        console.log('balanceOf')
         const balanceOf = await vault.balanceOf(account);
         return balanceOf.toString();
     }),
