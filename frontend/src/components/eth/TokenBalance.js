@@ -6,6 +6,16 @@ import ERC20ABI from "./abi/MockToken.json";
 import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
+const initialState = {
+  balanceEth: 0,
+  balanceDai: 0,
+  allowanceEth: 0,
+  allowanceDai: 0,
+  decimalsEth: 0,
+  decimalsDai: 0
+
+};
+
 export const fetchActionsToken = {
     decimals: createAsyncThunk(
       'token/fetchDecimals',
@@ -13,7 +23,47 @@ export const fetchActionsToken = {
          const decimals = await contract.decimals();
          return decimals.toString();
     }),
+    balance: createAsyncThunk(
+      'token/fetchBalance',
+      async (data) => {
+        const { account, contract } = data;
+         const balance = await contract.balanceOf(account);
+         return balance.toString();
+    }),
+    allowance: createAsyncThunk(
+      'token/fetchAllowance',
+      async (data) => {
+        const {vault, account, contract} = data;
+        const allowanceEth = await contract.allowance(account, vault.address);
+        return allowanceEth.toString()
+    }),
 };
+
+export const tokenSlice = createSlice({
+  name: 'token',
+  initialState,
+  reducers: {
+      decimalsEth: (state, action) => {
+        state.decimalsEth = action.payload;
+      },
+      decimalsDai: (state, action) => {
+        state.decimalsDai = action.payload
+      },
+      balanceEth: (state, action) => {
+        state.balanceEth = action.payload;
+      },
+      balanceDai: (state, action) => {
+        state.balanceDai = action.payload;
+      },
+      allowanceEth: (state, action) => {
+        state.allowanceEth = action.payload;
+      },
+      allowanceDai: (state, action) => {
+        state.allowanceDai = action.payload;
+      },
+  },
+});
+export default tokenSlice.reducer;
 
 export function Token(address){
     const {account, library, chainId} = useWeb3React()
@@ -48,42 +98,6 @@ export function Token(address){
     return contract;
 }
 
-export function Decimals(contract){
-  const [decimals, setDecimals] = useState()
-
-  useEffect(async () => {
-    if (!contract) {
-        return
-    }
-    contract.decimals()
-        .then((result) => {
-          console.log("Decimals: ", result.toString())
-          setDecimals(result);
-        }).catch((err) => {
-            console.log(err);
-        })      
-  }, [contract])
-  return decimals;
-}
-
-export function Allowance(contract, vault){
-  const {account} = useWeb3React()
-  const [result, setResult] = useState('0')
-
-  useEffect(() => {
-    if (!contract) {
-        return
-    }
-    contract.allowance(account, vault.address)
-        .then((r) => {
-          setResult(r.toString());
-        }).catch((err) => {
-            console.log(err);
-        })      
-  }, [contract,account])
-  return result;
-}
-
 export async function Approve(contract, vault, balance){
 
   return contract.approve(await vault.address, balance)
@@ -95,28 +109,6 @@ export async function Approve(contract, vault, balance){
     }).catch((err) => {
         console.log(err);
     })      
-}
-
-export function Balance(contract){
-  const {account, library, chainId} = useWeb3React()
-
-  const [balance, setBalance] = useState()
-
-  useEffect(async () => {
-    if (!account || !contract) {
-        return
-    }
-    contract.balanceOf(account)
-        .then((balance) => {
-          setBalance(balance.toString())
-        }).catch((err) => {
-          console.log(err);
-          setBalance(null);
-        })
-  
-  }, [account, contract])
-
-  return balance;
 }
 
 export function TokenBalance({balance, decimals}){

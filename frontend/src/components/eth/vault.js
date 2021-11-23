@@ -3,6 +3,7 @@ import { useWeb3React } from '@web3-react/core'
 import UniVault from "./abi/UniVault.json";
 import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
+import { decimalFormat } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 
@@ -15,11 +16,15 @@ const initialState = {
       value: [0, 0],
       status: 'idle',
   },
+  balanceOf: {
+    value: 0,
+    status: 'idle'
+  },
   decimals: 0,
 
 };
 
-export const fetchActions = {
+export const fetchActionsVault = {
     totalSupply: createAsyncThunk(
       'vault/fetchTotalSupply',
       async (vault) => {
@@ -31,7 +36,14 @@ export const fetchActions = {
       async (vault) => {
          const totalAmounts = await vault.getTotalAmounts();
          return [totalAmounts[0].toString(), totalAmounts[1].toString()];
-    })
+    }),
+    balanceOf: createAsyncThunk(
+      'vault/fetchBalanceOf',
+      async(data) => {
+        const { account, vault } = data
+        const balanceOf = await vault.balanceOf(account);
+        return balanceOf.toString();
+    }),
 };
 
 export const vaultSlice = createSlice({
@@ -44,28 +56,35 @@ export const vaultSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-          .addCase(fetchActions.totalAmounts.pending, (state) => {
+          .addCase(fetchActionsVault.totalAmounts.pending, (state) => {
             state.totalAmounts.status = 'loading';
           })
-          .addCase(fetchActions.totalAmounts.fulfilled, (state, action) => {
+          .addCase(fetchActionsVault.totalAmounts.fulfilled, (state, action) => {
             state.totalAmounts.status = 'idle';
             state.totalAmounts.value = action.payload;
           })
 
-          .addCase(fetchActions.totalSupply.pending, (state) => {
+          .addCase(fetchActionsVault.totalSupply.pending, (state) => {
             state.totalSupply.status = 'loading';
           })
-          .addCase(fetchActions.totalSupply.fulfilled, (state, action) => {
+          .addCase(fetchActionsVault.totalSupply.fulfilled, (state, action) => {
             state.totalSupply.status = 'idle';
             state.totalSupply.value = action.payload;
-          });
+          })
+
+          .addCase(fetchActionsVault.balanceOf.pending, (state) => {
+            state.balanceOf.status = 'loading'
+          })
+          .addCase(fetchActionsVault.balanceOf.fulfilled, (state, action) => {
+            state.balanceOf.status = 'idle'
+            state.balanceOf.value = action.payload
+          })
     },
 });
 export default vaultSlice.reducer;
 
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
-
   const [vault, setVault] = useState()
 
   useEffect(() => {
@@ -89,31 +108,16 @@ export function GetVault(address) {
   return vault
 }
 
-
-export function BalanceOf(vault,decimals) {
-  const {account, library, chainId} = useWeb3React()
-  const [result, setResult] = useState(0)
-  useEffect(() => {
-    if (!vault){
-      return;
-    }
-
-    vault.balanceOf(account)
-    .then((r) => {
-      setResult(r.toString());
-    }).catch((err) => {
-        console.log(err);
-    }) 
-  }, [vault, decimals, account])
-  return Math.round(parseFloat(formatUnits(result, decimals)) * 100) / 100
-}
-
-
 export async function Deposit(vault, val1, val2) {
   const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-  
-  return vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0]).then((r) => {
+  console.log('deposit - vault.js')
+  console.log(accounts[0])
+  console.log(val1)
+  console.log(val2)
+
+  return vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], {from: accounts[0], gasLimit: 1000000}).then((r) => {
      //setResult(r.toString());
+     console.log('deposit function')
      console.log(r);
      return r.wait();
   }).then((r) => {
