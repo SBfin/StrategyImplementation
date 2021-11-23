@@ -7,14 +7,8 @@ import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
-  balanceEth: {
-    value: 0,
-    status: 'idle'
-  },
-  balanceDai: {
-    value: 0,
-    status: 'idle'
-  },
+  balanceEth: 0,
+  balanceDai: 0,
   allowanceEth: {
     value: 0,
     status: 'idle'
@@ -23,7 +17,8 @@ const initialState = {
     value: 0,
     status: 'idle'
   },
-  decimals: 0,
+  decimalsEth: 0,
+  decimalsDai: 0
 
 };
 
@@ -63,8 +58,11 @@ export const tokenSlice = createSlice({
   name: 'token',
   initialState,
   reducers: {
-      decimals: (state, action) => {
-        state.decimals = action.payload;
+      decimalsEth: (state, action) => {
+        state.decimalsEth = action.payload;
+      },
+      decimalsDai: (state, action) => {
+        state.decimalsDai = action.payload
       },
       balanceEth: (state, action) => {
         state.balanceEth = action.payload;
@@ -75,13 +73,6 @@ export const tokenSlice = createSlice({
   },
   extraReducers: (builder) => {
       builder
-        .addCase(fetchActionsToken.balance.pending, (state) => {
-          state.balance.status = 'loading';
-        })
-        .addCase(fetchActionsToken.balance.fulfilled, (state, action) => {
-          state.balance.status = 'idle';
-          state.balance.value = action.payload;
-        })
         .addCase(fetchActionsToken.allowanceEth.pending, (state) => {
           state.allowanceEth.status = 'loading';
         })

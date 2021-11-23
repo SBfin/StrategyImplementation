@@ -39,19 +39,15 @@ export default function Main(props) {
      dispatch(fetchActionsVault.totalAmounts(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
      
-     dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
+     dispatch(fetchActionsToken.decimals(eth)).then(r => dispatch(tokenSlice.actions.decimalsEth(r.payload)));
+     dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
+
+     dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));
      dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
      dispatch(fetchActionsToken.allowanceEth({vault, account, contract: eth}));
      dispatch(fetchActionsToken.allowanceDai({vault, account, contract: dai}));
 
   }, [vault]);
-
-
-  const ethDecimals = Decimals(eth)
-  const ethBalance = Balance(eth)
-  
-  const daiDecimals = Decimals(dai)
-  const daiBalance = Balance(dai)  
   
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
@@ -62,8 +58,8 @@ export default function Main(props) {
   const onDepositClick = async () => {
     console.log('deposit')
     setLoader(true);
-    const val1 = parseFloat(input1 || 0) * Math.pow(10,ethDecimals)
-    const val2 = parseFloat(input2 || 0) * Math.pow(10,daiDecimals)
+    const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
+    const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
     console.log(vault)
     console.log(val2)
     console.log(typeof val2)
@@ -110,9 +106,8 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) => setInput1(e.target.value) }
           />
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth.value} decimals={ethDecimals} /></label>
+          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
         </div>
-        
         
 
         <div className="element">
@@ -126,14 +121,14 @@ export default function Main(props) {
             onChange={ (e) => setInput2(e.target.value) }
           />
 
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai.value} decimals={daiDecimals} /></label>
+          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai} decimals={tokenStore.decimalsDai} /></label>
         </div>
       
         <div className="element">
           { tokenStore.allowanceEth.value == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(eth, tokenStore.balanceEth.value) }
+            onClick={ () => onApproveClick(eth, tokenStore.balanceEth) }
             disabled={ isButtonDisabled }
           >
             Approve WETH
@@ -142,7 +137,7 @@ export default function Main(props) {
           {tokenStore.allowanceDai.value == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(dai, tokenStore.balanceDai.value) }
+            onClick={ () => onApproveClick(dai, tokenStore.balanceDai) }
             disabled={ isButtonDisabled }
           >
             Approve DAI

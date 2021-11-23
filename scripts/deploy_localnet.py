@@ -29,14 +29,14 @@ def main():
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    eth = deployer.deploy(MockToken, "ETH", "ETH", 18)
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    eth = deployer.deploy(MockToken, "WETH", "WETH", 18)
+    usdc = deployer.deploy(MockToken, "DAI", "DAI", 6)
     #eth = Contract('0x2150e3B32dD7201a73dEc2D7E92f3Ef511c26103')
     #usdc = Contract('0x6951b5Bd815043E3F842c1b026b0Fa888Cc2DD85')
 
-
-    eth.mint(deployer, 100 * 1e18, {"from": deployer })
-    usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
+    accountPers = accounts.load("deployer")
+    eth.mint(accountPers, 100 * 1e18, {"from": deployer })
+    usdc.mint(accountPers, 100000 * 1e6, {"from": deployer })
 
     factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
     print(factory.address)
@@ -67,9 +67,9 @@ def main():
 
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
-    router.mint(
-        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
-    )
+    #router.mint(
+    #    pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
+    #)
 
     #vault = Contract("0xe692Cf21B12e0B2717C4bF647F9768Fa58861c8b")
     vault = deployer.deploy(
@@ -98,3 +98,5 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
+    print(f"Eth address: {eth.address}")
+    print(f"Usdc address: {usdc.address}")
