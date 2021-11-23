@@ -38,9 +38,7 @@ export const fetchActionsToken = {
       'token/fetchBalance',
       async (data) => {
         const { account, contract } = data;
-        console.log(contract)
          const balance = await contract.balanceOf(account);
-         console.log(balance.toString())
          return balance.toString();
     }),
     allowanceEth: createAsyncThunk(
@@ -69,7 +67,6 @@ export const tokenSlice = createSlice({
         state.decimals = action.payload;
       },
       balanceEth: (state, action) => {
-        console.log(action)
         state.balanceEth = action.payload;
       },
       balanceDai: (state, action) => {
