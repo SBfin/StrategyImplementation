@@ -6,6 +6,19 @@ import ERC20ABI from "./abi/MockToken.json";
 import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 
+const initialState = {
+  balance: {
+    value: 0,
+    status: 'idle'
+  },
+  allowance: {
+    value: 0,
+    status: 'idle'
+  },
+  decimals: 0,
+
+};
+
 export const fetchActionsToken = {
     decimals: createAsyncThunk(
       'token/fetchDecimals',
@@ -13,7 +26,51 @@ export const fetchActionsToken = {
          const decimals = await contract.decimals();
          return decimals.toString();
     }),
+    balance: createAsyncThunk(
+      'token/fetchBalance',
+      async (data) => {
+        const { account, contract } = data;
+         const balance = await contract.balanceOf(account);
+         return balance.toString();
+    }),
+    allowance: createAsyncThunk(
+      'token/fetchAllowance',
+      async (data) => {
+        const {vault, account, contract} = data;
+        const allowance = await contract.allowance(account, vault.address);
+        return allowance.toString()
+
+      }
+    )
 };
+
+export const tokenSlice = createSlice({
+  name: 'token',
+  initialState,
+  reducers: {
+      decimals: (state, action) => {
+        state.decimals = action.payload;
+      },
+  },
+  extraReducers: (builder) => {
+      builder
+        .addCase(fetchActionsToken.balance.pending, (state) => {
+          state.balance.status = 'loading';
+        })
+        .addCase(fetchActionsToken.balance.fulfilled, (state, action) => {
+          state.balance.status = 'idle';
+          state.balance.value = action.payload;
+        })
+        .addCase(fetchActionsToken.allowance.pending, (state) => {
+          state.allowance.status = 'loading';
+        })
+        .addCase(fetchActionsToken.allowance.fulfilled, (state, action) => {
+          state.allowance.status = 'idle';
+          state.allowance.value = action.payload;
+        })
+  },
+});
+export default tokenSlice.reducer;
 
 export function Token(address){
     const {account, library, chainId} = useWeb3React()

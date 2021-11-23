@@ -24,7 +24,7 @@ const initialState = {
 
 };
 
-export const fetchActions = {
+export const fetchActionsVault = {
     totalSupply: createAsyncThunk(
       'vault/fetchTotalSupply',
       async (vault) => {
@@ -57,26 +57,26 @@ export const vaultSlice = createSlice({
     },
     extraReducers: (builder) => {
         builder
-          .addCase(fetchActions.totalAmounts.pending, (state) => {
+          .addCase(fetchActionsVault.totalAmounts.pending, (state) => {
             state.totalAmounts.status = 'loading';
           })
-          .addCase(fetchActions.totalAmounts.fulfilled, (state, action) => {
+          .addCase(fetchActionsVault.totalAmounts.fulfilled, (state, action) => {
             state.totalAmounts.status = 'idle';
             state.totalAmounts.value = action.payload;
           })
 
-          .addCase(fetchActions.totalSupply.pending, (state) => {
+          .addCase(fetchActionsVault.totalSupply.pending, (state) => {
             state.totalSupply.status = 'loading';
           })
-          .addCase(fetchActions.totalSupply.fulfilled, (state, action) => {
+          .addCase(fetchActionsVault.totalSupply.fulfilled, (state, action) => {
             state.totalSupply.status = 'idle';
             state.totalSupply.value = action.payload;
           })
 
-          .addCase(fetchActions.balanceOf.pending, (state) => {
+          .addCase(fetchActionsVault.balanceOf.pending, (state) => {
             state.balanceOf.status = 'loading'
           })
-          .addCase(fetchActions.balanceOf.fulfilled, (state, action) => {
+          .addCase(fetchActionsVault.balanceOf.fulfilled, (state, action) => {
             state.balanceOf.status = 'idle'
             state.balanceOf.value = action.payload
           })

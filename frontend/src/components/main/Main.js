@@ -1,11 +1,11 @@
 import Loader from '../loader/Loader';
-import {TokenBalance,Balance,Token,Decimals,Allowance,Approve,fetchActionsToken} from '../eth/TokenBalance';
+import {TokenBalance,Balance,Token,Decimals,Allowance,Approve,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
 import EthBalance from '../eth/EthBalance';
 import {TotalSupply,GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
-import {vaultSlice,fetchActions} from '../eth/vault';
+import {vaultSlice,fetchActionsVault} from '../eth/vault';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
 import {decimalFormat} from '../eth/helpers';
@@ -17,6 +17,7 @@ export default function Main(props) {
   const {account, library, chainId} = useWeb3React();
 
   const vaultStore = useSelector((state) => state.vault);
+  const tokenStore = useSelector((state) => state.token)
   const dispatch = useDispatch();
 
   const isButtonDisabled = props.fetching;
@@ -31,20 +32,22 @@ export default function Main(props) {
      console.log("selected contract: ", vault.address)
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
 
-     dispatch(fetchActions.totalSupply(vault));
-     dispatch(fetchActions.totalAmounts(vault));
-     dispatch(fetchActions.balanceOf({account, vault}));
+     dispatch(fetchActionsVault.totalSupply(vault));
+     dispatch(fetchActionsVault.totalAmounts(vault));
+     dispatch(fetchActionsVault.balanceOf({account, vault}));
+     dispatch(fetchActionsToken.allowance(vault, account, eth))
+
   }, [vault]);
 
   const eth = Token(ContractAddress("eth"))
   const ethDecimals = Decimals(eth)
   const ethBalance = Balance(eth)
-  const ethAllowance = 2
+  console.log(tokenStore)
   
   const dai = Token(ContractAddress("dai"))
   const daiDecimals = Decimals(dai)
   const daiBalance = Balance(dai)
-  const daiAllowance = 2
+  const daiAllowance = fetchActionsToken.allowance(vault, account, dai)
   
   
   const [input1, setInput1] = useState('');
@@ -124,7 +127,7 @@ export default function Main(props) {
         </div>
       
         <div className="element">
-          { ethAllowance == '0' &&
+          { tokenStore.allowance.value == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
             onClick={ () => onApproveClick(eth, ethBalance) }
@@ -141,7 +144,7 @@ export default function Main(props) {
           >
             Approve DAI
           </button>
-          :ethAllowance !='0' && daiAllowance!='0' &&
+          :tokenStore.allowance.value !='0' && daiAllowance!='0' &&
           
           <button
             className={`search-button`}
