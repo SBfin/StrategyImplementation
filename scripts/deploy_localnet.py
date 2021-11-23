@@ -12,10 +12,6 @@ from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialSca
 from math import floor, sqrt
 import time
 
-
-# Uniswap v3 factory on Mainnet
-FACTORY = "0x1F98431c8aD98523631AE4a59f267346ea31F984"
-
 PROTOCOL_FEE = 10000
 MAX_TOTAL_SUPPLY = 1e32
 
@@ -29,7 +25,7 @@ TWAP_DURATION = 60  # 60 seconds
 
 def main():
     deployer = accounts[0]
-    UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
+    UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
@@ -42,12 +38,10 @@ def main():
     eth.mint(deployer, 100 * 1e18, {"from": deployer })
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
 
-    factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
+    factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
     print(factory.address)
-    factory.createPool(eth, usdc, 3000, { "from": deployer, "gas_price": gas_strategy })
-    time.sleep(15)
-
-    pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, usdc, 3000))
+    tx = factory.createPool(eth, usdc, 3000, { "from": deployer, "gas_price": gas_strategy })
+    pool = UniswapV3Core.interface.IUniswapV3Pool(tx.return_value)
 
     inverse = pool.token0() == usdc
     price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
@@ -70,8 +64,8 @@ def main():
     MockToken.at(usdc).approve(
         router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
     )
-    time.sleep(15)
 
+    # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
     router.mint(
         pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}

@@ -10,7 +10,7 @@ Feel free to [join our discord](https://discord.gg/6BY3Fq2) if you have any ques
 Before compiling, run below. The uniswap-v3-periphery package has to be cloned
 otherwise imports don't work.
 
-`brownie pm clone Uniswap/uniswap-v3-periphery@1.0.0`
+`brownie pm install Uniswap/v3-core@1.0.0`
 
 Run tests
 
