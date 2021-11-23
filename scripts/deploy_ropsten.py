@@ -29,26 +29,24 @@ TWAP_DURATION = 60  # 60 seconds
 
 
 def main():
-    deployer = accounts.load("deployer")
+    deployer = accounts.load("6000e057971f9f094145f7f5a088b6a277eb904ec77288ec873aedca9fafcb7f")
     print(deployer)
     UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
     gas_price(gas_strategy)
 
-    eth = Contract('0x7F88e71C8aE4EB91AE678D2dd5dE6d7Bd7d5A019')
-    #MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
-    dai = Contract('0x6c0f5CEf5dCF88F591C97f2BA9ba14B54727aae5')
-    #MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
+    eth = MockToken.deploy("ETH", "ETH", "18", { "from": deployer, "gas_price": '4 gwei' })
+    dai = MockToken.deploy("DAI", "DAI", "6", { "from": deployer, "gas_price": '4 gwei'  })
     
-    #eth.mint(deployer, 100 * 1e18, {"from": deployer, "gas_price": '4 gwei'})
-    #dai.mint(deployer, 100000 * 1e6, {"from": deployer, "gas_price": '4 gwei'})
+    eth.mint(deployer, 100 * 1e18, {"from": deployer, "gas_price": '4 gwei'})
+    dai.mint(deployer, 100000 * 1e6, {"from": deployer, "gas_price": '4 gwei'})
     
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
     
-    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": gas_strategy})
+    factory.createPool(eth, dai, 3000, {"from": deployer, "gas_price": '4 gwei'})
     
-    #time.sleep(15)
+    time.sleep(15)
 
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, dai, 3000))
 
@@ -65,20 +63,20 @@ def main():
         100, {"from": deployer, "gas_price": '4 gwei'}
     )
 
-    #router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
+    router = TestRouter.deploy({"from": deployer, "gas_price": '4 gwei'})
     
-    #eth.approve(
-    #    router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
-    #)
-    #dai.approve(
-    #    router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
-    #)
+    eth.approve(
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
+    )
+    dai.approve(
+        router, 1 << 255, {"from": deployer, "gas_price": '4 gwei'}
+    )
 
-    #max_tick = 887272 // 60 * 60 ## 246
+    max_tick = 887272 // 60 * 60 ## 246
     
-    #router.mint(
-    #    pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": '4 gwei'}
-    #)
+    router.mint(
+        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": '4 gwei'}
+    )
 
     
     vault = AlphaVault.deploy(
