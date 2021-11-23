@@ -1,7 +1,6 @@
 import Loader from '../loader/Loader';
-import {TokenBalance,Balance,Token,Decimals,Allowance,Approve,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
-import EthBalance from '../eth/EthBalance';
-import {TotalSupply,GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
+import {TokenBalance,Token,Approve,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
+import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -24,7 +23,6 @@ export default function Main(props) {
   const isButtonDisabled = props.fetching;
   const vaultContractAddress = ContractAddress("vault")
   const vault = GetVault(vaultContractAddress)
-  const vaultDecimals = Decimals(vault)
   const eth = Token(ContractAddress("eth"))
   const dai = Token(ContractAddress("dai"))
 
@@ -68,7 +66,7 @@ export default function Main(props) {
   }
   const onWithdrawClick = async () => {
     setLoader(true);
-    const val = parseFloat(shares) * Math.pow(10,vaultDecimals)
+    const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
     window.location.reload(false);
   }

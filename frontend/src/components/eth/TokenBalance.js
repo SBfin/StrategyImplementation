@@ -98,42 +98,6 @@ export function Token(address){
     return contract;
 }
 
-export function Decimals(contract){
-  const [decimals, setDecimals] = useState()
-
-  useEffect(async () => {
-    if (!contract) {
-        return
-    }
-    contract.decimals()
-        .then((result) => {
-          console.log("Decimals: ", result.toString())
-          setDecimals(result);
-        }).catch((err) => {
-            console.log(err);
-        })      
-  }, [contract])
-  return decimals;
-}
-
-export function Allowance(contract, vault){
-  const {account} = useWeb3React()
-  const [result, setResult] = useState('0')
-
-  useEffect(() => {
-    if (!contract) {
-        return
-    }
-    contract.allowance(account, vault.address)
-        .then((r) => {
-          setResult(r.toString());
-        }).catch((err) => {
-            console.log(err);
-        })      
-  }, [contract,account])
-  return result;
-}
-
 export async function Approve(contract, vault, balance){
 
   return contract.approve(await vault.address, balance)
@@ -145,28 +109,6 @@ export async function Approve(contract, vault, balance){
     }).catch((err) => {
         console.log(err);
     })      
-}
-
-export function Balance(contract){
-  const {account, library, chainId} = useWeb3React()
-
-  const [balance, setBalance] = useState()
-
-  useEffect(async () => {
-    if (!account || !contract) {
-        return
-    }
-    contract.balanceOf(account)
-        .then((balance) => {
-          setBalance(balance.toString())
-        }).catch((err) => {
-          console.log(err);
-          setBalance(null);
-        })
-  
-  }, [account, contract])
-
-  return balance;
 }
 
 export function TokenBalance({balance, decimals}){
