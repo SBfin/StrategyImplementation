@@ -86,7 +86,6 @@ export default vaultSlice.reducer;
 
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
-
   const [vault, setVault] = useState()
 
   useEffect(() => {
@@ -112,9 +111,14 @@ export function GetVault(address) {
 
 export async function Deposit(vault, val1, val2) {
   const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-  
-  return vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0]).then((r) => {
+  console.log('deposit - vault.js')
+  console.log(accounts[0])
+  console.log(val1)
+  console.log(val2)
+
+  return vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], {from: accounts[0], gasLimit: 1000000}).then((r) => {
      //setResult(r.toString());
+     console.log('deposit function')
      console.log(r);
      return r.wait();
   }).then((r) => {

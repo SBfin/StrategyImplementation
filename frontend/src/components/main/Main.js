@@ -39,12 +39,12 @@ export default function Main(props) {
   const eth = Token(ContractAddress("eth"))
   const ethDecimals = Decimals(eth)
   const ethBalance = Balance(eth)
-  const ethAllowance = Allowance(eth, vault)
+  const ethAllowance = 2
   
   const dai = Token(ContractAddress("dai"))
   const daiDecimals = Decimals(dai)
   const daiBalance = Balance(dai)
-  const daiAllowance = Allowance(dai, vault)
+  const daiAllowance = 2
   
   
   const [input1, setInput1] = useState('');
@@ -59,10 +59,10 @@ export default function Main(props) {
     const val1 = parseFloat(input1 || 0) * Math.pow(10,ethDecimals)
     const val2 = parseFloat(input2 || 0) * Math.pow(10,daiDecimals)
     console.log(vault)
-    console.log(val1)
     console.log(val2)
-    await Deposit(vault, val2, val1)
-    //window.location.reload(false);
+    console.log(typeof val2)
+    await Deposit(vault, val1, val2)
+    setLoader(false);
   }
   const onWithdrawClick = async () => {
     setLoader(true);

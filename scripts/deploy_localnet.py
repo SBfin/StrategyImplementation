@@ -25,25 +25,26 @@ TWAP_DURATION = 60  # 60 seconds
 
 def main():
     deployer = accounts[0]
+    accountPers = accounts.load("deployer")
     UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    eth = deployer.deploy(MockToken, "ETH", "ETH", 18)
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    weth = deployer.deploy(MockToken, "WETH", "WETH", 18)
+    dai = deployer.deploy(MockToken, "DAI", "DAI", 6)
     #eth = Contract('0x2150e3B32dD7201a73dEc2D7E92f3Ef511c26103')
     #usdc = Contract('0x6951b5Bd815043E3F842c1b026b0Fa888Cc2DD85')
 
-
-    eth.mint(deployer, 100 * 1e18, {"from": deployer })
-    usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
+    
+    weth.mint(accountPers, 100 * 1e18, {"from": deployer })
+    dai.mint(accountPers, 100000 * 1e6, {"from": deployer })
 
     factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
     print(factory.address)
-    tx = factory.createPool(eth, usdc, 3000, { "from": deployer, "gas_price": gas_strategy })
+    tx = factory.createPool(weth, dai, 3000, { "from": deployer, "gas_price": gas_strategy })
     pool = UniswapV3Core.interface.IUniswapV3Pool(tx.return_value)
 
-    inverse = pool.token0() == usdc
+    inverse = pool.token0() == dai
     price = 1e18 / 2000e6 if inverse else 2000e6 / 1e18
 
     # Set ETH/USDC price to 2000
@@ -58,10 +59,10 @@ def main():
 
     router = deployer.deploy(TestRouter)
     #router = Contract("0xa3B53dDCd2E3fC28e8E130288F2aBD8d5EE37472")
-    MockToken.at(eth).approve(
+    MockToken.at(weth).approve(
         router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
     )
-    MockToken.at(usdc).approve(
+    MockToken.at(dai).approve(
         router, 1 << 255, {"from": deployer, "gas_price": gas_strategy}
     )
 
@@ -98,4 +99,3 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
-    
