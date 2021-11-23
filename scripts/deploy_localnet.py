@@ -25,7 +25,7 @@ TWAP_DURATION = 60  # 60 seconds
 
 def main():
     deployer = accounts[0]
-    UniswapV3Core = project.load("Uniswap/uniswap-v3-core@1.0.0")
+    UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
