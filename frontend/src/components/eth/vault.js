@@ -24,6 +24,10 @@ const initialState = {
 
 };
 
+/*function getBalance0() public view returns (uint256) {
+        return token0.balanceOf(address(this)).sub(accruedProtocolFees0);
+    }*/
+
 export const fetchActionsVault = {
     totalSupply: createAsyncThunk(
       'vault/fetchTotalSupply',

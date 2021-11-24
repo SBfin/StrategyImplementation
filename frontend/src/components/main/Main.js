@@ -57,7 +57,8 @@ export default function Main(props) {
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    await Deposit(vault, val1, val2)
+    const rep = await Deposit(vault, val1, val2)
+    console.log(rep)
     setLoader(false);
   }
   const onWithdrawClick = async () => {
@@ -120,7 +121,7 @@ export default function Main(props) {
             onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: tokenStore.balanceEth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve WETH
+            Approve WETH 
           </button>
          }
           {tokenStore.allowanceDai == '0' ?
@@ -129,7 +130,7 @@ export default function Main(props) {
             onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: tokenStore.balanceDai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve DAI
+            Approve DAI 
           </button>
           :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
           
@@ -148,6 +149,30 @@ export default function Main(props) {
         }
         
       </div>
+      
+      
+      <div className="main-container">
+        <div className="element">
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
+            <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
+        </div>
+        <div className="element">
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
+            <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
+        </div>
+
+          
+
+          <div className="element">
+          <button
+            className={`search-button`}
+          >
+            Nothing
+          </button> 
+          </div>
+      </div>
+
+
       { vaultStore.balanceOf.value!==0 &&
       <div className="main-container">
         <div className="element">
