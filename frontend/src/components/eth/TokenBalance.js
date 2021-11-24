@@ -12,7 +12,9 @@ const initialState = {
   allowanceEth: 0,
   allowanceDai: 0,
   decimalsEth: 0,
-  decimalsDai: 0
+  decimalsDai: 0,
+  approveEth: 0,
+  approveDai: 0
 
 };
 
@@ -34,8 +36,15 @@ export const fetchActionsToken = {
       'token/fetchAllowance',
       async (data) => {
         const {vault, account, contract} = data;
-        const allowanceEth = await contract.allowance(account, vault.address);
-        return allowanceEth.toString()
+        const allowance = await contract.allowance(account, vault.address);
+        return allowance.toString()
+    }),
+    approve: createAsyncThunk(
+      'token/fetchApprove',
+      async(data) => {
+        const {vault, contract, balance} = data;
+        const approve = await contract.approve(vault.address, balance);
+        return approve.toString();
     }),
 };
 
@@ -61,6 +70,12 @@ export const tokenSlice = createSlice({
       allowanceDai: (state, action) => {
         state.allowanceDai = action.payload;
       },
+      approveEth: (state, action) => {
+        state.approveEth = action.payload;
+      },
+      approveDai: (state, action) => {
+        state.approveDai = action.payload;
+      }
   },
 });
 export default tokenSlice.reducer;
@@ -96,19 +111,6 @@ export function Token(address){
     }, [account, library, chainId])
 
     return contract;
-}
-
-export async function Approve(contract, vault, balance){
-
-  return contract.approve(await vault.address, balance)
-    .then((r) => {
-      return r.wait();
-    }).then((r) => {
-      console.log("confirmed");
-      console.log(r);
-    }).catch((err) => {
-        console.log(err);
-    })      
 }
 
 export function TokenBalance({balance, decimals}){

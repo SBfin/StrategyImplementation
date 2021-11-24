@@ -54,13 +54,9 @@ export default function Main(props) {
   const [loader, setLoader] = useState(false);
 
   const onDepositClick = async () => {
-    console.log('deposit')
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    console.log(vault)
-    console.log(val2)
-    console.log(typeof val2)
     await Deposit(vault, val1, val2)
     setLoader(false);
   }
@@ -126,7 +122,7 @@ export default function Main(props) {
           { tokenStore.allowanceEth == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(eth, tokenStore.balanceEth) }
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: input1})).then(r => dispatch(tokenSlice.actions.approveEth(r.payload)))}
             disabled={ isButtonDisabled }
           >
             Approve WETH
@@ -135,7 +131,7 @@ export default function Main(props) {
           {tokenStore.allowanceDai == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(dai, tokenStore.balanceDai) }
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: input2})).then(r => dispatch(tokenSlice.actions.approveDai(r.payload)))}
             disabled={ isButtonDisabled }
           >
             Approve DAI
