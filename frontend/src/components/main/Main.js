@@ -1,5 +1,5 @@
 import Loader from '../loader/Loader';
-import {TokenBalance,Token,Approve,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
+import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
 import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
@@ -54,13 +54,9 @@ export default function Main(props) {
   const [loader, setLoader] = useState(false);
 
   const onDepositClick = async () => {
-    console.log('deposit')
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    console.log(vault)
-    console.log(val2)
-    console.log(typeof val2)
     await Deposit(vault, val1, val2)
     setLoader(false);
   }
@@ -68,11 +64,6 @@ export default function Main(props) {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
-    window.location.reload(false);
-  }
-  const onApproveClick = async (contract, balance) => {
-    setLoader(true);
-    await Approve(contract, vault, balance)
     window.location.reload(false);
   }
 
@@ -126,7 +117,7 @@ export default function Main(props) {
           { tokenStore.allowanceEth == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(eth, tokenStore.balanceEth) }
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: input1})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
             disabled={ isButtonDisabled }
           >
             Approve WETH
@@ -135,7 +126,7 @@ export default function Main(props) {
           {tokenStore.allowanceDai == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => onApproveClick(dai, tokenStore.balanceDai) }
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: input2})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
             disabled={ isButtonDisabled }
           >
             Approve DAI
