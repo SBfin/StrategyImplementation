@@ -1,5 +1,5 @@
 import Loader from '../loader/Loader';
-import {TokenBalance,Token,Approve,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
+import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
 import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
@@ -64,11 +64,6 @@ export default function Main(props) {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
-    window.location.reload(false);
-  }
-  const onApproveClick = async (contract, balance) => {
-    setLoader(true);
-    await Approve(contract, vault, balance)
     window.location.reload(false);
   }
 
