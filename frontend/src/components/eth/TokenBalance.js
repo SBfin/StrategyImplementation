@@ -13,8 +13,6 @@ const initialState = {
   allowanceDai: 0,
   decimalsEth: 0,
   decimalsDai: 0,
-  approveEth: 0,
-  approveDai: 0
 
 };
 
@@ -69,12 +67,6 @@ export const tokenSlice = createSlice({
       },
       allowanceDai: (state, action) => {
         state.allowanceDai = action.payload;
-      },
-      approveEth: (state, action) => {
-        state.approveEth = action.payload;
-      },
-      approveDai: (state, action) => {
-        state.approveDai = action.payload;
       }
   },
 });
