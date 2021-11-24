@@ -4,10 +4,9 @@ import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
-import {vaultSlice,fetchActionsVault} from '../eth/vault';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat} from '../eth/helpers';
+import {decimalFormat, fetchAll} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -32,21 +31,9 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
-     dispatch(fetchActionsVault.totalSupply(vault));
-     dispatch(fetchActionsVault.totalAmounts(vault));
-     dispatch(fetchActionsVault.balanceOf({account, vault}));
-     
-     dispatch(fetchActionsToken.decimals(eth)).then(r => dispatch(tokenSlice.actions.decimalsEth(r.payload)));
-     dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
-
-     dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));
-     dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
-     dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
-     dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
-
+     fetchAll(account, vault, eth, dai, dispatch)
   }, [vault]);
-  
+
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
   const [shares, setShares] = useState('');
@@ -70,7 +57,6 @@ export default function Main(props) {
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
-      <span>Total Amounts: {vaultStore.totalAmounts.value[0]} eth, {vaultStore.totalAmounts.value[1]} dai</span>
 
       { vaultContractAddress==null &&
       <div className="main-container" style={{background: 'red'}}>
@@ -82,7 +68,14 @@ export default function Main(props) {
         
 
         <div className="element">
-          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault Supply: 
+          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault Supply:
+          <span style={{color: 'green'}}>
+              {decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} eth,
+                    {decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} dai</span>
+          </label>
+        </div>
+        <div className="element">
+          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares:
           <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
         </div>
         
@@ -173,7 +166,7 @@ export default function Main(props) {
       </div>
 
 
-      { vaultStore.balanceOf.value!==0 &&
+      { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
         <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
