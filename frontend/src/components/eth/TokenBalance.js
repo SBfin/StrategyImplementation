@@ -41,8 +41,9 @@ export const fetchActionsToken = {
       'token/fetchApprove',
       async(data) => {
         const {vault, contract, balance} = data;
-        const approve = await contract.approve(vault.address, balance);
-        return approve.toString();
+        const approveTx = await contract.approve(vault.address, balance);
+        const result = await approveTx.wait(); //wait for the tx to be confirmed on chain
+        return result.status;
     }),
 };
 
@@ -87,16 +88,6 @@ export function Token(address){
       const signer = library.getSigner(account).connectUnchecked()
       const c = new Contract(address, ERC20ABI.abi, signer)
 
-      const fromMe = c.filters.Transfer(account, null)
-      library.on(fromMe, (from, to, amount, event) => {
-        console.log('Transfer|sent', {from, to, amount, event})
-        //mutate(undefined, true)
-      })
-      const toMe = c.filters.Transfer(null, account)
-      library.on(toMe, (from, to, amount, event) => {
-        console.log('Transfer|received', {from, to, amount, event})
-        //mutate(undefined, true)
-      })
       setContract(c)
 
       

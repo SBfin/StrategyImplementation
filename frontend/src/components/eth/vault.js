@@ -5,7 +5,10 @@ import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
 import { decimalFormat } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-
+import {fetchAll} from '../eth/helpers';
+import { useDispatch } from 'react-redux';
+import {Token} from '../eth/TokenBalance';
+import {ContractAddress} from '../../helpers/connector';
 
 const initialState = {
   totalSupply: {
@@ -86,6 +89,9 @@ export default vaultSlice.reducer;
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
   const [vault, setVault] = useState()
+  const eth = Token(ContractAddress("eth"))
+  const dai = Token(ContractAddress("dai"))
+  const dispatch = useDispatch()
 
   useEffect(() => {
     console.log("loading contract")
@@ -96,15 +102,17 @@ export function GetVault(address) {
     const signer = library.getSigner(account).connectUnchecked()
     const contract = new Contract(address, UniVault.abi, signer)
 
-    const filterFrom = contract.filters.Transfer(account);
-    contract.on(filterFrom, (from, to, amount, event) => {
-      // The `from` will always be the signer address,  more info: https://docs.ethers.io/v5/api/contract/example/
-      // TODO: check and reload things from here
-        console.log(from, to, amount, event)
-    });
+    // more info: https://docs.ethers.io/v5/api/contract/example/
+    if (eth && dai && contract && account && dispatch){
+        const filterTo = contract.filters.Transfer(null, account)
+        library.on(filterTo, (from, to, amount, event) => {
+            console.log('Vault|Interaction', {from, to, amount, event})
+            fetchAll(account, contract, eth, dai, dispatch)
+        })
+    }
 
     setVault(contract)
-  }, [address, library, chainId])
+  }, [address, library, chainId, eth, dai])
   return vault
 }
 
