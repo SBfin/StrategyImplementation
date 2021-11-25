@@ -182,13 +182,7 @@ export default function Main(props) {
 
           
 
-          <div className="element">
-          <button
-            className={`search-button`}
-          >
-            Nothing
-          </button> 
-          </div>
+          
       </div>
 
 
