@@ -130,56 +130,62 @@ export default function Main(props) {
       </div>
       
       
-      <div className="main-container">
+      <div className="row main-container">
 
-      <div className="element">
-          <label className="paste-label" class="fs-2" style={{textAlign: 'center', width: "100%"}}>Holdings</label>
-      </div>
-        <div className="element">
-            <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
-            <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
-        </div>
-        <div className="element">
-            <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
-            <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
-        </div>
-        <div className="element">
-            <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
-            <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai))}</span></label>
-        </div>
-        <div className="element">
-          <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
-          <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
-        </div>
+        <div className="col-6">
+          <div className="element">
+              <label className="paste-label fs-2"  style={{textAlign: 'center', width: "100%"}}>Holdings</label>
+          </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
+                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
+                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
+                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai))}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
+              <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Deposit Cap</label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
+                <span style={{color: 'green'}}>{((vaultStore.totalSupply.value/vaultStore.maxTotalSupply.value) * 100).toFixed(2)}%</span></label>
+            </div>
 
-        <div className="element">
-          <label className="paste-label" class="fs-2" style={{textAlign: 'center', width: "100%"}}>Deposit Cap</label>
-      </div>
-        <div className="element">
-            <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
-            <span style={{color: 'green'}}>{((vaultStore.totalSupply.value/vaultStore.maxTotalSupply.value) * 100).toFixed(2)}%</span></label>
-        </div>
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Vault position</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Base order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.baseOrder.value[0] + ' - ' + vaultStore.baseOrder.value[1]} </span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Limit order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.limitOrder.value[0] + ' - ' + vaultStore.limitOrder.value[1]} </span></label>
+            </div>
 
-        <div className="element">
-          <label className="paste-label" class="fs-2" style={{textAlign: 'center', width: "100%"}}>Vault position</label>
-        </div>
-        <div className="element">
-          <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Base order: &nbsp;
-          <span style={{color: 'green'}}> {vaultStore.baseOrder.value[0] + ' - ' + vaultStore.baseOrder.value[1]} </span></label>
-        </div>
-        <div className="element">
-          <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Limit order: &nbsp;
-          <span style={{color: 'green'}}> {vaultStore.limitOrder.value[0] + ' - ' + vaultStore.limitOrder.value[1]} </span></label>
-        </div>
-
-        <div className="element">
-          <label className="paste-label" class="fs-2" style={{textAlign: 'center', width: "100%"}}>Contracts</label>
-        </div>
-        <div className="element">
-          <label className="paste-label" class="fs-6" style={{textAlign: 'center', width: "100%"}}>Vault: &nbsp;
-          <span style={{color: 'green'}}> {vaultStore.address}</span></label>
-        </div>
-
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Contracts</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Vault: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.address}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Strategy: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.strategyAddress.value}</span></label>
+            </div>
+          </div>
           
 
           

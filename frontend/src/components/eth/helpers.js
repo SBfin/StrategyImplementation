@@ -26,6 +26,7 @@ export function calculateRatio(num_1, num_2){
 export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
      dispatch(vaultSlice.actions.address(vault.address))
+     dispatch(fetchActionsVault.strategyAddress(vault));
      dispatch(fetchActionsVault.totalSupply(vault));
      dispatch(fetchActionsVault.totalAmounts(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));

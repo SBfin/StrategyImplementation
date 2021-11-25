@@ -37,6 +37,10 @@ const initialState = {
   },
   decimals: 0,
   address: 0,
+  strategyAddress: {
+    value: 0,
+    status: 'idle'
+  }
 
 };
 
@@ -79,8 +83,13 @@ export const fetchActionsVault = {
       async(vault) => {
         const maxTotalSupply = await vault.maxTotalSupply.call()
         return maxTotalSupply.toString()
-      }
-    )
+    }),
+    strategyAddress: createAsyncThunk(
+      'vault/strategyAddress',
+      async(vault) => {
+        const strategyAddress = await vault.strategy.call()
+        return strategyAddress.toString();
+    }),
 };
 
 export const vaultSlice = createSlice({
@@ -92,7 +101,7 @@ export const vaultSlice = createSlice({
         },
         address: (state, action) => {
           state.address = action.payload;
-        }
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -139,6 +148,13 @@ export const vaultSlice = createSlice({
           .addCase(fetchActionsVault.maxTotalSupply.fulfilled, (state, action) => {
             state.maxTotalSupply.status = 'idle'
             state.maxTotalSupply.value = action.payload
+          })
+          .addCase(fetchActionsVault.strategyAddress.pending, (state) => {
+            state.strategyAddress.status = 'loading'
+          })
+          .addCase(fetchActionsVault.strategyAddress.fulfilled, (state, action) => {
+            state.strategyAddress.status = 'idle'
+            state.strategyAddress.value = action.payload
           })
     },
 });
