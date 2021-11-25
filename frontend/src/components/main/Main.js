@@ -1,6 +1,6 @@
 import Loader from '../loader/Loader';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
-import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
+import {GetVault,GetStrategy, Deposit,Withdraw, vaultSlice} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -31,11 +31,13 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-     fetchAll(account, vault, eth, dai, dispatch)
-  }, [vault]);
+    fetchAll(account, vault, eth, dai, dispatch)
+    }, [vault]);
 
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
+  const [disable, setDisable] = useState(false)
+  const [messageError, setMessageError] = useState('')
   const [shares, setShares] = useState('');
 
   const [loader, setLoader] = useState(false);
@@ -73,7 +75,16 @@ export default function Main(props) {
             className="address-input"
             disabled={ props.fetching }
             value={input1}
-            onChange={ (e) => setInput1(e.target.value) }
+            onChange={ (e) =>  {
+              setInput1(e.target.value)
+              if(vaultStore.balanceOf.value !== 0){
+                 setInput2(e.target.value * vaultStore.ratioToken);
+              } 
+              if(tokenStore.balanceEth < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsEth)) {
+                setDisable(true);
+                setMessageError('Insufficient ETH Balance')
+              } else setDisable(false)
+            }}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
         </div>
@@ -87,7 +98,16 @@ export default function Main(props) {
             className="address-input"
             disabled={ props.fetching }
             value={input2}
-            onChange={ (e) => setInput2(e.target.value) }
+            onChange={ (e) => {
+              setInput2(e.target.value)
+              if(vaultStore.balanceOf.value !== 0){
+                setInput1(e.target.value / vaultStore.ratioToken);
+              }
+              if(tokenStore.balanceDai < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsDai)) {
+                setDisable(true);
+                setMessageError('Insufficient DAI Balance')
+              } else setDisable(false)
+            }}
           />
 
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai} decimals={tokenStore.decimalsDai} /></label>
@@ -114,11 +134,12 @@ export default function Main(props) {
           :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
           
           <button
-            className={`search-button`}
+            className="btn btn-primary col-12 btn-lg"
             onClick={ onDepositClick }
-            disabled={ isButtonDisabled }
+            disabled={ disable }
           >
-            Deposit
+            {disable && <span>{messageError}</span>  }
+            {!disable && <span>Deposit</span>}
           </button> }
         </div>
         { loader &&  
@@ -213,7 +234,7 @@ export default function Main(props) {
 
           <div className="element">
           <button
-            className={`search-button`}
+            className="btn btn-primary col-12 btn-lg"
             onClick={ onWithdrawClick }
           >
             Withdraw
