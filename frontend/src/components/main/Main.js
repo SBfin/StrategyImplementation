@@ -6,7 +6,7 @@ import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat, fetchAll} from '../eth/helpers';
+import {decimalFormat, fetchAll, calculateRatio} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -44,7 +44,7 @@ export default function Main(props) {
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    await Deposit(vault, val1, val2)
+    Deposit(vault, val1, val2)
     setLoader(false);
   }
   const onWithdrawClick = async () => {
@@ -64,19 +64,6 @@ export default function Main(props) {
       </div>
       }
       <div className="main-container">
-        
-
-        <div className="element">
-          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault Supply:
-          <span style={{color: 'green'}}>
-              {decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} eth,
-                    {decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} dai</span>
-          </label>
-        </div>
-        <div className="element">
-          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares:
-          <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
-        </div>
         
         <div className="element">
           <label className="paste-label" style={{lineHeight: '3em'}}>WETH</label>
@@ -113,7 +100,7 @@ export default function Main(props) {
             onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: tokenStore.balanceEth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve WETH
+            Approve WETH 
           </button>
          }
           {tokenStore.allowanceDai == '0' ?
@@ -122,7 +109,7 @@ export default function Main(props) {
             onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: tokenStore.balanceDai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve DAI
+            Approve DAI 
           </button>
           :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
           
@@ -141,6 +128,70 @@ export default function Main(props) {
         }
         
       </div>
+      
+      
+      <div className="row main-container">
+
+        <div className="col-6">
+          <div className="element">
+              <label className="paste-label fs-2"  style={{textAlign: 'center', width: "100%"}}>Holdings</label>
+          </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
+                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
+                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
+                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai))}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
+              <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Deposit Cap</label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
+                <span style={{color: 'green'}}>{((vaultStore.totalSupply.value/vaultStore.maxTotalSupply.value) * 100).toFixed(2)}%</span></label>
+            </div>
+
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Vault position</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Base order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.baseOrder.value[0] + ' - ' + vaultStore.baseOrder.value[1]} </span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Limit order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.limitOrder.value[0] + ' - ' + vaultStore.limitOrder.value[1]} </span></label>
+            </div>
+
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Contracts</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Vault: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.address}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Strategy: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.strategyAddress.value}</span></label>
+            </div>
+          </div>
+          
+
+          
+      </div>
+
+
       { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
         <div className="element">

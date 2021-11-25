@@ -12,11 +12,27 @@ export function decimalFormat(number, decimals) {
     return Math.round(parseFloat(formatUnits(number, parseInt(decimals))) * 100) / 100;
 }
 
+export function calculateRatio(num_1, num_2){
+    for(let i=num_2; i>1; i--) {
+        if((num_1 % i) == 0 && (num_2 % i) == 0) {
+            num_1=num_1/i;
+            num_2=num_2/i;
+        }
+    }
+    var ratio = num_1+":"+num_2;
+    return ratio;
+}
+
 export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
+     dispatch(vaultSlice.actions.address(vault.address))
+     dispatch(fetchActionsVault.strategyAddress(vault));
      dispatch(fetchActionsVault.totalSupply(vault));
      dispatch(fetchActionsVault.totalAmounts(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
+     dispatch(fetchActionsVault.baseOrder(vault));
+     dispatch(fetchActionsVault.limitOrder(vault));
+     dispatch(fetchActionsVault.maxTotalSupply(vault));
 
      dispatch(fetchActionsToken.decimals(eth)).then(r => dispatch(tokenSlice.actions.decimalsEth(r.payload)));
      dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
