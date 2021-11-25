@@ -4,6 +4,8 @@ import {fetchActionsToken, tokenSlice, Token} from '../eth/TokenBalance';
 import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
 import {ContractAddress} from '../../helpers/connector';
 import { useWeb3React } from '@web3-react/core'
+import { createStore} from 'redux'
+
 
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
@@ -32,7 +34,6 @@ export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(vaultSlice.actions.address(vault.address))
      dispatch(fetchActionsVault.strategyAddress(vault));
      dispatch(fetchActionsVault.totalSupply(vault));
-     dispatch(fetchActionsVault.totalAmounts(vault)).then(r => dispatch(vaultSlice.actions.ratioToken(r.payload[0] / r.payload[1])));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
      dispatch(fetchActionsVault.baseOrder(vault));
      dispatch(fetchActionsVault.limitOrder(vault));
@@ -40,6 +41,8 @@ export function fetchAll(account, vault, eth, dai, dispatch) {
 
      dispatch(fetchActionsToken.decimals(eth)).then(r => dispatch(tokenSlice.actions.decimalsEth(r.payload)));
      dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
+
+     dispatch(fetchActionsVault.totalAmounts(vault)).then(r => dispatch(tokenSlice.actions.ratioToken(r.payload)));
 
      dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));
      dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));

@@ -36,8 +36,8 @@ export default function Main(props) {
 
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
-  const [disable, setDisable] = useState(false)
-  const [messageError, setMessageError] = useState('')
+  const [disable, setDisable] = useState(true)
+  const [messageError, setMessageError] = useState('Deposit')
   const [shares, setShares] = useState('');
 
   const [loader, setLoader] = useState(false);
@@ -78,7 +78,7 @@ export default function Main(props) {
             onChange={ (e) =>  {
               setInput1(e.target.value)
               if(vaultStore.balanceOf.value !== 0){
-                 setInput2(e.target.value * vaultStore.ratioToken);
+                 setInput2(e.target.value * tokenStore.ratioToken);
               } 
               if(tokenStore.balanceEth < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsEth)) {
                 setDisable(true);
@@ -101,7 +101,7 @@ export default function Main(props) {
             onChange={ (e) => {
               setInput2(e.target.value)
               if(vaultStore.balanceOf.value !== 0){
-                setInput1(e.target.value / vaultStore.ratioToken);
+                setInput1(e.target.value / tokenStore.ratioToken);
               }
               if(tokenStore.balanceDai < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsDai)) {
                 setDisable(true);

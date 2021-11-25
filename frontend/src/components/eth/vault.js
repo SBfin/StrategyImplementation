@@ -41,7 +41,6 @@ const initialState = {
   },
   decimals: 0,
   address: 0,
-  ratioToken: 0,
 
 };
 
@@ -103,9 +102,6 @@ export const vaultSlice = createSlice({
         address: (state, action) => {
           state.address = action.payload;
         },
-        ratioToken: (state, action) => {
-          state.ratioToken = action.payload;
-        }
     },
     extraReducers: (builder) => {
         builder

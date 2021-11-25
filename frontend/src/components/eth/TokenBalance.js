@@ -5,6 +5,7 @@ import {Contract} from "@ethersproject/contracts";
 import ERC20ABI from "./abi/MockToken.json";
 import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {decimalFormat} from '../eth/helpers';
 
 const initialState = {
   balanceEth: 0,
@@ -13,6 +14,7 @@ const initialState = {
   allowanceDai: 0,
   decimalsEth: 0,
   decimalsDai: 0,
+  ratioToken: 0,
 
 };
 
@@ -68,6 +70,12 @@ export const tokenSlice = createSlice({
       },
       allowanceDai: (state, action) => {
         state.allowanceDai = action.payload;
+      },
+      ratioToken: (state, action) => {
+        console.log(action)
+        console.log(state.decimalsDai)
+        state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
+        console.log(state.ratioToken)
       }
   },
 });
