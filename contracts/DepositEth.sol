@@ -33,7 +33,8 @@ contract DepositEth is
     AlphaVault public immutable vault;
     address public immutable weth;
     uint256 public amount1Desired;
-    
+    IERC20 public token0;
+
     constructor(
         address _vault,
         address _weth
@@ -42,6 +43,8 @@ contract DepositEth is
         vault = AlphaVault(_vault);
         weth = _weth;
     }
+
+    
 
     //Eth is token 1
     function depositEth(
@@ -60,27 +63,32 @@ contract DepositEth is
         )
         
         {   
+            
             //Converting user eth to weth
             //Depositing eth in IWETH9 contract
             IWETH9(weth).deposit{value : msg.value}();
+            token0 = IERC20(vault.token0());
 
             //Amount desired is the weth balance of this contract
             amount1Desired = IWETH9(weth).balanceOf(address(this));
 
-            //Approving amount desired for this contract
-            IWETH9(weth).approve(address(this), amount1Desired);
-            
-            //Pull in token 0
-            if (amount0Desired > 0) vault.token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+            //Getting token0
+            vault.token0().approve(address(vault), amount0Desired);
+            if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
 
-            //now vault has weth
-            vault.deposit(
+            //Approving amount desired for this contract
+            IWETH9(weth).approve(address(vault), amount1Desired);
+            vault.token0().approve(address(vault), amount0Desired);
+            
+            vault.deposit(  
                 amount0Desired,
                 amount1Desired,
                 amount0Min,
                 amount1Min,
                 to
             );
+
+
         }
 
 }

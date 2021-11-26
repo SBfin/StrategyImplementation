@@ -31,15 +31,16 @@ def main():
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    weth = deployer.deploy(MockWETH9)
     usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    weth = deployer.deploy(MockWETH9)
+    
 
     #eth.mint(deployer, 100 * 1e18, {"from": deployer })
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
 
     factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
     print(factory.address)
-    tx = factory.createPool(usdc, weth, 3000, { "from": deployer, "gas_price": gas_strategy })
+    tx = factory.createPool(weth, usdc, 3000, { "from": deployer, "gas_price": gas_strategy })
     pool = UniswapV3Core.interface.IUniswapV3Pool(tx.return_value)
     
     vault = deployer.deploy(
@@ -50,11 +51,18 @@ def main():
         gas_price=gas_strategy,
     )
 
+    print("vault token 0 : " + str(vault.token0()))
+    print("vault token 1 : " + str(vault.token1()))
+    print("usdc address : " + str(usdc.address))
+    print("weth address : " + str(weth.address))
+    
     depositContract = deployer.deploy(
         DepositEth,
         vault,
         weth.address
     )
+
+    usdc.approve(depositContract, 1000e6)
 
     depositContract.depositEth(
         1000e6,
@@ -62,8 +70,9 @@ def main():
         9e17,
         deployer,
         { "from": deployer, "value": 1e18})
-
+    
     print("weth " + str(weth.balanceOf(depositContract)))
     print("usdc " + str(usdc.balanceOf(depositContract)))
-    
+    print("shares in deposit " + str(vault.balanceOf(depositContract)))
+    print("shares in deployer  " + str(vault.balanceOf(deployer)))
     
