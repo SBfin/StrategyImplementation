@@ -2,6 +2,7 @@
 
 pragma solidity 0.7.6;
 
+import "../interfaces/external/IWETH9.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -88,6 +89,7 @@ contract AlphaVault is
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(IUniswapV3Pool(_pool).token0());
         token1 = IERC20(IUniswapV3Pool(_pool).token1());
+
         tickSpacing = IUniswapV3Pool(_pool).tickSpacing();
 
         protocolFee = _protocolFee;
@@ -96,7 +98,6 @@ contract AlphaVault is
 
         require(_protocolFee < 1e6, "protocolFee");
     }
-
     /**
      * @notice Deposits tokens in proportion to the vault's current holdings.
      * @dev These tokens sit in the vault and are not used for liquidity on
@@ -112,6 +113,7 @@ contract AlphaVault is
      * @return amount0 Amount of token0 deposited
      * @return amount1 Amount of token1 deposited
      */
+
     function deposit(
         uint256 amount0Desired,
         uint256 amount1Desired,
@@ -144,6 +146,7 @@ contract AlphaVault is
         // Pull in tokens from sender
         if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
         if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
+
 
         // Mint shares to recipient
         _mint(to, shares);

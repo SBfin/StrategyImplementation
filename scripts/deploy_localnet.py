@@ -71,7 +71,6 @@ def main():
         pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
     )
 
-    #vault = Contract("0xe692Cf21B12e0B2717C4bF647F9768Fa58861c8b")
     vault = deployer.deploy(
         AlphaVault,
         pool,
@@ -79,8 +78,7 @@ def main():
         MAX_TOTAL_SUPPLY,
         gas_price=gas_strategy,
     )
-
-    #strategy = Contract("")
+    
     strategy = deployer.deploy(
         PassiveStrategy,
         vault,
