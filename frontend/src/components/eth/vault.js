@@ -35,12 +35,12 @@ const initialState = {
     value: 0,
     status: 'idle'
   },
-  decimals: 0,
-  address: 0,
   strategyAddress: {
     value: 0,
     status: 'idle'
-  }
+  },
+  decimals: 0,
+  address: 0,
 
 };
 
