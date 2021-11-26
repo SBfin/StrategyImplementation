@@ -6,7 +6,7 @@ import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat, fetchAll, calculateRatio} from '../eth/helpers';
+import {decimalFormat, fetchAll, calculateRatio, validateNumber} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -55,6 +55,9 @@ export default function Main(props) {
     await Withdraw(vault, val)
     window.location.reload(false);
   }
+  const firstDeposit = () => {
+    return Number(vaultStore.balanceOf.value) !== 0
+  }
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
@@ -77,14 +80,16 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              if(vaultStore.balanceOf.value !== 0){
-                 setInput2(e.target.value * tokenStore.ratioToken);
-              } 
-              if(tokenStore.balanceEth < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsEth)) {
+              const validate = validateNumber(e.target.value, e.target.value / tokenStore.ratioToken, 
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
+              if(validate){
                 setDisable(true);
-                setMessageError('Insufficient ETH Balance')
-              } else setDisable(false)
-            }}
+                setMessageError(validate)
+              } else {
+                setDisable(false)
+                firstDeposit ? setInput2(e.target.value / tokenStore.ratioToken) : console.log('first Deposit')
+              }}}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
         </div>
@@ -100,14 +105,16 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              if(vaultStore.balanceOf.value !== 0){
-                setInput1(e.target.value / tokenStore.ratioToken);
-              }
-              if(tokenStore.balanceDai < parseFloat(e.target.value) * Math.pow(10, tokenStore.decimalsDai)) {
+              const validate = validateNumber(e.target.value, e.target.value * tokenStore.ratioToken, 
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai),
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth))
+              if(validate){
                 setDisable(true);
-                setMessageError('Insufficient DAI Balance')
-              } else setDisable(false)
-            }}
+                setMessageError(validate)
+              } else {
+                setDisable(false)
+                firstDeposit ? setInput1(e.target.value * tokenStore.ratioToken) : console.log('first Deposit')
+              }}}
           />
 
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai} decimals={tokenStore.decimalsDai} /></label>

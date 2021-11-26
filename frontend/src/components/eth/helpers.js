@@ -4,8 +4,6 @@ import {fetchActionsToken, tokenSlice, Token} from '../eth/TokenBalance';
 import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
 import {ContractAddress} from '../../helpers/connector';
 import { useWeb3React } from '@web3-react/core'
-import { createStore} from 'redux'
-
 
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
@@ -25,6 +23,20 @@ export function calculateRatio(num_1, num_2) {
     const den = gcd(num_1, num_2);
     var ratio = num_1/den+":"+num_2/den;
     return ratio;
+}
+
+export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
+    console.log(Number(token1) <= max1)
+    console.log( Number(token1) >= min1)
+    console.log(Number(token2) <= max2)
+    console.log(Number(token2) >= min2)
+    if(isNaN(Number(token1)) || isNaN(Number(token2)))
+    return 'Insert a valid number'
+    
+    if(!(Number(token1) <= max1 && Number(token1) >= min1 && Number(token2) <= max2 && Number(token2) >= min2))
+    return 'Insufficient balance'
+
+    return false
 }
 
 export function fetchAll(account, vault, eth, dai, dispatch) {

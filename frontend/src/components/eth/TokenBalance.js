@@ -72,10 +72,8 @@ export const tokenSlice = createSlice({
         state.allowanceDai = action.payload;
       },
       ratioToken: (state, action) => {
-        console.log(action)
-        console.log(state.decimalsDai)
         state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
-        console.log(state.ratioToken)
+        console.log('ratio : ' + state.ratioToken)
       }
   },
 });
