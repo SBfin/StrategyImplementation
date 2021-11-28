@@ -1,5 +1,5 @@
 {
-  "name": "hackmoney",
+  "name": "orbit",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -11,7 +11,6 @@
     "@web3-react/core": "^6.1.9",
     "@web3-react/injected-connector": "^6.0.7",
     "ethers": "^5.3.1",
-    "express": "^4.17.1",
     "node-sass": "^6.0.1",
     "react": "^17.0.2",
     "react-dom": "^17.0.2",
@@ -22,7 +21,7 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "CI=false && react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
