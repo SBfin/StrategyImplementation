@@ -39,10 +39,6 @@ export function calculateRatio(num_1, num_2) {
 }
 
 export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
-    console.log(token1)
-    console.log(token2)
-    console.log(max1)
-    console.log(max2)
     if(isNaN(Number(token1)) || isNaN(Number(token2)))
     return 'Insert a valid number'
     

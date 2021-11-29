@@ -87,8 +87,6 @@ export default function Main(props) {
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                console.log(firstDeposit)
-                console.log(vaultStore.balanceOf.value)
                 firstDeposit ? setInput2((e.target.value / tokenStore.ratioToken).toFixed(3)) : console.log('first Deposit')
               }}}
           />
