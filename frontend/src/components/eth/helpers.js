@@ -18,14 +18,31 @@ function gcd(num_1, num_2){
     else
         return gcd(num_2, num_1 % num_2)
 }
+function roundNum(num_1, num_2){
+    if(num_1 >= 1 || num_1 === 0) return {num_1, num_2}
+    num_1 *= 10
+    num_2 *= 10
+    if(num_1 >= 1) 
+        return [num_1, num_2]
+    else
+        return roundNum(num_1, num_2)
+}
 
 export function calculateRatio(num_1, num_2) {
+    const num = roundNum(Number(num_1), Number(num_2))
+    num_1 = num[0] || 1
+    num_2 = num[1] || 1
     const den = gcd(num_1, num_2);
+    if(isNaN(num_1) || isNaN(num_2) || isNaN(den) || den === 0) return '0:0'
     var ratio = num_1/den+":"+num_2/den;
     return ratio;
 }
 
 export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
+    console.log(token1)
+    console.log(token2)
+    console.log(max1)
+    console.log(max2)
     if(isNaN(Number(token1)) || isNaN(Number(token2)))
     return 'Insert a valid number'
     

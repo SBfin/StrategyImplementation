@@ -55,9 +55,8 @@ export default function Main(props) {
     await Withdraw(vault, val)
     window.location.reload(false);
   }
-  const firstDeposit = () => {
-    return Number(vaultStore.balanceOf.value) !== 0
-  }
+  const firstDeposit = Number(vaultStore.balanceOf.value) !== 0
+  
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
@@ -80,7 +79,7 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              const validate = validateNumber(e.target.value, e.target.value / tokenStore.ratioToken, 
+              const validate = validateNumber(e.target.value, ((firstDeposit) ? e.target.value / tokenStore.ratioToken : input1), 
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
               if(validate){
@@ -88,7 +87,9 @@ export default function Main(props) {
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput2(e.target.value / tokenStore.ratioToken) : console.log('first Deposit')
+                console.log(firstDeposit)
+                console.log(vaultStore.balanceOf.value)
+                firstDeposit ? setInput2((e.target.value / tokenStore.ratioToken).toFixed(3)) : console.log('first Deposit')
               }}}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
@@ -105,7 +106,7 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              const validate = validateNumber(e.target.value, e.target.value * tokenStore.ratioToken, 
+              const validate = validateNumber(e.target.value, ((firstDeposit) ?e.target.value * tokenStore.ratioToken : input1), 
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai),
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth))
               if(validate){
@@ -113,7 +114,7 @@ export default function Main(props) {
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput1(e.target.value * tokenStore.ratioToken) : console.log('first Deposit')
+                firstDeposit ? setInput1((e.target.value * tokenStore.ratioToken).toFixed(3)) : console.log('first Deposit')
               }}}
           />
 
@@ -187,7 +188,7 @@ export default function Main(props) {
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
-                <span style={{color: 'green'}}>{((vaultStore.totalSupply.value/vaultStore.maxTotalSupply.value) * 100).toFixed(2)}%</span></label>
+                <span style={{color: 'green'}}>{(((vaultStore.totalSupply.value || 0 )/(vaultStore.maxTotalSupply.value || 0)) * 100).toFixed(2)}%</span></label>
             </div>
 
             <div className="element">
