@@ -6,7 +6,7 @@ import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat, fetchAll, calculateRatio, validateNumber} from '../eth/helpers';
+import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -77,7 +77,7 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              setInput2((e.target.value / tokenStore.ratioToken).toFixed(5))
+              setInput2(dinamicFixed(e.target.value / tokenStore.ratioToken, 5))
               const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
@@ -102,7 +102,7 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              setInput1((e.target.value * tokenStore.ratioToken).toFixed(5))
+              setInput1(dinamicFixed(e.target.value * tokenStore.ratioToken, 5))
               const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
@@ -163,11 +163,11 @@ export default function Main(props) {
           </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
-                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), 5)} Weth</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
-                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai),5)} Dai</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
@@ -175,7 +175,7 @@ export default function Main(props) {
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
-              <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
+              <span style={{color: 'green'}}> {dinamicFixed(decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
             </div>
           </div>
           <div class="col-6">

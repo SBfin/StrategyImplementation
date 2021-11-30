@@ -14,6 +14,10 @@ export function decimalFormat(number, decimals) {
     return parseFloat(formatUnits(number, parseInt(decimals)))
 }
 
+export function dinamicFixed(num, dec) {
+    return Math.round(num * (Math.pow(10,dec))) / Math.pow(10,dec);
+}
+
 function gcd(a , b)
     {
         if (a < b)
