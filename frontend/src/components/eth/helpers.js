@@ -1,7 +1,8 @@
 import {formatUnits} from "@ethersproject/units";
 import { useSelector, useDispatch } from 'react-redux';
-import {fetchActionsToken, tokenSlice, Token} from '../eth/TokenBalance';
-import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
+import {fetchActionsToken, tokenSlice, Token} from './TokenBalance';
+import {vaultSlice,fetchActionsVault, GetVault} from './vault';
+import { fetchActionsStrategy, strategySlice ,Strategy } from "./strategy";
 import {ContractAddress} from '../../helpers/connector';
 import { useWeb3React } from '@web3-react/core'
 
@@ -35,8 +36,7 @@ export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) {
     return false
 }
 
-export function fetchAll(account, vault, eth, dai, dispatch) {
-    
+export function fetchAll(account, vault, eth, dai, strategy, dispatch) {
 
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
      dispatch(vaultSlice.actions.address(vault.address))
@@ -56,5 +56,7 @@ export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
+
+     dispatch(fetchActionsStrategy.twap(strategy));
 
 }

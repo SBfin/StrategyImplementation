@@ -1,6 +1,7 @@
 import Loader from '../loader/Loader';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
 import {GetVault,GetStrategy, Deposit,Withdraw, vaultSlice} from '../eth/vault';
+import { Strategy } from '../eth/strategy';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -16,7 +17,8 @@ export default function Main(props) {
   const {account, library, chainId} = useWeb3React();
 
   const vaultStore = useSelector((state) => state.vault);
-  const tokenStore = useSelector((state) => state.token)
+  const tokenStore = useSelector((state) => state.token);
+  const strategyStore = useSelector((state) => state.strategy)
   const dispatch = useDispatch();
 
   const isButtonDisabled = props.fetching;
@@ -24,6 +26,7 @@ export default function Main(props) {
   const vault = GetVault(vaultContractAddress)
   const eth = Token(ContractAddress("eth"))
   const dai = Token(ContractAddress("dai"))
+  const strategy = Strategy(ContractAddress("strategy"))
 
   useEffect(() => {
      if(!vault){
@@ -31,7 +34,7 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-    fetchAll(account, vault, eth, dai, dispatch)
+    fetchAll(account, vault, eth, dai, strategy, dispatch)
     }, [vault]);
 
   const [input1, setInput1] = useState('');
@@ -179,6 +182,10 @@ export default function Main(props) {
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
               <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Twap: &nbsp;
+              <span style={{color: 'green'}}> {strategyStore.twap.value}</span></label>
             </div>
           </div>
           <div class="col-6">
