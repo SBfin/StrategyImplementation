@@ -3,7 +3,6 @@ from brownie import (
     project,
     MockToken,
     MockWETH9,
-    DepositEth,
     AlphaVault,
     PassiveStrategy,
     TestRouter,
@@ -31,11 +30,12 @@ def main():
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
     weth = deployer.deploy(MockWETH9)
+    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
     
 
-    #eth.mint(deployer, 100 * 1e18, {"from": deployer })
+    #weth.deposit({"from": deployer, "value" : 1e18})
+    weth.balanceOf(deployer)
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
 
     factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
@@ -51,28 +51,62 @@ def main():
         gas_price=gas_strategy,
     )
 
+    weth.approve(vault, 1e30, {"from" : deployer})
+    usdc.approve(vault, 1e24, {"from" : deployer})
+
+
+    #Deposit WETH
+    """
     print("vault token 0 : " + str(vault.token0()))
     print("vault token 1 : " + str(vault.token1()))
     print("usdc address : " + str(usdc.address))
     print("weth address : " + str(weth.address))
-    
-    depositContract = deployer.deploy(
-        DepositEth,
-        vault,
-        weth.address
-    )
+    print("weth " + str(weth.balanceOf(deployer)))
+    print("usdc " + str(usdc.balanceOf(deployer)))
 
-    usdc.approve(depositContract, 1000e6)
-
-    depositContract.depositEth(
-        1000e6,
-        999e6,
-        9e17,
-        deployer,
-        { "from": deployer, "value": 1e18})
     
-    print("weth " + str(weth.balanceOf(depositContract)))
-    print("usdc " + str(usdc.balanceOf(depositContract)))
-    print("shares in deposit " + str(vault.balanceOf(depositContract)))
+    vault.deposit(1,
+        1,
+        0,
+        0,
+        deployer, 
+        {"from" : deployer})
+    
+    print("weth " + str(weth.balanceOf(deployer)))
+    print("usdc " + str(usdc.balanceOf(deployer)))
+    print("shares in deposit " + str(vault.balanceOf(deployer)))
+    print("shares in deployer  " + str(vault.balanceOf(deployer)))
+    """
+    #Deposit ETH
+    print("vault token 0 : " + str(vault.token0()))
+    print("vault token 1 : " + str(vault.token1()))
+    print("usdc address : " + str(usdc.address))
+    print("weth address : " + str(weth.address))
+    print("deployer address : " + str(deployer.address))
+    print("vault address : " + str(vault.address))
+    print("eth " + str(deployer.balance()))
+    print("weth " + str(weth.balanceOf(deployer)))
+    print("usdc " + str(usdc.balanceOf(deployer)))
+
+    #weth.approve(vault, 1e30, {"from" : deployer})
+    #usdc.approve(vault, 1e24, {"from" : deployer})
+
+    tx = vault.depositEth(100,
+        1,
+        0,
+        0,
+        deployer, 
+        weth.address,
+        {"from" : deployer,
+         "value" : 1e18})
+    
+    print(tx.events)
+    print(tx.info())
+    print(tx.return_value)
+    print("eth " + str(deployer.balance()))
+    print("weth user " + str(weth.balanceOf(deployer)))
+    print("weth vault " + str(weth.balanceOf(vault)))
+    print("usdc " + str(usdc.balanceOf(deployer)))
+    print("shares in deposit " + str(vault.balanceOf(deployer)))
     print("shares in deployer  " + str(vault.balanceOf(deployer)))
     

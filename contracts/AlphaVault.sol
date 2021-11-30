@@ -123,35 +123,47 @@ contract AlphaVault is
     )
         external
         override
-        nonReentrant
         returns (
             uint256 shares,
             uint256 amount0,
             uint256 amount1
         )
     {
-        require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
-        require(to != address(0) && to != address(this), "to");
+        depositLogic(amount0Desired,
+                    amount1Desired,
+                    amount0Min,
+                    amount1Min,
+                    to);
+    }
 
-        // Poke positions so vault's current holdings are up-to-date
-        _poke(baseLower, baseUpper);
-        _poke(limitLower, limitUpper);
+    function depositEth(
+        uint256 amount0Desired,
+        uint256 amount1Desired,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        address to,
+        address weth
+    )
+        external
+        payable
+        returns (
+            uint256 shares,
+            uint256 amount0,
+            uint256 amount1
+        )
+    {
+        require(msg.value > 0, "msg.value");
+        require(amount1Desired <= msg.value, "amount desired");
 
-        // Calculate amounts proportional to vault's holdings
-        (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
-        require(shares > 0, "shares");
-        require(amount0 >= amount0Min, "amount0Min");
-        require(amount1 >= amount1Min, "amount1Min");
+        //address(weth).delegatecall(abi.encodeWithSignature("deposit()"));
+        IWETH9(weth).deposit{value: msg.value}();
+        IWETH9(weth).transfer(msg.sender, msg.value);
 
-        // Pull in tokens from sender
-        if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
-        if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
-
-
-        // Mint shares to recipient
-        _mint(to, shares);
-        emit Deposit(msg.sender, to, shares, amount0, amount1);
-        require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
+        depositLogic(amount0Desired,
+                    amount1Desired,
+                    amount0Min,
+                    amount1Min,
+                    to);
     }
 
     /// @dev Do zero-burns to poke a position on Uniswap so earned fees are
@@ -618,5 +630,40 @@ contract AlphaVault is
     modifier onlyGovernance {
         require(msg.sender == governance, "governance");
         _;
+    }
+
+    function depositLogic(uint256 amount0Desired,
+        uint256 amount1Desired,
+        uint256 amount0Min,
+        uint256 amount1Min,
+        address to) 
+        internal 
+        nonReentrant
+        returns (uint256 shares, 
+                uint256 amount0,
+                uint256 amount1)
+        {
+            require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
+            require(to != address(0) && to != address(this), "to");
+
+            // Poke positions so vault's current holdings are up-to-date
+            _poke(baseLower, baseUpper);
+            _poke(limitLower, limitUpper);
+
+            // Calculate amounts proportional to vault's holdings
+            (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
+            require(shares > 0, "shares");
+            require(amount0 >= amount0Min, "amount0Min");
+            require(amount1 >= amount1Min, "amount1Min");
+
+            // Pull in tokens from sender
+            if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
+            if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
+
+            // Mint shares to recipient
+            _mint(to, shares);
+            emit Deposit(msg.sender, to, shares, amount0, amount1);
+            require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
+
     }
 }
