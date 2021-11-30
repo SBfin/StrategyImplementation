@@ -184,8 +184,8 @@ export default function Main(props) {
               <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
             </div>
             <div className="element">
-              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Twap: &nbsp;
-              <span style={{color: 'green'}}> {strategyStore.twap.value}</span></label>
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Tick Value: &nbsp;
+              <span style={{color: 'green'}}> {strategyStore.tickValue.value}</span></label>
             </div>
           </div>
           <div class="col-6">

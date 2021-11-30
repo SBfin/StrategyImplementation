@@ -10,18 +10,18 @@ import { useDispatch } from 'react-redux';
 import {ContractAddress} from '../../helpers/connector';
 
 const initialState = {
-    twap: {
+    tickValue: {
         value: 0,
         status: 'idle',
     },
   };
   
   export const fetchActionsStrategy = {
-    twap: createAsyncThunk(
-        'strategy/fetchTwap',
+    tickValue: createAsyncThunk(
+        'strategy/fetchTickValue',
         async (strategy) => {
-           const twap = await strategy.getTick();
-           return twap.toString();
+           const tickValue = await strategy.getTick();
+           return tickValue.toString();
       }),
   };
   
@@ -34,13 +34,13 @@ const initialState = {
       extraReducers: (builder) => {
           
         builder
-          .addCase(fetchActionsStrategy.twap.pending, (state) => {
+          .addCase(fetchActionsStrategy.tickValue.pending, (state) => {
               console.log('pending')
-            state.twap.status = 'loading';
+            state.tickValue.status = 'loading';
           })
-          .addCase(fetchActionsStrategy.twap.fulfilled, (state, action) => {
-            state.twap.status = 'idle';
-            state.twap.value = action.payload;
+          .addCase(fetchActionsStrategy.tickValue.fulfilled, (state, action) => {
+            state.tickValue.status = 'idle';
+            state.tickValue.value = action.payload;
             
           })
            

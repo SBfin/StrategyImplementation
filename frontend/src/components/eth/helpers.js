@@ -57,6 +57,6 @@ export function fetchAll(account, vault, eth, dai, strategy, dispatch) {
      dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
 
-     dispatch(fetchActionsStrategy.twap(strategy));
+     dispatch(fetchActionsStrategy.tickValue(strategy));
 
 }
