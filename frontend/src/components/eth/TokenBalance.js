@@ -14,7 +14,7 @@ const initialState = {
   allowanceDai: 0,
   decimalsEth: 0,
   decimalsDai: 0,
-  ratioToken: 0,
+  ratioToken: 1,
 
 };
 

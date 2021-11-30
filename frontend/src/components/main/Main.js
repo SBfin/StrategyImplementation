@@ -54,9 +54,7 @@ export default function Main(props) {
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
     window.location.reload(false);
-  }
-  const firstDeposit = Number(vaultStore.balanceOf.value) !== 0
-  
+  }  
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
@@ -79,7 +77,8 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              const validate = validateNumber(e.target.value, ((firstDeposit) ? e.target.value / tokenStore.ratioToken : input1), 
+              setInput2((e.target.value / tokenStore.ratioToken).toFixed(4))
+              const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
               if(validate){
@@ -87,7 +86,6 @@ export default function Main(props) {
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput2((e.target.value / tokenStore.ratioToken).toFixed(3)) : console.log('first Deposit')
               }}}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
@@ -104,15 +102,15 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              const validate = validateNumber(e.target.value, ((firstDeposit) ?e.target.value * tokenStore.ratioToken : input1), 
-                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai),
-                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth))
+              setInput1((e.target.value * tokenStore.ratioToken).toFixed(4))
+              const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
               if(validate){
                 setDisable(true);
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput1((e.target.value * tokenStore.ratioToken).toFixed(3)) : console.log('first Deposit')
               }}}
           />
 

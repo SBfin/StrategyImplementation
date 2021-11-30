@@ -9,41 +9,37 @@ export function decimalFormat(number, decimals) {
     if(!number || !decimals){
         return 0;
     }
-    return Math.round(parseFloat(formatUnits(number, parseInt(decimals))) * 100) / 100;
+    return parseFloat(formatUnits(number, parseInt(decimals)))
 }
 
-function gcd(num_1, num_2){
-    if (num_2 === 0)
-        return num_1
-    else
-        return gcd(num_2, num_1 % num_2)
-}
-function roundNum(num_1, num_2){
-    if(num_1 >= 1 || num_1 === 0) return {num_1, num_2}
-    num_1 *= 10
-    num_2 *= 10
-    if(num_1 >= 1) 
-        return [num_1, num_2]
-    else
-        return roundNum(num_1, num_2)
-}
+function gcd(a , b)
+    {
+        if (a < b)
+            return gcd(b, a);
+ 
+        // base case
+        if (Math.abs(b) < 0.00001)
+            return a;
+        else
+            return (gcd(b, a - Math.floor(a / b) * b));
+    }
 
 export function calculateRatio(num_1, num_2) {
-    const num = roundNum(Number(num_1), Number(num_2))
-    num_1 = num[0] || 1
-    num_2 = num[1] || 1
-    const den = gcd(num_1, num_2);
+    const den = (gcd(num_1, num_2));
     if(isNaN(num_1) || isNaN(num_2) || isNaN(den) || den === 0) return '0:0'
     var ratio = num_1/den+":"+num_2/den;
     return ratio;
 }
 
-export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
+export function validateNumber(token1, token2, max1, max2, min1 = 0.00001, min2 = 0.00001) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
     if(isNaN(Number(token1)) || isNaN(Number(token2)))
     return 'Insert a valid number'
     
-    if(!(Number(token1) <= max1 && Number(token1) >= min1 && Number(token2) <= max2 && Number(token2) >= min2))
+    if(!(Number(token1) <= max1 && Number(token2) <= max2))
     return 'Insufficient balance'
+
+    if(!(Number(token1) >= min1 && Number(token2) >= min2))
+    return 'Minimun amount of 0.00001'
 
     return false
 }
