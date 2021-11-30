@@ -26,6 +26,10 @@ MIN_TICK_MOVE = 0
 MAX_TWAP_DEVIATION = 100  # 1%
 TWAP_DURATION = 60  # 60 seconds
 
+# Set this to make the first deposit, in this example we deposit 1 token0 = 4K token1
+DEPOSIT_TOKEN_1 = 1e18
+DEPOSIT_TOKEN_2 = 4000e6
+
 
 def main():
     deployer = accounts.load("deployer")
@@ -103,6 +107,13 @@ def main():
     )
     vault.setStrategy(strategy, {"from": deployer })
 
+    print("Doing the first deposit to set the price ratio..")
+    eth.approve(vault, DEPOSIT_TOKEN_1, {"from": deployer})
+    usdc.approve(vault, DEPOSIT_TOKEN_2, {"from": deployer})
+    tx = vault.deposit(DEPOSIT_TOKEN_1, DEPOSIT_TOKEN_2, 0, 0, deployer, {"from": deployer})
+    shares, amount0, amount1 = tx.return_value
+
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
+    print(f"Deposited token0: {amount0} token1: {amount1} shares: {shares}")

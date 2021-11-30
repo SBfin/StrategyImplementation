@@ -7,7 +7,7 @@ import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat, fetchAll, calculateRatio, validateNumber} from '../eth/helpers';
+import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -57,10 +57,7 @@ export default function Main(props) {
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
     window.location.reload(false);
-  }
-  const firstDeposit = () => {
-    return Number(vaultStore.balanceOf.value) !== 0
-  }
+  }  
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
@@ -83,7 +80,8 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              const validate = validateNumber(e.target.value, e.target.value / tokenStore.ratioToken, 
+              setInput2(dinamicFixed(e.target.value / tokenStore.ratioToken, 5))
+              const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
               if(validate){
@@ -91,7 +89,6 @@ export default function Main(props) {
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput2(e.target.value / tokenStore.ratioToken) : console.log('first Deposit')
               }}}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
@@ -108,15 +105,15 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              const validate = validateNumber(e.target.value, e.target.value * tokenStore.ratioToken, 
-                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai),
-                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth))
+              setInput1(dinamicFixed(e.target.value * tokenStore.ratioToken, 5))
+              const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
               if(validate){
                 setDisable(true);
                 setMessageError(validate)
               } else {
                 setDisable(false)
-                firstDeposit ? setInput1(e.target.value * tokenStore.ratioToken) : console.log('first Deposit')
               }}}
           />
 
@@ -169,11 +166,11 @@ export default function Main(props) {
           </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
-                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth)} Weth</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), 5)} Weth</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
-                <span style={{color: 'green'}}>{decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai)} Dai</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai),5)} Dai</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
@@ -181,7 +178,7 @@ export default function Main(props) {
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
-              <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
+              <span style={{color: 'green'}}> {dinamicFixed(decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Tick Value: &nbsp;
@@ -194,7 +191,7 @@ export default function Main(props) {
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
-                <span style={{color: 'green'}}>{((vaultStore.totalSupply.value/vaultStore.maxTotalSupply.value) * 100).toFixed(2)}%</span></label>
+                <span style={{color: 'green'}}>{(((vaultStore.totalSupply.value || 0 )/(vaultStore.maxTotalSupply.value || 0)) * 100).toFixed(2)}%</span></label>
             </div>
 
             <div className="element">
