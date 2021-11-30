@@ -72,10 +72,12 @@ export const tokenSlice = createSlice({
         state.allowanceDai = action.payload;
       },
       ratioToken: (state, action) => {
-        if(Number(action.payload[0]) !== 0 || Number(action.payload[1]) !== 0) {
-          state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
-        } else {
-          state.ratioToken = 1
+        if(!action && !action.payload){
+          if(Number(action.payload[0]) !== 0 || Number(action.payload[1]) !== 0) {
+            state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
+          } else {
+            state.ratioToken = 1
+          }
         }
         console.log('ratio : ' + state.ratioToken)
       }
