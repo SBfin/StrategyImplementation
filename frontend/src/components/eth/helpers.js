@@ -5,31 +5,43 @@ import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
 import {ContractAddress} from '../../helpers/connector';
 import { useWeb3React } from '@web3-react/core'
 
+const MINIMUN_TOKEN = 0.00001;
+
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
         return 0;
     }
-    return Math.round(parseFloat(formatUnits(number, parseInt(decimals))) * 100) / 100;
+    return parseFloat(formatUnits(number, parseInt(decimals)))
 }
 
-function gcd(num_1, num_2){
-    if (num_2 === 0)
-        return num_1
-    else
-        return gcd(num_2, num_1 % num_2)
+export function dinamicFixed(num, dec) {
+    return Math.round(num * (Math.pow(10,dec))) / Math.pow(10,dec);
 }
+
+function gcd(a , b)
+    {
+        if (a < b)
+            return gcd(b, a);
+ 
+        // base case
+        if (Math.abs(b) < MINIMUN_TOKEN)
+            return a;
+        else
+            return (gcd(b, a - Math.floor(a / b) * b));
+    }
 
 export function calculateRatio(num_1, num_2) {
-    const den = gcd(num_1, num_2);
+    const den = (gcd(num_1, num_2));
+    if(isNaN(num_1) || isNaN(num_2) || isNaN(den) || den === 0) return '0:0'
     var ratio = num_1/den+":"+num_2/den;
     return ratio;
 }
 
-export function validateNumber(token1, token2, max1, max2, min1 = 0, min2 = 0) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
-    if(isNaN(Number(token1)) || isNaN(Number(token2)))
+export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
+    if(isNaN(Number(token1)) || isNaN(Number(token2)) || (!(Number(token1) >= min1 && Number(token2) >= min2)))
     return 'Insert a valid number'
     
-    if(!(Number(token1) <= max1 && Number(token1) >= min1 && Number(token2) <= max2 && Number(token2) >= min2))
+    if(!(Number(token1) <= max1 && Number(token2) <= max2))
     return 'Insufficient balance'
 
     return false
