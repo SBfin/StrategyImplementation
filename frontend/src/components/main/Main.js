@@ -77,7 +77,7 @@ export default function Main(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              setInput2((e.target.value / tokenStore.ratioToken).toFixed(4))
+              setInput2((e.target.value / tokenStore.ratioToken).toFixed(5))
               const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
@@ -102,7 +102,7 @@ export default function Main(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              setInput1((e.target.value * tokenStore.ratioToken).toFixed(4))
+              setInput1((e.target.value * tokenStore.ratioToken).toFixed(5))
               const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
                 decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
                 decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))

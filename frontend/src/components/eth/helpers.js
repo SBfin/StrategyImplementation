@@ -5,6 +5,8 @@ import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
 import {ContractAddress} from '../../helpers/connector';
 import { useWeb3React } from '@web3-react/core'
 
+const MINIMUN_TOKEN = 0.00001;
+
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
         return 0;
@@ -18,7 +20,7 @@ function gcd(a , b)
             return gcd(b, a);
  
         // base case
-        if (Math.abs(b) < 0.00001)
+        if (Math.abs(b) < MINIMUN_TOKEN)
             return a;
         else
             return (gcd(b, a - Math.floor(a / b) * b));
@@ -31,15 +33,12 @@ export function calculateRatio(num_1, num_2) {
     return ratio;
 }
 
-export function validateNumber(token1, token2, max1, max2, min1 = 0.00001, min2 = 0.00001) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
-    if(isNaN(Number(token1)) || isNaN(Number(token2)))
+export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) { //get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
+    if(isNaN(Number(token1)) || isNaN(Number(token2)) || (!(Number(token1) >= min1 && Number(token2) >= min2)))
     return 'Insert a valid number'
     
     if(!(Number(token1) <= max1 && Number(token2) <= max2))
     return 'Insufficient balance'
-
-    if(!(Number(token1) >= min1 && Number(token2) >= min2))
-    return 'Minimun amount of 0.00001'
 
     return false
 }
