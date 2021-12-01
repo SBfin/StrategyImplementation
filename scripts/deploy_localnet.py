@@ -6,7 +6,8 @@ from brownie import (
     PassiveStrategy,
     TestRouter,
     ZERO_ADDRESS,
-    Contract
+    Contract,
+    chain
 )
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 from math import floor, sqrt
@@ -59,6 +60,7 @@ def main():
     pool.increaseObservationCardinalityNext(
         100, {"from": deployer, "gas_price": gas_strategy}
     )
+    chain.sleep(3600)
 
     router = deployer.deploy(TestRouter)
     #router = Contract("0xa3B53dDCd2E3fC28e8E130288F2aBD8d5EE37472")
@@ -104,6 +106,9 @@ def main():
     usdc.approve(vault, DEPOSIT_TOKEN_2, {"from": deployer})
     tx = vault.deposit(DEPOSIT_TOKEN_1, DEPOSIT_TOKEN_2, 0, 0, deployer, {"from": deployer})
     shares, amount0, amount1 = tx.return_value
+
+    print("Triggering rebalance")
+    strategy.rebalance({"from": deployer, "gas_price": gas_strategy})
 
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
