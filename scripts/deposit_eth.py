@@ -2,7 +2,7 @@ from brownie import (
     accounts,
     project,
     MockToken,
-    MockWETH9,
+    MockWeth,
     AlphaVault,
     PassiveStrategy,
     TestRouter,
@@ -30,12 +30,11 @@ def main():
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    weth = deployer.deploy(MockWETH9)
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
     
+    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    weth = deployer.deploy(MockWeth)
 
-    #weth.deposit({"from": deployer, "value" : 1e18})
-    weth.balanceOf(deployer)
+    weth.deposit({"from": deployer, "value" : 1e18})
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
 
     factory = deployer.deploy(UniswapV3Core.UniswapV3Factory)
@@ -54,9 +53,6 @@ def main():
     weth.approve(vault, 1e30, {"from" : deployer})
     usdc.approve(vault, 1e24, {"from" : deployer})
 
-
-    #Deposit WETH
-    """
     print("vault token 0 : " + str(vault.token0()))
     print("vault token 1 : " + str(vault.token1()))
     print("usdc address : " + str(usdc.address))
@@ -64,9 +60,8 @@ def main():
     print("weth " + str(weth.balanceOf(deployer)))
     print("usdc " + str(usdc.balanceOf(deployer)))
 
-    
-    vault.deposit(1,
-        1,
+    vault.deposit(1e6,
+        1e18,
         0,
         0,
         deployer, 
@@ -76,7 +71,7 @@ def main():
     print("usdc " + str(usdc.balanceOf(deployer)))
     print("shares in deposit " + str(vault.balanceOf(deployer)))
     print("shares in deployer  " + str(vault.balanceOf(deployer)))
-    """
+    
     #Deposit ETH
     print("vault token 0 : " + str(vault.token0()))
     print("vault token 1 : " + str(vault.token1()))
@@ -88,11 +83,11 @@ def main():
     print("weth " + str(weth.balanceOf(deployer)))
     print("usdc " + str(usdc.balanceOf(deployer)))
 
-    #weth.approve(vault, 1e30, {"from" : deployer})
-    #usdc.approve(vault, 1e24, {"from" : deployer})
+    weth.approve(vault, 1e30, {"from" : deployer})
+    usdc.approve(vault, 1e24, {"from" : deployer})
 
-    tx = vault.depositEth(100,
-        1,
+    tx = vault.depositEth(10,
+        1e18,
         0,
         0,
         deployer, 
@@ -103,6 +98,7 @@ def main():
     print(tx.events)
     print(tx.info())
     print(tx.return_value)
+    print(tx.call_trace())
     print("eth " + str(deployer.balance()))
     print("weth user " + str(weth.balanceOf(deployer)))
     print("weth vault " + str(weth.balanceOf(vault)))

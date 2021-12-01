@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: Unlicense
 pragma solidity 0.7.6;
 
-contract MockWETH9 {
+contract MockWeth {
     
     string public name     = "Wrapped Ether";
     string public symbol   = "WETH";
@@ -23,6 +23,7 @@ contract MockWETH9 {
         balanceOf[msg.sender] += msg.value;
         Deposit(msg.sender, msg.value);
     }
+    
     function withdraw(uint wad) public {
         require(balanceOf[msg.sender] >= wad);
         balanceOf[msg.sender] -= wad;
@@ -62,4 +63,6 @@ contract MockWETH9 {
 
         return true;
     }
+
+
 }
