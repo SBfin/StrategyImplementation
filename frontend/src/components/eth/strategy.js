@@ -3,20 +3,23 @@ import { useWeb3React } from '@web3-react/core'
 import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
 import {Contract} from "@ethersproject/contracts";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { tickToPrice } from './helpers'
 
 const initialState = {
-    tickValue: {
+    price: {
         value: 0,
         status: 'idle',
     },
   };
   
   export const fetchActionsStrategy = {
-    tickValue: createAsyncThunk(
-        'strategy/fetchTickValue',
+    price: createAsyncThunk(
+        'strategy/fetchPrice',
         async (strategy) => {
            const tickValue = await strategy.getTick();
-           return tickValue.toString();
+           const price = tickToPrice(tickValue,6,18).toString();
+           console.log(price)
+           return price
       }),
   };
   
@@ -29,13 +32,13 @@ const initialState = {
       extraReducers: (builder) => {
           
         builder
-          .addCase(fetchActionsStrategy.tickValue.pending, (state) => {
+          .addCase(fetchActionsStrategy.price.pending, (state) => {
               console.log('pending')
-            state.tickValue.status = 'loading';
+            state.price.status = 'loading';
           })
-          .addCase(fetchActionsStrategy.tickValue.fulfilled, (state, action) => {
-            state.tickValue.status = 'idle';
-            state.tickValue.value = action.payload;
+          .addCase(fetchActionsStrategy.price.fulfilled, (state, action) => {
+            state.price.status = 'idle';
+            state.price.value = action.payload;
             
           })
            

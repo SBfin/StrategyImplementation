@@ -19,6 +19,12 @@ export function dinamicFixed(num, dec) {
     return Math.round(num * (Math.pow(10,dec))) / Math.pow(10,dec);
 }
 
+export function tickToPrice(tick, decimal0, decimal1) {
+    tick = Math.abs(tick)
+    return dinamicFixed(Math.pow(1.0001, tick) * (Math.pow(10, decimal0 - decimal1)),5)
+}
+
+
 function gcd(a , b)
     {
         if (a < b)
@@ -71,6 +77,6 @@ export function fetchAll(account, vault, eth, dai, strategy, dispatch) {
      dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
 
-     dispatch(fetchActionsStrategy.tickValue(strategy));
+     dispatch(fetchActionsStrategy.price(strategy));
 
 }
