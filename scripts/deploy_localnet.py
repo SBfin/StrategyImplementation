@@ -3,7 +3,7 @@ from brownie import (
     project,
     MockToken,
     AlphaVault,
-    PassiveStrategy,
+    DynamicRangesStrategy,
     TestRouter,
     ZERO_ADDRESS,
     Contract,
@@ -29,16 +29,17 @@ DEPOSIT_TOKEN_2 = 4000e6
 
 
 def main():
-    deployer = accounts[0]
+    deployer = accounts.load("deployer")
+    accounts[0].transfer(deployer,1000000000000000000)
+
     UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
 
-    eth = deployer.deploy(MockToken, "ETH", "ETH", 18)
-    usdc = deployer.deploy(MockToken, "USDC", "USDC", 6)
+    eth = deployer.deploy(MockToken, "WETH", "WETH", 18)
+    usdc = deployer.deploy(MockToken, "DAI", "DAI", 6)
     #eth = Contract('0x2150e3B32dD7201a73dEc2D7E92f3Ef511c26103')
     #usdc = Contract('0x6951b5Bd815043E3F842c1b026b0Fa888Cc2DD85')
-
 
     eth.mint(deployer, 100 * 1e18, {"from": deployer })
     usdc.mint(deployer, 100000 * 1e6, {"from": deployer })
@@ -73,9 +74,9 @@ def main():
 
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
-    router.mint(
-        pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
-    )
+    #router.mint(
+    #    pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
+    #)
 
     #vault = Contract("0xe692Cf21B12e0B2717C4bF647F9768Fa58861c8b")
     vault = deployer.deploy(
@@ -88,12 +89,10 @@ def main():
 
     #strategy = Contract("")
     strategy = deployer.deploy(
-        PassiveStrategy,
+        DynamicRangesStrategy,
         vault,
         BASE_THRESHOLD,
         LIMIT_THRESHOLD,
-        PERIOD,
-        MIN_TICK_MOVE,
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
         deployer,
@@ -114,3 +113,5 @@ def main():
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
     print(f"Deposited token0: {amount0} token1: {amount1} shares: {shares}")
+    print(f"Eth: {eth.address}")
+    print(F"Usdc: {usdc.address}")

@@ -2,12 +2,7 @@ import { useState, useEffect } from 'react'
 import { useWeb3React } from '@web3-react/core'
 import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
 import {Contract} from "@ethersproject/contracts";
-import {formatUnits} from "@ethersproject/units";
-import { decimalFormat } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import {fetchAll} from '../eth/helpers';
-import { useDispatch } from 'react-redux';
-import {ContractAddress} from '../../helpers/connector';
 
 const initialState = {
     tickValue: {
@@ -53,7 +48,7 @@ const initialState = {
     const [strategy, setStrategy] = useState()
   
     useEffect(() => {
-      console.log("loading contract")
+      console.log("loading strategy contract")
       if (!(!!account || !!library) || !address) {
         return
       }

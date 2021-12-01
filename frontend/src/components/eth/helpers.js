@@ -32,6 +32,8 @@ function gcd(a , b)
     }
 
 export function calculateRatio(num_1, num_2) {
+    num_1 = dinamicFixed(num_1, 4)
+    num_2 = dinamicFixed(num_2, 4)
     const den = (gcd(num_1, num_2));
     if(isNaN(num_1) || isNaN(num_2) || isNaN(den) || den === 0) return '0:0'
     var ratio = num_1/den+":"+num_2/den;
