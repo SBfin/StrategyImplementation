@@ -5,6 +5,7 @@ import {Contract} from "@ethersproject/contracts";
 import ERC20ABI from "./abi/MockToken.json";
 import {formatUnits} from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import {decimalFormat} from '../eth/helpers';
 
 const initialState = {
   balanceEth: 0,
@@ -13,6 +14,7 @@ const initialState = {
   allowanceDai: 0,
   decimalsEth: 0,
   decimalsDai: 0,
+  ratioToken: 1,
 
 };
 
@@ -41,8 +43,9 @@ export const fetchActionsToken = {
       'token/fetchApprove',
       async(data) => {
         const {vault, contract, balance} = data;
-        const approve = await contract.approve(vault.address, balance);
-        return approve.toString();
+        const approveTx = await contract.approve(vault.address, balance);
+        const result = await approveTx.wait(); //wait for the tx to be confirmed on chain
+        return result.status;
     }),
 };
 
@@ -67,6 +70,18 @@ export const tokenSlice = createSlice({
       },
       allowanceDai: (state, action) => {
         state.allowanceDai = action.payload;
+      },
+      ratioToken: (state, action) => {
+        if(action && action.payload){
+          if(Number(action.payload[0]) !== 0 || Number(action.payload[1]) !== 0) {
+            state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
+          } else {
+            state.ratioToken = 1
+          }
+        } else {
+          state.ratioToken = 1
+        }
+        console.log('ratio : ' + state.ratioToken)
       }
   },
 });
@@ -87,16 +102,6 @@ export function Token(address){
       const signer = library.getSigner(account).connectUnchecked()
       const c = new Contract(address, ERC20ABI.abi, signer)
 
-      const fromMe = c.filters.Transfer(account, null)
-      library.on(fromMe, (from, to, amount, event) => {
-        console.log('Transfer|sent', {from, to, amount, event})
-        //mutate(undefined, true)
-      })
-      const toMe = c.filters.Transfer(null, account)
-      library.on(toMe, (from, to, amount, event) => {
-        console.log('Transfer|received', {from, to, amount, event})
-        //mutate(undefined, true)
-      })
       setContract(c)
 
       

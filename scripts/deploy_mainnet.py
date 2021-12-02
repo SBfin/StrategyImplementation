@@ -1,4 +1,4 @@
-from brownie import accounts, AlphaVault, PassiveStrategy
+from brownie import accounts, AlphaVault, PassiveStrategy, project, MockToken
 from brownie.network.gas.strategies import GasNowScalingStrategy
 
 
@@ -49,3 +49,4 @@ def main():
 
     print(f"Gas used: {(balance - deployer.balance()) / 1e18:.4f} ETH")
     print(f"Vault address: {vault.address}")
+    print("\n DO THE FIRST DEPOSIT BY HAND (FROM CONSOLE) TO SET THE PRICE RATIO")

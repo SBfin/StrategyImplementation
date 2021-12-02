@@ -1,13 +1,12 @@
 import Loader from '../loader/Loader';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
-import {GetVault,GetStrategy, Deposit,Withdraw} from '../eth/vault';
+import {GetVault,GetStrategy, Deposit,Withdraw, vaultSlice} from '../eth/vault';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
-import {vaultSlice,fetchActionsVault} from '../eth/vault';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat} from '../eth/helpers';
+import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -32,23 +31,13 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
-     dispatch(fetchActionsVault.totalSupply(vault));
-     dispatch(fetchActionsVault.totalAmounts(vault));
-     dispatch(fetchActionsVault.balanceOf({account, vault}));
-     
-     dispatch(fetchActionsToken.decimals(eth)).then(r => dispatch(tokenSlice.actions.decimalsEth(r.payload)));
-     dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
+    fetchAll(account, vault, eth, dai, dispatch)
+    }, [vault]);
 
-     dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));
-     dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
-     dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
-     dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
-
-  }, [vault]);
-  
   const [input1, setInput1] = useState('');
   const [input2, setInput2] = useState('');
+  const [disable, setDisable] = useState(true)
+  const [messageError, setMessageError] = useState('Deposit')
   const [shares, setShares] = useState('');
 
   const [loader, setLoader] = useState(false);
@@ -57,7 +46,7 @@ export default function Main(props) {
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    await Deposit(vault, val1, val2)
+    Deposit(vault, val1, val2)
     setLoader(false);
   }
   const onWithdrawClick = async () => {
@@ -65,11 +54,10 @@ export default function Main(props) {
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
     await Withdraw(vault, val)
     window.location.reload(false);
-  }
+  }  
 
   return (
     <div style={{textAlign: 'center', width: "50%"}}>
-      <span>Total Amounts: {vaultStore.totalAmounts.value[0]} eth, {vaultStore.totalAmounts.value[1]} dai</span>
 
       { vaultContractAddress==null &&
       <div className="main-container" style={{background: 'red'}}>
@@ -79,12 +67,6 @@ export default function Main(props) {
       }
       <div className="main-container">
         
-
-        <div className="element">
-          <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault Supply: 
-          <span style={{color: 'green'}}> {decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals)}</span></label>
-        </div>
-        
         <div className="element">
           <label className="paste-label" style={{lineHeight: '3em'}}>WETH</label>
           <input
@@ -93,7 +75,18 @@ export default function Main(props) {
             className="address-input"
             disabled={ props.fetching }
             value={input1}
-            onChange={ (e) => setInput1(e.target.value) }
+            onChange={ (e) =>  {
+              setInput1(e.target.value)
+              setInput2(dinamicFixed(e.target.value / tokenStore.ratioToken, 5))
+              const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
+              if(validate){
+                setDisable(true);
+                setMessageError(validate)
+              } else {
+                setDisable(false)
+              }}}
           />
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
         </div>
@@ -107,7 +100,18 @@ export default function Main(props) {
             className="address-input"
             disabled={ props.fetching }
             value={input2}
-            onChange={ (e) => setInput2(e.target.value) }
+            onChange={ (e) => {
+              setInput2(e.target.value)
+              setInput1(dinamicFixed(e.target.value * tokenStore.ratioToken, 5))
+              const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
+                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
+                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
+              if(validate){
+                setDisable(true);
+                setMessageError(validate)
+              } else {
+                setDisable(false)
+              }}}
           />
 
           <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai} decimals={tokenStore.decimalsDai} /></label>
@@ -117,28 +121,29 @@ export default function Main(props) {
           { tokenStore.allowanceEth == '0' &&
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: input1})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: tokenStore.balanceEth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve WETH
+            Approve WETH 
           </button>
          }
           {tokenStore.allowanceDai == '0' ?
           <button
             className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: input2})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
+            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: tokenStore.balanceDai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
             disabled={ isButtonDisabled }
           >
-            Approve DAI
+            Approve DAI 
           </button>
           :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
           
           <button
-            className={`search-button`}
+            className="btn btn-primary col-12 btn-lg"
             onClick={ onDepositClick }
-            disabled={ isButtonDisabled }
+            disabled={ disable }
           >
-            Deposit
+            {disable && <span>{messageError}</span>  }
+            {!disable && <span>Deposit</span>}
           </button> }
         </div>
         { loader &&  
@@ -148,7 +153,71 @@ export default function Main(props) {
         }
         
       </div>
-      { vaultStore.balanceOf.value!==0 &&
+      
+      
+      <div className="row main-container">
+
+        <div className="col-6">
+          <div className="element">
+              <label className="paste-label fs-2"  style={{textAlign: 'center', width: "100%"}}>Holdings</label>
+          </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), 5)} Weth</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai),5)} Dai</span></label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
+                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai))}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
+              <span style={{color: 'green'}}> {dinamicFixed(decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
+            </div>
+          </div>
+          <div class="col-6">
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Deposit Cap</label>
+            </div>
+            <div className="element">
+                <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>% of the cap used: &nbsp;
+                <span style={{color: 'green'}}>{(((vaultStore.totalSupply.value || 0 )/(vaultStore.maxTotalSupply.value || 0)) * 100).toFixed(2)}%</span></label>
+            </div>
+
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Vault position</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Base order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.baseOrder.value[0] + ' - ' + vaultStore.baseOrder.value[1]} </span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Limit order: &nbsp;
+              <span style={{color: 'green'}}> {vaultStore.limitOrder.value[0] + ' - ' + vaultStore.limitOrder.value[1]} </span></label>
+            </div>
+
+            <div className="element">
+              <label className="paste-label fs-2" style={{textAlign: 'center', width: "100%"}}>Contracts</label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Vault: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.address}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Strategy: &nbsp;
+              <span style={{color: 'green', wordWrap: 'break-word'}}> {vaultStore.strategyAddress.value}</span></label>
+            </div>
+          </div>
+          
+
+          
+      </div>
+
+
+      { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
         <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
@@ -169,7 +238,7 @@ export default function Main(props) {
 
           <div className="element">
           <button
-            className={`search-button`}
+            className="btn btn-primary col-12 btn-lg"
             onClick={ onWithdrawClick }
           >
             Withdraw
