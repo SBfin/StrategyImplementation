@@ -3,7 +3,7 @@ import { useWeb3React } from '@web3-react/core'
 import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
 import {Contract} from "@ethersproject/contracts";
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import { tickToPrice } from './helpers'
+import { tickToPrice, dinamicFixed } from './helpers'
 
 const initialState = {
     price: {
@@ -18,8 +18,7 @@ const initialState = {
         async (strategy) => {
            const tickValue = await strategy.getTick();
            const price = tickToPrice(tickValue,6,18).toString();
-           console.log(price)
-           return price
+           return dinamicFixed(1 / price,2)
       }),
   };
   
