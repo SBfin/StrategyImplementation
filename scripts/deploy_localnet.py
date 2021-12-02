@@ -4,6 +4,7 @@ from brownie import (
     MockToken,
     AlphaVault,
     PassiveStrategy,
+    DynamicRangesStrategy,
     TestRouter,
     ZERO_ADDRESS,
     Contract,
@@ -23,9 +24,9 @@ MIN_TICK_MOVE = 0
 MAX_TWAP_DEVIATION = 100  # 1%
 TWAP_DURATION = 60  # 60 seconds
 
-# Set this to make the first deposit, in this example we deposit 1 token0 = 4K token1
+# Set this to make the first deposit, in this example we deposit 1 token0 = 2K token1
 DEPOSIT_TOKEN_1 = 1e18
-DEPOSIT_TOKEN_2 = 4000e6
+DEPOSIT_TOKEN_2 = 2000e6
 
 
 def main():
@@ -77,7 +78,6 @@ def main():
         pool, -max_tick, max_tick, 1e14, {"from": deployer, "gas_price": gas_strategy}
     )
 
-    #vault = Contract("0xe692Cf21B12e0B2717C4bF647F9768Fa58861c8b")
     vault = deployer.deploy(
         AlphaVault,
         pool,
@@ -86,14 +86,11 @@ def main():
         gas_price=gas_strategy,
     )
 
-    #strategy = Contract("")
     strategy = deployer.deploy(
-        PassiveStrategy,
+        DynamicRangesStrategy,
         vault,
         BASE_THRESHOLD,
         LIMIT_THRESHOLD,
-        PERIOD,
-        MIN_TICK_MOVE,
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
         deployer,
@@ -102,10 +99,28 @@ def main():
     vault.setStrategy(strategy, {"from": deployer, "gas_price": gas_strategy})
 
     print("Doing the first deposit to set the price ratio..")
-    eth.approve(vault, DEPOSIT_TOKEN_1, {"from": deployer})
-    usdc.approve(vault, DEPOSIT_TOKEN_2, {"from": deployer})
+    eth.approve(vault, 2*DEPOSIT_TOKEN_1, {"from": deployer})
+    usdc.approve(vault, 2*DEPOSIT_TOKEN_2, {"from": deployer})
+
+    # Deposit and move price to simulate existing activity
     tx = vault.deposit(DEPOSIT_TOKEN_1, DEPOSIT_TOKEN_2, 0, 0, deployer, {"from": deployer})
     shares, amount0, amount1 = tx.return_value
+
+    prevTick = pool.slot0()[1] // 60 * 60
+    print(f"tick before swap {prevTick}")
+    router.swap(pool, True, 1e16, {"from": deployer})
+
+    # Check price did indeed move
+    tick = pool.slot0()[1] // 60 * 60
+    print(f"tick after swap {tick}")
+    assert tick != prevTick
+
+    # deposit a second time to have some funds in token1 after swapping them
+    tx = vault.deposit(DEPOSIT_TOKEN_1, DEPOSIT_TOKEN_2, 0, 0, deployer, {"from": deployer})
+    shares_, amount0_, amount1_ = tx.return_value
+    shares += shares_
+    amount0 += amount0_
+    amount1 += amount1_
 
     print("Triggering rebalance")
     strategy.rebalance({"from": deployer, "gas_price": gas_strategy})
