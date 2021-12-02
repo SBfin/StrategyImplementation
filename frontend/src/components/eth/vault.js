@@ -5,7 +5,10 @@ import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
 import { decimalFormat } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-
+import {fetchAll} from '../eth/helpers';
+import { useDispatch } from 'react-redux';
+import {Token} from '../eth/TokenBalance';
+import {ContractAddress} from '../../helpers/connector';
 
 const initialState = {
   totalSupply: {
@@ -20,7 +23,24 @@ const initialState = {
     value: 0,
     status: 'idle'
   },
+  baseOrder: {
+    value: [0, 0],
+    status: 'idle'
+  },
+  limitOrder: {
+    value: [0, 0],
+    status: 'idle'
+  },
+  maxTotalSupply: {
+    value: 0,
+    status: 'idle'
+  },
+  strategyAddress: {
+    value: 0,
+    status: 'idle'
+  },
   decimals: 0,
+  address: 0,
 
 };
 
@@ -44,6 +64,32 @@ export const fetchActionsVault = {
         const balanceOf = await vault.balanceOf(account);
         return balanceOf.toString();
     }),
+    baseOrder: createAsyncThunk(
+      'vault/fetchBaseOrder',
+      async(vault) => {
+        const baseUpper = await vault.baseUpper.call()
+        const baseLower = await vault.baseLower.call()
+        return [ baseLower, baseUpper ]
+    }),
+    limitOrder: createAsyncThunk(
+      'vault/fetchLimitOrder',
+      async(vault) => {
+        const limitUpper = await vault.baseUpper.call()
+        const limitLower = await vault.baseLower.call()
+        return [ limitLower, limitUpper ]
+    }),
+    maxTotalSupply: createAsyncThunk(
+      'vault/fetchMaxTotalSupply',
+      async(vault) => {
+        const maxTotalSupply = await vault.maxTotalSupply.call()
+        return maxTotalSupply.toString()
+    }),
+    strategyAddress: createAsyncThunk(
+      'vault/strategyAddress',
+      async(vault) => {
+        const strategyAddress = await vault.strategy.call()
+        return strategyAddress.toString();
+    }),
 };
 
 export const vaultSlice = createSlice({
@@ -52,6 +98,9 @@ export const vaultSlice = createSlice({
     reducers: {
         decimals: (state, action) => {
           state.decimals = action.payload;
+        },
+        address: (state, action) => {
+          state.address = action.payload;
         },
     },
     extraReducers: (builder) => {
@@ -79,6 +128,34 @@ export const vaultSlice = createSlice({
             state.balanceOf.status = 'idle'
             state.balanceOf.value = action.payload
           })
+          .addCase(fetchActionsVault.baseOrder.pending, (state) => {
+            state.baseOrder.status = 'loading'
+          })
+          .addCase(fetchActionsVault.baseOrder.fulfilled, (state, action) => {
+            state.baseOrder.status = 'idle'
+            state.baseOrder.value = action.payload
+          })
+          .addCase(fetchActionsVault.limitOrder.pending, (state) => {
+            state.limitOrder.status = 'loading'
+          })
+          .addCase(fetchActionsVault.limitOrder.fulfilled, (state, action) => {
+            state.limitOrder.status = 'idle'
+            state.limitOrder.value = action.payload
+          })
+          .addCase(fetchActionsVault.maxTotalSupply.pending, (state) => {
+            state.maxTotalSupply.status = 'loading'
+          })
+          .addCase(fetchActionsVault.maxTotalSupply.fulfilled, (state, action) => {
+            state.maxTotalSupply.status = 'idle'
+            state.maxTotalSupply.value = action.payload
+          })
+          .addCase(fetchActionsVault.strategyAddress.pending, (state) => {
+            state.strategyAddress.status = 'loading'
+          })
+          .addCase(fetchActionsVault.strategyAddress.fulfilled, (state, action) => {
+            state.strategyAddress.status = 'idle'
+            state.strategyAddress.value = action.payload
+          })
     },
 });
 export default vaultSlice.reducer;
@@ -86,6 +163,9 @@ export default vaultSlice.reducer;
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
   const [vault, setVault] = useState()
+  const eth = Token(ContractAddress("eth"))
+  const dai = Token(ContractAddress("dai"))
+  const dispatch = useDispatch()
 
   useEffect(() => {
     console.log("loading contract")
@@ -96,15 +176,17 @@ export function GetVault(address) {
     const signer = library.getSigner(account).connectUnchecked()
     const contract = new Contract(address, UniVault.abi, signer)
 
-    const filterFrom = contract.filters.Transfer(account);
-    contract.on(filterFrom, (from, to, amount, event) => {
-      // The `from` will always be the signer address,  more info: https://docs.ethers.io/v5/api/contract/example/
-      // TODO: check and reload things from here
-        console.log(from, to, amount, event)
-    });
+    // more info: https://docs.ethers.io/v5/api/contract/example/
+    if (eth && dai && contract && account && dispatch){
+        const filterTo = contract.filters.Transfer(null, account)
+        library.on(filterTo, (from, to, amount, event) => {
+            console.log('Vault|Interaction', {from, to, amount, event})
+            fetchAll(account, contract, eth, dai, dispatch)
+        })
+    }
 
     setVault(contract)
-  }, [address, library, chainId])
+  }, [address, library, chainId, eth, dai])
   return vault
 }
 
