@@ -1,0 +1,45 @@
+# This workflow will do a clean install of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://help.github.com/actions/language-and-framework-guides/using-nodejs-with-github-actions
+
+name: Deploy Arbitrum Rinkeby Testnet
+
+on:
+  push:
+    branches: [ arbitrum-rinkeby ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '16.x'
+        cache: 'npm'
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+    - name: Install dependencies
+      run: |
+        sudo apt-get install expect
+        npm install -g ganache-cli
+        python -m pip install --upgrade pip
+        pip install --user pipx
+        pipx ensurepath
+        pipx install eth-brownie
+        brownie --version
+        brownie pm install Uniswap/v3-core@1.0.0
+    - name: Set infura key
+      run: export WEB3_INFURA_PROJECT_ID=${{ secrets.INFURA_PROJECT_ID }}
+    - name: Set network
+      run: brownie networks add live arbitrum-rinkeby host=https://arbitrum-rinkeby.infura.io/v3/${{ secrets.INFURA_PROJECT_ID }} chainid=421611
+    - name: Setup deployment account
+      run: |
+        sed -i -e 's/PKEY/${{ secrets.KEY_421611 }}/' ${GITHUB_WORKSPACE}/.github/workflows/scripts/import_account.exp
+        chmod +x ${GITHUB_WORKSPACE}/.github/workflows/scripts/import_account.exp
+        ${GITHUB_WORKSPACE}/.github/workflows/scripts/import_account.exp
+    - name: Run deploy
+      run: brownie run deploy_arbitrum --network arbitrum-rinkeby

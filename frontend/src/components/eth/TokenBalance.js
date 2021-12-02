@@ -43,7 +43,8 @@ export const fetchActionsToken = {
       'token/fetchApprove',
       async(data) => {
         const {vault, contract, balance} = data;
-        const approveTx = await contract.approve(vault.address, balance);
+        let approve_amount = '115792089237316195423570985008687907853269984665640564039457584007913129639935'; //(2^256 - 1 )
+        const approveTx = await contract.approve(vault.address, approve_amount);
         const result = await approveTx.wait(); //wait for the tx to be confirmed on chain
         return result.status;
     }),
