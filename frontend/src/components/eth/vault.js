@@ -8,7 +8,6 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {fetchAll} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
 import {Token} from '../eth/TokenBalance';
-import { Strategy } from './strategy';
 import {ContractAddress} from '../../helpers/connector';
 
 const initialState = {
@@ -168,7 +167,6 @@ export function GetVault(address) {
   const [vault, setVault] = useState()
   const eth = Token(ContractAddress("eth"))
   const dai = Token(ContractAddress("dai"))
-  const strategy = Strategy(ContractAddress("strategy"))
   const dispatch = useDispatch()
 
   useEffect(() => {
@@ -176,7 +174,6 @@ export function GetVault(address) {
     if (!(!!account || !!library) || !address) {
       return
     }
-    
     const signer = library.getSigner(account).connectUnchecked()
     const contract = new Contract(address, UniVault.abi, signer)
 
@@ -185,7 +182,7 @@ export function GetVault(address) {
         const filterTo = contract.filters.Transfer(null, account)
         library.on(filterTo, (from, to, amount, event) => {
             console.log('Vault|Interaction', {from, to, amount, event})
-            fetchAll(account, contract, eth, dai, strategy, dispatch)
+            fetchAll(account, contract, eth, dai, dispatch)
         })
     }
 

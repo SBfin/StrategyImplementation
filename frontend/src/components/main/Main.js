@@ -26,7 +26,6 @@ export default function Main(props) {
   const vault = GetVault(vaultContractAddress)
   const eth = Token(ContractAddress("eth"))
   const dai = Token(ContractAddress("dai"))
-  const strategy = Strategy(ContractAddress("strategy"))
 
   useEffect(() => {
      if(!vault){
@@ -34,7 +33,7 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-    fetchAll(account, vault, eth, dai, strategy, dispatch)
+    fetchAll(account, vault, eth, dai, dispatch)
     }, [vault]);
 
   const [input1, setInput1] = useState('');

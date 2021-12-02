@@ -1,12 +1,35 @@
+import { useState, useEffect } from 'react'
+import { useWeb3React } from '@web3-react/core'
 import {formatUnits} from "@ethersproject/units";
+import {Contract} from "@ethersproject/contracts";
 import { useSelector, useDispatch } from 'react-redux';
 import {fetchActionsToken, tokenSlice, Token} from './TokenBalance';
 import {vaultSlice,fetchActionsVault, GetVault} from './vault';
 import { fetchActionsStrategy, strategySlice ,Strategy } from "./strategy";
+import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
 import {ContractAddress} from '../../helpers/connector';
-import { useWeb3React } from '@web3-react/core'
+import { ethers } from 'ethers';
+
+import { Web3Provider } from '@ethersproject/providers'
+import { Provider } from 'react-redux'
 
 const MINIMUN_TOKEN = 0.00001;
+
+export async function FetchStrategy(address) {
+
+    var contract
+
+      if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
+        // Web3 browser user detected. You can now use the provider.
+        const accounts = await window.ethereum.enable();
+        let provider = new ethers.providers.Web3Provider(Provider);
+        const account = provider.getSigner(accounts[0]).connectUnchecked()
+
+      contract = await new Contract(address, DynamicRangesStrategy.abi, account)
+    
+    return contract
+}}
+
 
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
@@ -56,11 +79,10 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
     return false
 }
 
-export function fetchAll(account, vault, eth, dai, strategy, dispatch) {
-
+export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
      dispatch(vaultSlice.actions.address(vault.address))
-     dispatch(fetchActionsVault.strategyAddress(vault));
+     dispatch(fetchActionsVault.strategyAddress(vault)).then(r =>FetchStrategy(r.payload).then(r => dispatch(fetchActionsStrategy.price(r))));
      dispatch(fetchActionsVault.totalSupply(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
      dispatch(fetchActionsVault.baseOrder(vault));
@@ -76,7 +98,5 @@ export function fetchAll(account, vault, eth, dai, strategy, dispatch) {
      dispatch(fetchActionsToken.balance({account,contract: dai})).then(r => dispatch(tokenSlice.actions.balanceDai(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: eth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)));
      dispatch(fetchActionsToken.allowance({vault, account, contract: dai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)));
-
-     dispatch(fetchActionsStrategy.price(strategy));
 
 }
