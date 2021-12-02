@@ -2,7 +2,7 @@ from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
 
-"""
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [ [0, 1e15] , [1, 0], [1e18, 0], [0, 1e10], [1e4, 1e10], [1e18, 1e10]],
@@ -28,9 +28,7 @@ def test_initial_deposit(
 
     
     shares, amount0, amount1 = tx.return_value
-    print(str(shares))
-    print(str(amount0))
-    print(str(amount1))
+
 
     # Check amounts are same as inputs
     assert amount0 == amount0Desired
@@ -43,9 +41,6 @@ def test_initial_deposit(
     assert amount0 == balance0 - tokens[0].balanceOf(user)
     assert amount1 == balance1 - user.balance()
 
-    print("balance 0 " + str(vault.getBalance0()))
-    print("balance 1 " + str(vault.getBalance1()))   
-    print("balance 1 user " + str(tokens[1].balanceOf(user)))   
 
     # Check event
     assert tx.events["Deposit"][1 if amount1Desired > 0 else 0] == {
@@ -149,7 +144,7 @@ def test_deposit_when_vault_only_has_token0(
 
     # Token 1 is weth
     balance1 = user.balance()
-    print("ETH user " + str(balance1))
+
     tx = vault.setAddressWeth(tokens[1], {"from" : gov})
 
     totalSupply = vault.totalSupply()
@@ -158,8 +153,7 @@ def test_deposit_when_vault_only_has_token0(
     # Deposit
     tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
     shares, amount0, amount1 = tx.return_value
-    print(tx.events)
-    print("ETH user " + str(user.balance()))
+
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
@@ -241,7 +235,7 @@ def test_deposit_when_vault_only_has_token1(
     totalSupplyAfter = vault.totalSupply()
     assert approx(total1 * totalSupplyAfter) == total1After * totalSupply
 
-"""
+
 def test_deposit_checks(vault, user):
     with reverts("amount0Desired or amount1Desired"):
         vault.deposit(0, 0, 0, 0, user, {"from": user})
@@ -252,6 +246,7 @@ def test_deposit_checks(vault, user):
 
     with reverts("amount0Min"):
         vault.deposit(1e8, 0, 2e8, 0, user, {"from": user})
+    
     with reverts("amount1Min"):
         vault.deposit(0, 1e8, 0, 2e8, user, {"from": user})
 
@@ -259,12 +254,12 @@ def test_deposit_checks(vault, user):
         vault.deposit(1e8, 200e18, 0, 0, user, {"from": user})
 
     with reverts("amount0Desired or value"):
-        vault.depositEth(1e8, 200e18, 0, 0, user, {"from": user, "value" : 0})
+        vault.depositEth(0, 0, 0, 0, user, {"from": user, "value" : 0})
 
     with reverts("amount1Desired greater than value"):
         vault.depositEth(1e13, 1e12, 0, 0, user, {"from": user, "value" : 1e10})  
 
     with reverts("to"):
-        vault.depositEth(1e8, 1e8, 0, 0, vault, {"from": user, "value" : 1e10})
+        vault.depositEth(1e8, 1e8, 0, 0, vault, {"from": user, "value" : 1e8})
     
 
