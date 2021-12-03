@@ -3,7 +3,7 @@ import { useWeb3React } from '@web3-react/core'
 import UniVault from "./abi/UniVault.json";
 import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
-import { decimalFormat } from './helpers';
+import { decimalFormat, tickToPrice, dinamicFixed } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {fetchAll} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
@@ -69,14 +69,16 @@ export const fetchActionsVault = {
       async(vault) => {
         const baseUpper = await vault.baseUpper.call()
         const baseLower = await vault.baseLower.call()
-        return [ baseLower, baseUpper ]
+        return [ dinamicFixed(1/tickToPrice(baseLower,6,18),2),
+                 dinamicFixed(1/tickToPrice(baseUpper,6,18),2) ]
     }),
     limitOrder: createAsyncThunk(
       'vault/fetchLimitOrder',
       async(vault) => {
         const limitUpper = await vault.baseUpper.call()
         const limitLower = await vault.baseLower.call()
-        return [ limitLower, limitUpper ]
+        return [ dinamicFixed(1/tickToPrice(limitLower,6,18),2),
+                 dinamicFixed(1/tickToPrice(limitUpper,6,18),2) ]
     }),
     maxTotalSupply: createAsyncThunk(
       'vault/fetchMaxTotalSupply',
@@ -172,7 +174,6 @@ export function GetVault(address) {
     if (!(!!account || !!library) || !address) {
       return
     }
-    
     const signer = library.getSigner(account).connectUnchecked()
     const contract = new Contract(address, UniVault.abi, signer)
 

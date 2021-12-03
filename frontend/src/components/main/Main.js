@@ -1,6 +1,7 @@
 import Loader from '../loader/Loader';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice} from '../eth/TokenBalance';
 import {GetVault,GetStrategy, Deposit,Withdraw, vaultSlice} from '../eth/vault';
+import { Strategy } from '../eth/strategy';
 import { useState, useEffect } from 'react'
 import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
@@ -16,7 +17,8 @@ export default function Main(props) {
   const {account, library, chainId} = useWeb3React();
 
   const vaultStore = useSelector((state) => state.vault);
-  const tokenStore = useSelector((state) => state.token)
+  const tokenStore = useSelector((state) => state.token);
+  const strategyStore = useSelector((state) => state.strategy)
   const dispatch = useDispatch();
 
   const isButtonDisabled = props.fetching;
@@ -176,6 +178,10 @@ export default function Main(props) {
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
               <span style={{color: 'green'}}> {dinamicFixed(decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
+            </div>
+            <div className="element">
+              <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>DAI/WETH price: &nbsp;
+              <span style={{color: 'green'}}> {strategyStore.price.value}</span></label>
             </div>
           </div>
           <div class="col-6">

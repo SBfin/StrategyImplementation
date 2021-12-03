@@ -1,11 +1,35 @@
-import {formatUnits} from "@ethersproject/units";
-import { useSelector, useDispatch } from 'react-redux';
-import {fetchActionsToken, tokenSlice, Token} from '../eth/TokenBalance';
-import {vaultSlice,fetchActionsVault, GetVault} from '../eth/vault';
-import {ContractAddress} from '../../helpers/connector';
+import { useState, useEffect } from 'react'
 import { useWeb3React } from '@web3-react/core'
+import {formatUnits} from "@ethersproject/units";
+import {Contract} from "@ethersproject/contracts";
+import { useSelector, useDispatch } from 'react-redux';
+import {fetchActionsToken, tokenSlice, Token} from './TokenBalance';
+import {vaultSlice,fetchActionsVault, GetVault} from './vault';
+import { fetchActionsStrategy, strategySlice ,Strategy } from "./strategy";
+import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
+import {ContractAddress} from '../../helpers/connector';
+import { ethers } from 'ethers';
+
+import { Web3Provider } from '@ethersproject/providers'
+import { Provider } from 'react-redux'
 
 const MINIMUN_TOKEN = 0.00001;
+
+export async function FetchStrategy(address) {
+
+    var contract
+
+      if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
+        // Web3 browser user detected. You can now use the provider.
+        const accounts = await window.ethereum.enable();
+        let provider = new ethers.providers.Web3Provider(window.ethereum);
+        const account = provider.getSigner(accounts[0]).connectUnchecked()
+
+      contract = await new Contract(address, DynamicRangesStrategy.abi, account)
+    
+    return contract
+}}
+
 
 export function decimalFormat(number, decimals) {
     if(!number || !decimals){
@@ -17,6 +41,12 @@ export function decimalFormat(number, decimals) {
 export function dinamicFixed(num, dec) {
     return Math.round(num * (Math.pow(10,dec))) / Math.pow(10,dec);
 }
+
+export function tickToPrice(tick, decimal0, decimal1) {
+    tick = Math.abs(tick)
+    return dinamicFixed(Math.pow(1.0001, tick) * (Math.pow(10, decimal0 - decimal1)),5)
+}
+
 
 function gcd(a , b)
     {
@@ -31,6 +61,8 @@ function gcd(a , b)
     }
 
 export function calculateRatio(num_1, num_2) {
+    num_1 = dinamicFixed(num_1, 4)
+    num_2 = dinamicFixed(num_2, 4)
     const den = (gcd(num_1, num_2));
     if(isNaN(num_1) || isNaN(num_2) || isNaN(den) || den === 0) return '0:0'
     var ratio = num_1/den+":"+num_2/den;
@@ -48,11 +80,9 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
 }
 
 export function fetchAll(account, vault, eth, dai, dispatch) {
-    
-
      dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
      dispatch(vaultSlice.actions.address(vault.address))
-     dispatch(fetchActionsVault.strategyAddress(vault));
+     dispatch(fetchActionsVault.strategyAddress(vault)).then(r =>FetchStrategy(r.payload).then(r => dispatch(fetchActionsStrategy.price(r))));
      dispatch(fetchActionsVault.totalSupply(vault));
      dispatch(fetchActionsVault.balanceOf({account, vault}));
      dispatch(fetchActionsVault.baseOrder(vault));
