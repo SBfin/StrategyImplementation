@@ -7,7 +7,8 @@ from brownie import (
     DynamicRangesStrategy,
     TestRouter,
     ZERO_ADDRESS,
-    Contract
+    Contract,
+    chain
 )
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 from math import floor, sqrt
@@ -60,6 +61,7 @@ def main():
     pool.increaseObservationCardinalityNext(
         100, {"from": deployer, "gas_price": gas_strategy}
     )
+    chain.sleep(3600)
 
     router = deployer.deploy(TestRouter)
     #router = Contract("0xa3B53dDCd2E3fC28e8E130288F2aBD8d5EE37472")
@@ -126,4 +128,4 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
-    
+    print(f"Deposited token0: {amount0} token1: {amount1} shares: {shares}")
