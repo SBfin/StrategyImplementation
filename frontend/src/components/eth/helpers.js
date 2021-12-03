@@ -22,7 +22,7 @@ export async function FetchStrategy(address) {
       if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
         // Web3 browser user detected. You can now use the provider.
         const accounts = await window.ethereum.enable();
-        let provider = new ethers.providers.Web3Provider(Provider);
+        let provider = new ethers.providers.Web3Provider(window.ethereum);
         const account = provider.getSigner(accounts[0]).connectUnchecked()
 
       contract = await new Contract(address, DynamicRangesStrategy.abi, account)
