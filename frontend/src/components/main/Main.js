@@ -226,8 +226,22 @@ export default function Main(props) {
       { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
         <div className="element">
-            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: &nbps;
             <span style={{color: 'green'}}>{decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
+          </div>
+          <div className="row main-container">
+            <div class="col-6">
+            <div className="element">
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Weth: &nbps;
+            <span style={{color: 'green'}}>{decimalFormat(vaultStore.userToken[0], vaultStore.decimals)}</span></label>
+          </div>
+            </div>
+            <div class="col-6">
+            <div className="element">
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Dai: &nbps;
+            <span style={{color: 'green'}}>{decimalFormat(vaultStore.userToken[1], vaultStore.decimals)}</span></label>
+          </div>
+            </div>
           </div>
 
           <div className="element">

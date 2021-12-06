@@ -5,7 +5,7 @@ import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
 import { decimalFormat, tickToPrice, dinamicFixed } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import {fetchAll} from '../eth/helpers';
+import {fetchAll, calcTokenByShares} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
 import {Token} from '../eth/TokenBalance';
 import {ContractAddress} from '../../helpers/connector';
@@ -39,6 +39,7 @@ const initialState = {
     value: 0,
     status: 'idle'
   },
+  userToken: [0, 0],
   decimals: 0,
   address: 0,
 
@@ -104,6 +105,11 @@ export const vaultSlice = createSlice({
         address: (state, action) => {
           state.address = action.payload;
         },
+        userToken: (state, action) => {
+          if(state.totalAmounts.value[0] && state.totalAmounts.value[1]) {   
+            state.userToken = calcTokenByShares(state.balanceOf.value, action.payload, state.totalAmounts.value[0], state.totalAmounts.value[1])
+          }
+        }
     },
     extraReducers: (builder) => {
         builder
