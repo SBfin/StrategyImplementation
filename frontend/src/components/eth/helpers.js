@@ -35,7 +35,7 @@ export function decimalFormat(number, decimals) {
     if(!number || !decimals){
         return 0;
     }
-    return parseFloat(formatUnits(number, parseInt(decimals)))
+    return parseFloat(formatUnits(String(number), parseInt(decimals)))
 }
 
 export function dinamicFixed(num, dec) {
