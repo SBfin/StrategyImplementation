@@ -108,7 +108,6 @@ export const vaultSlice = createSlice({
         userToken: (state, action) => {
           if(state.totalAmounts.value[0] && state.totalAmounts.value[1]) {   
             state.userToken = calcTokenByShares(state.balanceOf.value, action.payload, state.totalAmounts.value[0], state.totalAmounts.value[1])
-            console.log(state.userToken)
           }
         }
     },

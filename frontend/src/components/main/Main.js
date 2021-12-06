@@ -235,13 +235,13 @@ export default function Main(props) {
             <div class="col-6">
             <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Weth:
-            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(BigNumber.from(vaultStore.userToken[0]), vaultStore.decimals),4)}</span></label>
+            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(vaultStore.userToken[0], 0), tokenStore.decimalsEth),4)}</span></label>
           </div>
             </div>
             <div class="col-6">
             <div className="element">
             <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Dai: 
-            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(BigNumber.from(dinamicFixed(vaultStore.userToken[1],2)), vaultStore.decimals),10)}</span></label>
+            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(vaultStore.userToken[1], 0), tokenStore.decimalsDai),4)}</span></label>
           </div>
             </div>
           </div>

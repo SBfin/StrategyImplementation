@@ -81,15 +81,8 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
 }
 
 export function calcTokenByShares(shares, totalShares, token1Tot, token2Tot) {
-    console.log(dinamicFixed(shares,3))
-    console.log(decimalFormat(totalShares,18))
-    console.log(token1Tot)
-    console.log(token2Tot)
     const rapp = dinamicFixed((shares / totalShares),3)
-    console.log(rapp)
-
     return [String(token1Tot * rapp), String(token2Tot * rapp)]
-
 }
 
 export function fetchAll(account, vault, eth, dai, dispatch) {
