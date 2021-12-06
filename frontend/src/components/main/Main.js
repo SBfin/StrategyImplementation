@@ -8,6 +8,8 @@ import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
 import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -226,20 +228,20 @@ export default function Main(props) {
       { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
         <div className="element">
-            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: &nbps;
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance:
             <span style={{color: 'green'}}>{decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
           </div>
           <div className="row main-container">
             <div class="col-6">
             <div className="element">
-            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Weth: &nbps;
-            <span style={{color: 'green'}}>{decimalFormat(vaultStore.userToken[0], vaultStore.decimals)}</span></label>
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Weth:
+            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(BigNumber.from(vaultStore.userToken[0]), vaultStore.decimals),4)}</span></label>
           </div>
             </div>
             <div class="col-6">
             <div className="element">
-            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Dai: &nbps;
-            <span style={{color: 'green'}}>{decimalFormat(vaultStore.userToken[1], vaultStore.decimals)}</span></label>
+            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Dai: 
+            <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(BigNumber.from(dinamicFixed(vaultStore.userToken[1],2)), vaultStore.decimals),10)}</span></label>
           </div>
             </div>
           </div>

@@ -13,6 +13,7 @@ import { ethers } from 'ethers';
 import { Web3Provider } from '@ethersproject/providers'
 import { Provider } from 'react-redux'
 
+
 const MINIMUN_TOKEN = 0.00001;
 
 export async function FetchStrategy(address) {
@@ -35,7 +36,7 @@ export function decimalFormat(number, decimals) {
     if(!number || !decimals){
         return 0;
     }
-    return parseFloat(formatUnits(number, parseInt(decimals)))
+    return parseFloat(formatUnits(String(number), parseInt(decimals)))
 }
 
 export function dinamicFixed(num, dec) {
@@ -80,9 +81,14 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
 }
 
 export function calcTokenByShares(shares, totalShares, token1Tot, token2Tot) {
-    const rapp = (shares / totalShares)
+    console.log(dinamicFixed(shares,3))
+    console.log(decimalFormat(totalShares,18))
+    console.log(token1Tot)
+    console.log(token2Tot)
+    const rapp = dinamicFixed((shares / totalShares),3)
+    console.log(rapp)
 
-    return [token1Tot * rapp, token2Tot * rapp]
+    return [String(token1Tot * rapp), String(token2Tot * rapp)]
 
 }
 
