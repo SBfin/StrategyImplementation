@@ -5,7 +5,7 @@ import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
 import { decimalFormat, tickToPrice, dinamicFixed } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import {fetchAll} from '../eth/helpers';
+import {fetchAll, calcTokenByShares} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
 import {Token} from '../eth/TokenBalance';
 import {ContractAddress} from '../../helpers/connector';

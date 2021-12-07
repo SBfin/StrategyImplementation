@@ -8,6 +8,9 @@ import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
 import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
+import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
+import UserBalance from '../user/UserBalance'
+
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
 const ENTER_KEY_CODE = 'Enter';
@@ -225,11 +228,7 @@ export default function Main(props) {
 
       { vaultStore.balanceOf.value>0 &&
       <div className="main-container">
-        <div className="element">
-            <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance: 
-            <span style={{color: 'green'}}>{decimalFormat(vaultStore.balanceOf.value, vaultStore.decimals)}</span></label>
-          </div>
-
+        <UserBalance />
           <div className="element">
             <label className="paste-label" style={{lineHeight: '3em'}}>Shares</label>
             <input
