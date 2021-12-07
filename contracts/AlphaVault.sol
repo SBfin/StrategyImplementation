@@ -2,6 +2,7 @@
 
 pragma solidity 0.7.6;
 
+import "../interfaces/external/IWETH9.sol";
 import "@openzeppelin/contracts/math/Math.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
@@ -88,6 +89,7 @@ contract AlphaVault is
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(IUniswapV3Pool(_pool).token0());
         token1 = IERC20(IUniswapV3Pool(_pool).token1());
+
         tickSpacing = IUniswapV3Pool(_pool).tickSpacing();
 
         protocolFee = _protocolFee;
@@ -96,7 +98,6 @@ contract AlphaVault is
 
         require(_protocolFee < 1e6, "protocolFee");
     }
-
     /**
      * @notice Deposits tokens in proportion to the vault's current holdings.
      * @dev These tokens sit in the vault and are not used for liquidity on
@@ -112,6 +113,7 @@ contract AlphaVault is
      * @return amount0 Amount of token0 deposited
      * @return amount1 Amount of token1 deposited
      */
+
     function deposit(
         uint256 amount0Desired,
         uint256 amount1Desired,
@@ -120,36 +122,37 @@ contract AlphaVault is
         address to
     )
         external
-        override
         nonReentrant
+        override
         returns (
             uint256 shares,
             uint256 amount0,
             uint256 amount1
         )
     {
-        require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
-        require(to != address(0) && to != address(this), "to");
+            require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
+            require(to != address(0) && to != address(this), "to");
 
-        // Poke positions so vault's current holdings are up-to-date
-        _poke(baseLower, baseUpper);
-        _poke(limitLower, limitUpper);
+            // Poke positions so vault's current holdings are up-to-date
+            _poke(baseLower, baseUpper);
+            _poke(limitLower, limitUpper);
 
-        // Calculate amounts proportional to vault's holdings
-        (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
-        require(shares > 0, "shares");
-        require(amount0 >= amount0Min, "amount0Min");
-        require(amount1 >= amount1Min, "amount1Min");
+            // Calculate amounts proportional to vault's holdings
+            (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
+            require(shares > 0, "shares");
+            require(amount0 >= amount0Min, "amount0Min");
+            require(amount1 >= amount1Min, "amount1Min");
 
-        // Pull in tokens from sender
-        if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
-        if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
+            // Pull in tokens from sender
+            if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
+            if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
 
-        // Mint shares to recipient
-        _mint(to, shares);
-        emit Deposit(msg.sender, to, shares, amount0, amount1);
-        require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
+            // Mint shares to recipient
+            _mint(to, shares);
+            emit Deposit(msg.sender, to, shares, amount0, amount1);
+            require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
     }
+
 
     /// @dev Do zero-burns to poke a position on Uniswap so earned fees are
     /// updated. Should be called if total amounts needs to include up-to-date
@@ -616,4 +619,5 @@ contract AlphaVault is
         require(msg.sender == governance, "governance");
         _;
     }
+
 }
