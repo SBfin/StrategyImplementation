@@ -98,7 +98,7 @@ export function fetchAll(account, vault, eth, dai, dispatch) {
      dispatch(fetchActionsToken.decimals(dai)).then(r => dispatch(tokenSlice.actions.decimalsDai(r.payload)));
 
      dispatch(fetchActionsVault.totalAmounts(vault)).then(r => dispatch(tokenSlice.actions.ratioToken(r.payload)));
-     dispatch(fetchActionsVault.totalSupply(vault)).then(r => dispatch(vaultSlice.actions.userToken(r.payload)));
+     dispatch(fetchActionsVault.totalSupply(vault));
 
 
      dispatch(fetchActionsToken.balance({account,contract: eth})).then(r => dispatch(tokenSlice.actions.balanceEth(r.payload)));

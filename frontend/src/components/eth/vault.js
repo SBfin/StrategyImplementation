@@ -39,7 +39,6 @@ const initialState = {
     value: 0,
     status: 'idle'
   },
-  userToken: [0, 0],
   decimals: 0,
   address: 0,
 
@@ -105,11 +104,6 @@ export const vaultSlice = createSlice({
         address: (state, action) => {
           state.address = action.payload;
         },
-        userToken: (state, action) => {
-          if(state.totalAmounts.value[0] && state.totalAmounts.value[1]) {   
-            state.userToken = calcTokenByShares(state.balanceOf.value, action.payload, state.totalAmounts.value[0], state.totalAmounts.value[1])
-          }
-        }
     },
     extraReducers: (builder) => {
         builder
