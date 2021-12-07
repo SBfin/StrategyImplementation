@@ -16,7 +16,8 @@ import "@uniswap/v3-periphery/contracts/libraries/PositionKey.sol";
 import "../interfaces/IVault.sol";
 import "./AlphaVault.sol";
 
-contract OrbitVault is   
+contract OrbitVault is 
+    IOrbitVault,
     IVault,
     IUniswapV3MintCallback,
     IUniswapV3SwapCallback,
