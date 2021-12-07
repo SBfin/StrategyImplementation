@@ -55,12 +55,6 @@ contract AlphaVault is
         uint256 feesToProtocol1
     );
 
-    event EthRefund(
-        address indexed to,
-        uint256 amount
-    );
-
-
     event Snapshot(int24 tick, uint256 totalAmount0, uint256 totalAmount1, uint256 totalSupply);
 
     IUniswapV3Pool public immutable pool;
@@ -73,7 +67,6 @@ contract AlphaVault is
     address public strategy;
     address public governance;
     address public pendingGovernance;
-    address public weth;
 
     int24 public baseLower;
     int24 public baseUpper;
@@ -160,53 +153,6 @@ contract AlphaVault is
             require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
     }
 
-    function depositEth(
-        uint256 amount0Desired,
-        uint256 amount1Desired,
-        uint256 amount0Min,
-        uint256 amount1Min,
-        address to
-    )
-        external
-        nonReentrant
-        payable
-        returns (
-            uint256 shares,
-            uint256 amount0,
-            uint256 amount1
-        )
-    {      
-        require(amount0Desired > 0 || msg.value > 0, "amount0Desired or value");
-        require(msg.value >= amount1Desired, "amount1Desired greater than value");
-        require(to != address(0) && to != address(this), "to");
-
-        // Poke positions so vault's current holdings are up-to-date
-        _poke(baseLower, baseUpper);
-        _poke(limitLower, limitUpper);
-
-        // Calculate amounts proportional to vault's holdings
-        (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
-        require(shares > 0, "shares");
-        require(amount0 >= amount0Min, "amount0Min");
-        require(amount1 >= amount1Min, "amount1Min");
-
-        // Pull in tokens from sender
-        if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
-        
-        // WETH is always token1
-        if (amount1 >= 0) {
-            // Convert amount in weth if positive amount
-            if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
-            // Refund any amount left
-            if (msg.value > amount1) refundETH();
-            }
-
-        // Mint shares to recipient
-        _mint(to, shares);
-        emit Deposit(msg.sender, to, shares, amount0, amount1);
-        require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
-
-    }
 
     /// @dev Do zero-burns to poke a position on Uniswap so earned fees are
     /// updated. Should be called if total amounts needs to include up-to-date
@@ -672,24 +618,6 @@ contract AlphaVault is
     modifier onlyGovernance {
         require(msg.sender == governance, "governance");
         _;
-    }
-
-    function refundETH() internal {
-        if (address(this).balance > 0) safeTransferETH(msg.sender, address(this).balance);
-        emit EthRefund(msg.sender, address(this).balance);
-    }
-
-    /// @notice Transfers ETH to the recipient address
-    /// @dev Fails with `STE`
-    /// @param to The destination of the transfer
-    /// @param value The value to be transferred
-    function safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, 'STE');
-    }
-
-    function setAddressWeth(address _address) external onlyGovernance {
-        weth = _address;
     }
 
 }

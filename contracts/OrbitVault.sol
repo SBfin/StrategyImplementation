@@ -14,10 +14,10 @@ import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
 import "@uniswap/v3-periphery/contracts/libraries/PositionKey.sol";
 import "../interfaces/IVault.sol";
+import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
 
 contract OrbitVault is 
-    IOrbitVault,
     IVault,
     IUniswapV3MintCallback,
     IUniswapV3SwapCallback,
