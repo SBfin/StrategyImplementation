@@ -28,7 +28,8 @@ contract OrbitVault is
     using SafeMath for uint256;
 
     address public weth;
-    
+
+
     constructor(address _pool,
         uint256 _protocolFee,
         uint256 _maxTotalSupply) 
@@ -82,7 +83,11 @@ contract OrbitVault is
             // Convert amount in weth if positive amount
             if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
             // Refund any amount left
-            if (msg.value > amount1) refundETH();
+            if (msg.value > amount1) 
+                {
+                 SafeMath.sub(msg.value, amount1);
+                 refundETH();
+                 }
             }
 
         // Mint shares to recipient

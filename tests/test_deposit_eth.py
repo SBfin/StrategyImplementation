@@ -261,5 +261,6 @@ def test_deposit_checks(vault, user):
 
     with reverts("to"):
         vault.depositEth(1e8, 1e8, 0, 0, vault, {"from": user, "value" : 1e8})
-    
+
+
 
