@@ -47,10 +47,9 @@ contract OrbitVault is
     );
 
     function depositEth(
-        uint256 amount0Desired,
-        uint256 amount1Desired,
-        uint256 amount0Min,
-        uint256 amount1Min,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountEthMin,
         address to
     )
         external
@@ -62,11 +61,26 @@ contract OrbitVault is
             uint256 amount1
         )
     {      
-        require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
-        if (address(token0) == weth) {require(msg.value >= amount0Desired, "amount0Desired greater than value");}
-        else {require(msg.value >= amount1Desired, "amount1Desired greater than value");}
+        require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
+        uint256 amount0Desired;
+        uint256 amount1Desired;
+        uint256 amount1Min;
+        uint256 amount0Min;
+        
+        if (address(token0) == weth) {
+            amount0Desired = msg.value;
+            amount1Desired = amountTokenDesired;
+            amount0Min = amountEthMin;
+            amount1Min = amountTokenMin;
+        } else {
+            amount0Desired = amountTokenDesired;
+            amount1Desired = msg.value;
+            amount0Min = amountTokenMin;
+            amount1Min = amountEthMin;
+        }
+        
         // Poke positions so vault's current holdings are up-to-date
         _poke(baseLower, baseUpper);
         _poke(limitLower, limitUpper);
@@ -95,8 +109,6 @@ contract OrbitVault is
                 // Refund any amount left
                 if (msg.value > amount1) refundETH();
                 }
-
-        
 
 
         // Mint shares to recipient

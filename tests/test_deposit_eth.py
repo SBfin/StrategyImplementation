@@ -25,10 +25,9 @@ def test_initial_deposit(
     balance1 = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
     
     value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
-
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : value}) 
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts are same as inputs
     assert amount0 == amount0Desired
@@ -82,9 +81,9 @@ def test_deposit_eth(
 
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : value})
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
@@ -152,9 +151,10 @@ def test_deposit_when_vault_only_has_token0(
     total0, total1 = vault.getTotalAmounts()
 
     # Deposit
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
@@ -214,7 +214,9 @@ def test_deposit_when_vault_only_has_token1(
     total0, total1 = vault.getTotalAmounts()
 
     # Deposit
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -266,11 +268,11 @@ def test_deposit_checks(vault, user, tokens, gov):
     with reverts("maxTotalSupply"):
         vault.deposit(1e8, 200e18, 0, 0, user, {"from": user})
 
-    with reverts("amount1Desired greater than value"):
-        vault.depositEth(1e13, 1e12, 0, 0, user, {"from": user, "value" : 1e10})  
+    with reverts("amountTokenDesired or value"):
+        vault.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
 
     with reverts("to"):
-        vault.depositEth(1e8, 1e8, 0, 0, vault, {"from": user, "value" : 1e8})
+        vault.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
 
 
 
