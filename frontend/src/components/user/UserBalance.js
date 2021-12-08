@@ -21,13 +21,13 @@ export default function UserBalance(props) {
                 <div class="col-6">
                     <div className="element">                    
                         <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Weth:
-                        <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(userToken[0], 0), tokenStore.decimalsEth),4)}</span></label>
+                        <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(userToken[0], 0), tokenStore.decimalsToken0),4)}</span></label>
                     </div>
                 </div>
                 <div class="col-6">
                     <div className="element">
                         <label className="paste-label" style={{textAlign: 'center', width: "100%"}}>Your balance Dai: 
-                        <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(userToken[1], 0), tokenStore.decimalsDai),4)}</span></label>
+                        <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(dinamicFixed(userToken[1], 0), tokenStore.decimalsToken1),4)}</span></label>
                     </div>
                 </div>
             </div>

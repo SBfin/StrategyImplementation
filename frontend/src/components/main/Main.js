@@ -10,6 +10,7 @@ import { useWeb3React } from '@web3-react/core'
 import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import UserBalance from '../user/UserBalance'
+import DepositSection from './DepositSection'
 
 
 const DEFAULT_BUTTON_TEXT = 'Approve';
@@ -24,11 +25,11 @@ export default function Main(props) {
   const strategyStore = useSelector((state) => state.strategy)
   const dispatch = useDispatch();
 
-  const isButtonDisabled = props.fetching;
+  const [loader, setLoader] = useState(false);
+  const [shares, setShares] = useState('');
+
   const vaultContractAddress = ContractAddress("vault")
   const vault = GetVault(vaultContractAddress)
-  const eth = Token(ContractAddress("eth"))
-  const dai = Token(ContractAddress("dai"))
 
   useEffect(() => {
      if(!vault){
@@ -36,24 +37,10 @@ export default function Main(props) {
      }
      console.log("selected contract: ", vault.address)
 
-    fetchAll(account, vault, eth, dai, dispatch)
+     fetchAll(account, vault, dispatch)
     }, [vault]);
 
-  const [input1, setInput1] = useState('');
-  const [input2, setInput2] = useState('');
-  const [disable, setDisable] = useState(true)
-  const [messageError, setMessageError] = useState('Deposit')
-  const [shares, setShares] = useState('');
 
-  const [loader, setLoader] = useState(false);
-
-  const onDepositClick = async () => {
-    setLoader(true);
-    const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsEth)
-    const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsDai)
-    Deposit(vault, val1, val2)
-    setLoader(false);
-  }
   const onWithdrawClick = async () => {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10,vaultStore.decimals)
@@ -71,92 +58,7 @@ export default function Main(props) {
       </div>
       }
       <div className="main-container">
-        
-        <div className="element">
-          <label className="paste-label" style={{lineHeight: '3em'}}>WETH</label>
-          <input
-            type="text"
-            placeholder="0.0"
-            className="address-input"
-            disabled={ props.fetching }
-            value={input1}
-            onChange={ (e) =>  {
-              setInput1(e.target.value)
-              setInput2(dinamicFixed(e.target.value / tokenStore.ratioToken, 5))
-              const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken, 
-                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
-                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
-              if(validate){
-                setDisable(true);
-                setMessageError(validate)
-              } else {
-                setDisable(false)
-              }}}
-          />
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceEth} decimals={tokenStore.decimalsEth} /></label>
-        </div>
-        
-
-        <div className="element">
-          <label className="paste-label" style={{lineHeight: '3em'}}>DAI</label>
-          <input
-            type="text"
-            placeholder="0.0"
-            className="address-input"
-            disabled={ props.fetching }
-            value={input2}
-            onChange={ (e) => {
-              setInput2(e.target.value)
-              setInput1(dinamicFixed(e.target.value * tokenStore.ratioToken, 5))
-              const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
-                decimalFormat(tokenStore.balanceEth, tokenStore.decimalsEth),
-                decimalFormat(tokenStore.balanceDai, tokenStore.decimalsDai))
-              if(validate){
-                setDisable(true);
-                setMessageError(validate)
-              } else {
-                setDisable(false)
-              }}}
-          />
-
-          <label style={{padding: "1em"}}>Your balance: <TokenBalance balance={tokenStore.balanceDai} decimals={tokenStore.decimalsDai} /></label>
-        </div>
-      
-        <div className="element">
-          { tokenStore.allowanceEth == '0' &&
-          <button
-            className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: eth, balance: tokenStore.balanceEth})).then(r => dispatch(tokenSlice.actions.allowanceEth(r.payload)))}
-            disabled={ isButtonDisabled }
-          >
-            Approve WETH 
-          </button>
-         }
-          {tokenStore.allowanceDai == '0' ?
-          <button
-            className={`search-button ${isButtonDisabled ? 'search-button-clicked' : '' }`}
-            onClick={ () => dispatch(fetchActionsToken.approve({vault, contract: dai, balance: tokenStore.balanceDai})).then(r => dispatch(tokenSlice.actions.allowanceDai(r.payload)))}
-            disabled={ isButtonDisabled }
-          >
-            Approve DAI 
-          </button>
-          :tokenStore.allowanceEth !='0' && tokenStore.allowanceDai !='0' &&
-          
-          <button
-            className="btn btn-primary col-12 btn-lg"
-            onClick={ onDepositClick }
-            disabled={ disable }
-          >
-            {disable && <span>{messageError}</span>  }
-            {!disable && <span>Deposit</span>}
-          </button> }
-        </div>
-        { loader &&  
-          <div style={{textAlign: 'center', width: "100%"}}>
-            <Loader />
-          </div>  
-        }
-        
+        <DepositSection vault={vault} />
       </div>
       
       
@@ -168,15 +70,15 @@ export default function Main(props) {
           </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth deposited: &nbsp;
-                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), 5)} Weth</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)} Weth</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Dai deposited: &nbsp;
-                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai),5)} Dai</span></label>
+                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),5)} Dai</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>Weth & Dai Ratio &nbsp;
-                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsEth), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsDai))}</span></label>
+                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1))}</span></label>
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>ETH/DAI Vault total shares: &nbsp;
