@@ -62,8 +62,9 @@ contract OrbitVault is
             uint256 amount1
         )
     {      
-        require(amount0Desired > 0 || msg.value > 0, "amount0Desired or value");
-        require(msg.value >= amount1Desired, "amount1Desired greater than value");
+        require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
+        if (address(token0) == weth) {require(msg.value >= amount0Desired, "amount0Desired greater than value");}
+        else {require(msg.value >= amount1Desired, "amount1Desired greater than value");}
         require(to != address(0) && to != address(this), "to");
 
         // Poke positions so vault's current holdings are up-to-date
@@ -77,19 +78,26 @@ contract OrbitVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Pull in tokens from sender
-        if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
+        if (address(token0) != weth)
+            {if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);}
+        else if (amount0 >= 0) {
+                // Convert amount in weth if positive amount
+                if (amount0 > 0) IWETH9(weth).deposit{value: amount0}();
+                // Refund any amount left
+                if (msg.value > amount0) refundETH();
+                }
+
+        if (address(token1) != weth)
+            {if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);}
+        else if (amount1 >= 0) {
+                // Convert amount in weth if positive amount
+                if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
+                // Refund any amount left
+                if (msg.value > amount1) refundETH();
+                }
+
         
-        // WETH is always token1
-        if (amount1 >= 0) {
-            // Convert amount in weth if positive amount
-            if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
-            // Refund any amount left
-            if (msg.value > amount1) 
-                {
-                 SafeMath.sub(msg.value, amount1);
-                 refundETH();
-                 }
-            }
+
 
         // Mint shares to recipient
         _mint(to, shares);
