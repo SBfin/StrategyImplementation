@@ -68,8 +68,10 @@ contract OrbitVault is
         uint256 amount1Desired;
         uint256 amount1Min;
         uint256 amount0Min;
-        
-        if (address(token0) == weth) {
+        bool token0IsWeth;
+        token0IsWeth = address(token0) == weth;
+
+        if (token0IsWeth) {
             amount0Desired = msg.value;
             amount1Desired = amountTokenDesired;
             amount0Min = amountEthMin;
@@ -92,23 +94,10 @@ contract OrbitVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Pull in tokens from sender
-        if (address(token0) != weth)
-            {if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);}
-        else if (amount0 >= 0) {
-                // Convert amount in weth if positive amount
-                if (amount0 > 0) IWETH9(weth).deposit{value: amount0}();
-                // Refund any amount left
-                if (msg.value > amount0) refundETH();
-                }
-
-        if (address(token1) != weth)
-            {if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);}
-        else if (amount1 >= 0) {
-                // Convert amount in weth if positive amount
-                if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
-                // Refund any amount left
-                if (msg.value > amount1) refundETH();
-                }
+        IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
+        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) refundETH();
+        token0IsWeth ? token1.safeTransferFrom(msg.sender, address(this), amount1) : 
+        token0.safeTransferFrom(msg.sender, address(this), amount0);
 
 
         // Mint shares to recipient

@@ -2,6 +2,7 @@ from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
 import random
+from collections import OrderedDict
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
@@ -44,7 +45,9 @@ def test_initial_deposit(
     assert amount1 == balance1 - balance1New
 
     # Check event
-    assert tx.events["Deposit"][1 if value > 0 else 0] == {
+    print(tx.events)
+    dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
+    assert dct == {
         "sender": user,
         "to": recipient,
         "shares": shares,
@@ -112,7 +115,8 @@ def test_deposit_eth(
     assert approx(total1 * totalSupplyAfter) == total1After * totalSupply
 
     # Check event
-    assert tx.events["Deposit"][1 if value > 0 else 0] == {
+    dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
+    assert dct == {
         "sender": user,
         "to": recipient,
         "shares": shares,
