@@ -14,14 +14,29 @@ contract MockToken is ERC20 {
     }
     
     event  Deposit(address indexed dst, uint wad);  
+    event  Withdrawal(address indexed src, uint wad);
 
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
     }
 
+    fallback() external payable {
+    }
+
     function deposit() external payable {
         _mint(msg.sender, msg.value);
         Deposit(msg.sender, msg.value);
+    }
+
+    function withdraw(uint wad) public {
+        _burn(msg.sender, wad);
+        safeTransferETH(msg.sender, wad);
+        Withdrawal(msg.sender, wad);
+    }
+
+    function safeTransferETH(address to, uint256 value) internal {
+        (bool success, ) = to.call{value: value}(new bytes(0));
+        require(success, 'STE');
     }
 
 }
