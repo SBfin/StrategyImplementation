@@ -96,9 +96,12 @@ contract OrbitVault is
         // Pull in tokens from sender
         IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
         if (msg.value >  (token0IsWeth ? amount0 : amount1) ) refundETH();
-        token0IsWeth ? token1.safeTransferFrom(msg.sender, address(this), amount1) : 
-        token0.safeTransferFrom(msg.sender, address(this), amount0);
-
+        if (token0IsWeth) {
+            token1.safeTransferFrom(msg.sender, address(this), amount1);
+        }
+        else { 
+            token0.safeTransferFrom(msg.sender, address(this), amount0);
+        }
 
         // Mint shares to recipient
         _mint(to, shares);
