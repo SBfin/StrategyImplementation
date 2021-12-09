@@ -1,38 +1,8 @@
-import { useState, useEffect } from 'react'
-import { useWeb3React } from '@web3-react/core'
 import {formatUnits} from "@ethersproject/units";
-import {Contract} from "@ethersproject/contracts";
-import { useSelector, useDispatch } from 'react-redux';
-import {fetchActionsToken, tokenSlice, fetchAllToken} from './TokenBalance';
-import {vaultSlice,fetchActionsVault, GetVault} from './vault';
-import { fetchActionsStrategy, strategySlice ,Strategy } from "./strategy";
-import DynamicRangesStrategy from "./abi/DynamicRangesStrategy.json";
-import {ContractAddress} from '../../helpers/connector';
 import { ethers } from 'ethers';
-
-import { Web3Provider } from '@ethersproject/providers'
-import { Provider } from 'react-redux'
 
 
 const MINIMUN_TOKEN = 0.00001;
-
-export async function FetchContract(address, abi) {
-
-    if (!address) {
-        return null
-    }
-    var contract
-
-      if (typeof window.ethereum !== 'undefined' || (typeof window.web3 !== 'undefined')) {
-        // Web3 browser user detected. You can now use the provider.
-        const accounts = await window.ethereum.enable();
-        let provider = new ethers.providers.Web3Provider(window.ethereum);
-        const account = provider.getSigner(accounts[0]).connectUnchecked()
-
-      contract = await new Contract(address, abi, account)
-    
-    return contract
-}}
 
 
 export function decimalFormat(number, decimals) {
@@ -88,20 +58,3 @@ export function calcTokenByShares(shares, totalShares, token1Tot, token2Tot) {
     return [String(token1Tot * rapp), String(token2Tot * rapp)]
 }
 
-export function fetchAll(account, vault, dispatch) {
-     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
-     dispatch(vaultSlice.actions.address(vault.address))
-
-     dispatch(fetchActionsVault.strategyAddress(vault)).then(r =>FetchContract(r.payload, DynamicRangesStrategy.abi)
-                                                        .then(r => dispatch(fetchActionsStrategy.price(r))));
-     dispatch(fetchActionsVault.token0Address(vault))
-     dispatch(fetchActionsVault.token1Address(vault))
-
-     dispatch(fetchActionsVault.balanceOf({account, vault}));
-     dispatch(fetchActionsVault.baseOrder(vault));
-     dispatch(fetchActionsVault.limitOrder(vault));
-     dispatch(fetchActionsVault.maxTotalSupply(vault));
-     dispatch(fetchActionsVault.totalAmounts(vault));
-     dispatch(fetchActionsVault.totalSupply(vault));
-
-}

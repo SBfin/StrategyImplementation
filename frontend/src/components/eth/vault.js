@@ -7,6 +7,8 @@ import { decimalFormat, tickToPrice, dinamicFixed } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {fetchAll, calcTokenByShares} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
+import {fetchActionsToken} from '../eth/TokenBalance';
+
 
 const initialState = {
   totalSupply: {
@@ -180,6 +182,26 @@ export const vaultSlice = createSlice({
 });
 export default vaultSlice.reducer;
 
+export function fetchAllVault(account, vault, dispatch){
+
+     if (!vault){
+        return
+     }
+     dispatch(fetchActionsToken.decimals(vault)).then(r => dispatch(vaultSlice.actions.decimals(r.payload)))
+     dispatch(vaultSlice.actions.address(vault.address))
+
+     dispatch(fetchActionsVault.strategyAddress(vault));
+     dispatch(fetchActionsVault.token0Address(vault))
+     dispatch(fetchActionsVault.token1Address(vault))
+
+     dispatch(fetchActionsVault.balanceOf({account, vault}));
+     dispatch(fetchActionsVault.baseOrder(vault));
+     dispatch(fetchActionsVault.limitOrder(vault));
+     dispatch(fetchActionsVault.maxTotalSupply(vault));
+     dispatch(fetchActionsVault.totalAmounts(vault));
+     dispatch(fetchActionsVault.totalSupply(vault));
+}
+
 export function GetVault(address) {
   const {account, library, chainId} = useWeb3React()
   const [vault, setVault] = useState()
@@ -198,7 +220,12 @@ export function GetVault(address) {
         const filterTo = contract.filters.Transfer(null, account)
         library.on(filterTo, (from, to, amount, event) => {
             console.log('Vault|Interaction', {from, to, amount, event})
-            fetchAll(account, contract, dispatch)
+            fetchAllVault(account, contract, dispatch)
+        })
+        const filterFrom = contract.filters.Transfer(account, null)
+        library.on(filterFrom, (from, to, amount, event) => {
+            console.log('Vault|Interaction', {from, to, amount, event})
+            fetchAllVault(account, contract, dispatch)
         })
     }
 

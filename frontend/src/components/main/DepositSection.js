@@ -9,6 +9,7 @@ import { useWeb3React } from '@web3-react/core'
 
 const mapState = state => ({
     tokenStore : state.token,
+    vaultStore : state.vault,
     token0Address: state.vault.token0Address,
     token1Address: state.vault.token1Address,
     vaultTotalAmounts: state.vault.totalAmounts.value
@@ -20,7 +21,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 })
 
 function DepositSection(props) {
-    const {tokenStore, vault, token0, token1, token0Address, token1Address, vaultTotalAmounts} = props;
+    const {tokenStore, vault, vaultStore, token0Address, token1Address, vaultTotalAmounts} = props;
 
     const dispatch = useDispatch();
     const {account, library, chainId} = useWeb3React();
@@ -37,18 +38,23 @@ function DepositSection(props) {
         setLoader(true);
         const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsToken0)
         const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsToken1)
-        Deposit(vault, val1, val2)
+        await Deposit(vault, val1, val2)
         setLoader(false);
     }
 
     const token0Contract = GetToken(token0Address);
     const token1Contract = GetToken(token1Address);
 
-    fetchAllToken(account, token0Contract, dispatch, "0", vault, vaultTotalAmounts);
-    fetchAllToken(account, token1Contract, dispatch, "1", vault, vaultTotalAmounts);
+    useEffect(() => {
+         if(!token0Contract || !token1Contract){
+            return
+         }
+         fetchAllToken(account, token0Contract, dispatch, "0", vault, vaultTotalAmounts);
+         fetchAllToken(account, token1Contract, dispatch, "1", vault, vaultTotalAmounts);
+    }, [token0Contract, token1Contract, vaultStore]);
 
     return (
-     <div>
+     <div className="main-container">
         <div className="element">
           <label className="paste-label" style={{lineHeight: '3em'}}>{tokenStore.symbolToken0}</label>
           <input
