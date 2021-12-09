@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Nav from './components/nav/Nav';
 import Main from './components/main/Main';
+import HomeView from './home'
 import './App.scss';
 
 function App() {
@@ -10,6 +11,7 @@ function App() {
   return (
     <div className="App">
       <Nav />
+      <HomeView />
       <Main 
         fetching={ fetching }
       />

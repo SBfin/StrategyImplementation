@@ -1,0 +1,8 @@
+.root {
+    width: 18rem;
+    background-color: blue;
+    border-radius: 0.6rem;
+}
+.body p {
+    font-size:10px
+}
