@@ -47,10 +47,9 @@ contract OrbitVault is
     );
 
     function depositEth(
-        uint256 amount0Desired,
-        uint256 amount1Desired,
-        uint256 amount0Min,
-        uint256 amount1Min,
+        uint256 amountTokenDesired,
+        uint256 amountTokenMin,
+        uint256 amountEthMin,
         address to
     )
         external
@@ -62,10 +61,28 @@ contract OrbitVault is
             uint256 amount1
         )
     {      
-        require(amount0Desired > 0 || msg.value > 0, "amount0Desired or value");
-        require(msg.value >= amount1Desired, "amount1Desired greater than value");
+        require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
+        uint256 amount0Desired;
+        uint256 amount1Desired;
+        uint256 amount1Min;
+        uint256 amount0Min;
+        bool token0IsWeth;
+        token0IsWeth = address(token0) == weth;
+
+        if (token0IsWeth) {
+            amount0Desired = msg.value;
+            amount1Desired = amountTokenDesired;
+            amount0Min = amountEthMin;
+            amount1Min = amountTokenMin;
+        } else {
+            amount0Desired = amountTokenDesired;
+            amount1Desired = msg.value;
+            amount0Min = amountTokenMin;
+            amount1Min = amountEthMin;
+        }
+        
         // Poke positions so vault's current holdings are up-to-date
         _poke(baseLower, baseUpper);
         _poke(limitLower, limitUpper);
@@ -77,19 +94,14 @@ contract OrbitVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Pull in tokens from sender
-        if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
-        
-        // WETH is always token1
-        if (amount1 >= 0) {
-            // Convert amount in weth if positive amount
-            if (amount1 > 0) IWETH9(weth).deposit{value: amount1}();
-            // Refund any amount left
-            if (msg.value > amount1) 
-                {
-                 SafeMath.sub(msg.value, amount1);
-                 refundETH();
-                 }
-            }
+        IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
+        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) refundETH();
+        if (token0IsWeth) {
+            token1.safeTransferFrom(msg.sender, address(this), amount1);
+        }
+        else { 
+            token0.safeTransferFrom(msg.sender, address(this), amount0);
+        }
 
         // Mint shares to recipient
         _mint(to, shares);

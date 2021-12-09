@@ -13,7 +13,6 @@ contract MockToken is ERC20 {
         _setupDecimals(decimals);
     }
     
-    mapping(address => uint256) private _balances;
     event  Deposit(address indexed dst, uint wad);  
 
     function mint(address account, uint256 amount) external {

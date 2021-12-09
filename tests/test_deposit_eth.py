@@ -1,7 +1,8 @@
 from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
-
+import random
+from collections import OrderedDict
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
@@ -16,19 +17,18 @@ def test_initial_deposit(
     amount0Desired,
     amount1Desired,
 ):
-
-    # Store balances
-    balance0 = tokens[0].balanceOf(user)
-    # Token 1 is eth
-    balance1 = user.balance()
+    wethtoken = int(bool(random.getrandbits(1)))
+    print(wethtoken)
     # Deposit
-    tx = vault.setAddressWeth(tokens[1], {"from" : gov})
-    
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired}) 
+    tx = vault.setAddressWeth(tokens[wethtoken], {"from" : gov})
 
+    balance0 = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1 = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
     
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts are same as inputs
     assert amount0 == amount0Desired
@@ -38,12 +38,16 @@ def test_initial_deposit(
     assert shares == vault.balanceOf(recipient) > 0
 
     # Check paid right amount of tokens
-    assert amount0 == balance0 - tokens[0].balanceOf(user)
-    assert amount1 == balance1 - user.balance()
-
+    balance0New = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1New = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
+    
+    assert amount0 == balance0 - balance0New
+    assert amount1 == balance1 - balance1New
 
     # Check event
-    assert tx.events["Deposit"][1 if amount1Desired > 0 else 0] == {
+    print(tx.events)
+    dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
+    assert dct == {
         "sender": user,
         "to": recipient,
         "shares": shares,
@@ -66,23 +70,23 @@ def test_deposit_eth(
     amount1Desired,
 ):
     vault = vaultAfterPriceMove
+    wethtoken = int(bool(random.getrandbits(1)))
+    print(wethtoken)
+    # set address
+    tx = vault.setAddressWeth(tokens[wethtoken], {"from" : gov})
 
-    # Store balances, supply and positions
-    balance0 = tokens[0].balanceOf(user)
-    # Token 1 is eth
-    balance1 = user.balance()
-    # Deposit
-    tx = vault.setAddressWeth(tokens[1], {"from" : gov})
-    
+    balance0 = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1 = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)    
     
     totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
     govShares = vault.balanceOf(gov)
 
     # Deposit
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
@@ -92,8 +96,11 @@ def test_deposit_eth(
     assert shares == vault.balanceOf(recipient) > 0
 
     # Check paid right amount of tokens
-    assert amount0 == balance0 - tokens[0].balanceOf(user)
-    assert amount1 == balance1 - user.balance()
+    balance0New = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1New = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
+ 
+    assert amount0 == balance0 - balance0New
+    assert amount1 == balance1 - balance1New
 
     # Check one amount is tight
     assert approx(amount0) == amount0Desired or approx(amount1) == amount1Desired
@@ -108,16 +115,14 @@ def test_deposit_eth(
     assert approx(total1 * totalSupplyAfter) == total1After * totalSupply
 
     # Check event
-    assert tx.events["Deposit"][1 if amount1Desired > 0 else 0] == {
+    dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
+    assert dct == {
         "sender": user,
         "to": recipient,
         "shares": shares,
         "amount0": amount0,
         "amount1": amount1,
     }
-
-
-
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
@@ -136,24 +141,24 @@ def test_deposit_when_vault_only_has_token0(
 ):
     vault = vaultOnlyWithToken0
 
-    # Poke fees
+    wethtoken = int(bool(random.getrandbits(1)))
+    print(wethtoken)
+    # set address
+    tx = vault.setAddressWeth(tokens[wethtoken], {"from" : gov})
+    
     vault.withdraw(vault.balanceOf(gov) // 2, 0, 0, gov, {"from": gov})
 
-    # Store balances, supply and positions
-    balance0 = tokens[0].balanceOf(user)
-
-    # Token 1 is weth
-    balance1 = user.balance()
-
-    tx = vault.setAddressWeth(tokens[1], {"from" : gov})
+    balance0 = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1 = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)    
 
     totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
 
     # Deposit
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
-
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
@@ -163,8 +168,11 @@ def test_deposit_when_vault_only_has_token0(
     assert shares == vault.balanceOf(recipient) > 0
 
     # Check paid right amount of tokens
-    assert amount0 == balance0 - tokens[0].balanceOf(user)
-    assert amount1 == balance1 - user.balance()
+    balance0New = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1New = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
+ 
+    assert amount0 == balance0 - balance0New
+    assert amount1 == balance1 - balance1New
 
     # Check paid mainly token0
     assert amount0 > 0
@@ -196,20 +204,23 @@ def test_deposit_when_vault_only_has_token1(
 ):
     vault = vaultOnlyWithToken1
 
-    # Poke fees
+    wethtoken = int(bool(random.getrandbits(1)))
+    print(wethtoken)
+    # set address
+    tx = vault.setAddressWeth(tokens[wethtoken], {"from" : gov})
+    
     vault.withdraw(vault.balanceOf(gov) // 2, 0, 0, gov, {"from": gov})
 
-    # Store balances, supply and positions
-    balance0 = tokens[0].balanceOf(user)
-    # Token 1 is weth
-    balance1 = user.balance()
-    tx = vault.setAddressWeth(tokens[1], {"from" : gov})
+    balance0 = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1 = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)    
 
     totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
 
     # Deposit
-    tx = vault.depositEth(amount0Desired, amount1Desired, 0, 0, recipient, {"from": user, "value" : amount1Desired})
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    value = amount0Desired if (tokens[0] == tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -220,8 +231,11 @@ def test_deposit_when_vault_only_has_token1(
     assert shares == vault.balanceOf(recipient) > 0
 
     # Check paid right amount of tokens
-    assert amount0 == balance0 - tokens[0].balanceOf(user)
-    assert amount1 == balance1 - user.balance()
+    balance0New = user.balance() if (tokens[0] == tokens[wethtoken]) else tokens[0].balanceOf(user)
+    balance1New = user.balance() if (tokens[1] == tokens[wethtoken]) else tokens[1].balanceOf(user)
+ 
+    assert amount0 == balance0 - balance0New
+    assert amount1 == balance1 - balance1New
 
     # Check paid mainly token1
     assert amount1 > 0
@@ -236,11 +250,16 @@ def test_deposit_when_vault_only_has_token1(
     assert approx(total1 * totalSupplyAfter) == total1After * totalSupply
 
 
-def test_deposit_checks(vault, user):
+def test_deposit_checks(vault, user, tokens, gov):
+
+    vault.setAddressWeth(tokens[1], {"from" : gov})
+
     with reverts("amount0Desired or amount1Desired"):
         vault.deposit(0, 0, 0, 0, user, {"from": user})
+    
     with reverts("to"):
         vault.deposit(1e8, 1e8, 0, 0, ZERO_ADDRESS, {"from": user})
+
     with reverts("to"):
         vault.deposit(1e8, 1e8, 0, 0, vault, {"from": user})
 
@@ -253,14 +272,11 @@ def test_deposit_checks(vault, user):
     with reverts("maxTotalSupply"):
         vault.deposit(1e8, 200e18, 0, 0, user, {"from": user})
 
-    with reverts("amount0Desired or value"):
-        vault.depositEth(0, 0, 0, 0, user, {"from": user, "value" : 0})
-
-    with reverts("amount1Desired greater than value"):
-        vault.depositEth(1e13, 1e12, 0, 0, user, {"from": user, "value" : 1e10})  
+    with reverts("amountTokenDesired or value"):
+        vault.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
 
     with reverts("to"):
-        vault.depositEth(1e8, 1e8, 0, 0, vault, {"from": user, "value" : 1e8})
+        vault.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
 
 
 
