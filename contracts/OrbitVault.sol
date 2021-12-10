@@ -170,12 +170,15 @@ contract OrbitVault is
     /// @param to The destination of the transfer
     /// @param value The value to be transferred
     function safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
+        (bool success, ) = to.call{value: value}("");
         require(success, 'STE');
     }
 
     function setAddressWeth(address _address) external onlyGovernance {
         weth = _address;
+    }
+
+    fallback() external payable {
     }
 
 }

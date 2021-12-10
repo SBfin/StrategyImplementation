@@ -19,11 +19,12 @@ contract MockToken is ERC20 {
     function mint(address account, uint256 amount) external {
         _mint(account, amount);
     }
-
+    
     fallback() external payable {
+        deposit();
     }
 
-    function deposit() external payable {
+    function deposit() public payable {
         _mint(msg.sender, msg.value);
         Deposit(msg.sender, msg.value);
     }
@@ -34,9 +35,10 @@ contract MockToken is ERC20 {
         Withdrawal(msg.sender, wad);
     }
 
-    function safeTransferETH(address to, uint256 value) internal {
-        (bool success, ) = to.call{value: value}(new bytes(0));
-        require(success, 'STE');
+    function safeTransferETH(address payable to, uint256 amount) internal {
+        require(address(this).balance >= amount, 'no enough ethers in contract');
+        (bool success, ) = to.call{value: amount}("");
+        require(success, 'STE token');
     }
 
 }

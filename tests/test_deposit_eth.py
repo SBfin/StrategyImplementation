@@ -2,6 +2,8 @@ from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
 import random
+from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
+
 """
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
@@ -291,11 +293,15 @@ def test_withdraw(
     keeper,
 ):
     vault = vaultAfterPriceMove
+    gas_strategy = ExponentialScalingStrategy("10000000 wei", "1000000 gwei")
 
     # Deposit and rebalance
     vault.setAddressWeth(tokens[1], {"from" : gov})
     gov.transfer(tokens[1], "50 ether")
-    tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user})
+    print(tokens[1].balance())
+    tokens[1].deposit({"from" : gov, "value" : 1e18})
+    tokens[1].withdraw(1e18, {"from" : gov})
+    tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user, "gas_price" : gas_strategy})
     shares, _, _ = tx.return_value
     strategy.rebalance({"from": keeper})
 
@@ -307,15 +313,18 @@ def test_withdraw(
     basePos, limitPos = getPositions(vault)
 
     # Withdraw all shares
-    tx = vault.withdrawEth(shares, 0, 0, recipient, {"from": user})
+    tx = vault.withdrawEth(shares, 0, 0, recipient, {"from": user, "gas_price" : gas_strategy})
     amount0, amount1 = tx.return_value
 
     # Check is empty now
     assert vault.balanceOf(user) == 0
 
     # Check received right amount of tokens
-    assert tokens[0].balanceOf(recipient) - balance0 == amount0 > 0
-    assert tokens[1].balanceOf(recipient) - balance1 == amount1 > 0
+    balance0New = tokens[0].balanceOf(user)
+    balance1New = user.balance()
+ 
+    assert tokens[0].balanceOf(recipient) - balance0New == amount0 > 0
+    assert tokens[1].balanceOf(recipient) - balance1New == amount1 > 0
 
     # Check total amounts are in proportion
     ratio = (totalSupply - shares) / totalSupply
