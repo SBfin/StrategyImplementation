@@ -64,22 +64,13 @@ contract OrbitVault is
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
-<<<<<<< HEAD
         bool token0IsWeth;
         token0IsWeth = address(token0) == weth;
 
-=======
->>>>>>> 40f1f70dbd9aaab2339e222bb9ec479592f4c303
         uint256 amount0Desired;
         uint256 amount1Desired;
         uint256 amount1Min;
         uint256 amount0Min;
-<<<<<<< HEAD
-
-=======
-        bool token0IsWeth;
-        token0IsWeth = address(token0) == weth;
->>>>>>> 40f1f70dbd9aaab2339e222bb9ec479592f4c303
 
         if (token0IsWeth) {
             amount0Desired = msg.value;
