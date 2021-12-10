@@ -5,6 +5,8 @@ import random
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 
 """
+
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [ [0, 1e15] , [1, 0], [1e18, 0], [0, 1e10], [1e4, 1e10], [1e18, 1e10]],
@@ -281,6 +283,7 @@ def test_deposit_checks(vault, user, tokens, gov):
 
 """
 
+
 def test_withdraw(
     vaultAfterPriceMove,
     strategy,
@@ -307,7 +310,7 @@ def test_withdraw(
 
     # Store balances, supply and positions
     balance0 = tokens[0].balanceOf(recipient)
-    balance1 = tokens[1].balanceOf(recipient)
+    balance1 = recipient.balance()
     totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
     basePos, limitPos = getPositions(vault)
@@ -320,11 +323,11 @@ def test_withdraw(
     assert vault.balanceOf(user) == 0
 
     # Check received right amount of tokens
-    balance0New = tokens[0].balanceOf(user)
-    balance1New = user.balance()
+    balance0New = tokens[0].balanceOf(recipient)
+    balance1New = recipient.balance()
  
-    assert tokens[0].balanceOf(recipient) - balance0New == amount0 > 0
-    assert tokens[1].balanceOf(recipient) - balance1New == amount1 > 0
+    assert balance0New - balance0 == amount0 > 0
+    assert balance1New - balance1 == amount1 > 0
 
     # Check total amounts are in proportion
     ratio = (totalSupply - shares) / totalSupply
@@ -352,16 +355,16 @@ def test_withdraw_checks(vault, user, recipient):
     shares, _, _ = tx.return_value
 
     with reverts("shares"):
-        vault.withdraw(0, 0, 0, recipient, {"from": user})
+        vault.withdrawEth(0, 0, 0, recipient, {"from": user})
     with reverts("to"):
-        vault.withdraw(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
+        vault.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
     with reverts("to"):
-        vault.withdraw(shares - 1000, 0, 0, vault, {"from": user})
+        vault.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
 
     with reverts("amount0Min"):
-        vault.withdraw(shares - 1000, 1e18, 0, recipient, {"from": user})
+        vault.withdrawEth(shares - 1000, 1e18, 0, recipient, {"from": user})
     with reverts("amount1Min"):
-        vault.withdraw(shares - 1000, 0, 1e18, recipient, {"from": user})
+        vault.withdrawEth(shares - 1000, 0, 1e18, recipient, {"from": user})
 
 
 
