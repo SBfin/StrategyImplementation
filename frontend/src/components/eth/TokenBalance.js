@@ -8,17 +8,25 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import {decimalFormat} from '../eth/helpers';
 
 const initialState = {
-  balanceEth: 0,
-  balanceDai: 0,
-  allowanceEth: 0,
-  allowanceDai: 0,
-  decimalsEth: 0,
-  decimalsDai: 0,
+  symbolToken0: "",
+  symbolToken1: "",
+  balanceToken0: 0,
+  balanceToken1: 0,
+  allowanceToken0: 0,
+  allowanceToken1: 0,
+  decimalsToken0: 0,
+  decimalsToken1: 0,
   ratioToken: 1,
 
 };
 
 export const fetchActionsToken = {
+    symbol: createAsyncThunk(
+      'token/fetchSymbol',
+      async (contract) => {
+         const symbol = await contract.symbol();
+         return symbol.toString();
+    }),
     decimals: createAsyncThunk(
       'token/fetchDecimals',
       async (contract) => {
@@ -42,7 +50,7 @@ export const fetchActionsToken = {
     approve: createAsyncThunk(
       'token/fetchApprove',
       async(data) => {
-        const {vault, contract, balance} = data;
+        const {vault, contract} = data;
         let approve_amount = '115792089237316195423570985008687907853269984665640564039457584007913129639935'; //(2^256 - 1 )
         const approveTx = await contract.approve(vault.address, approve_amount);
         const result = await approveTx.wait(); //wait for the tx to be confirmed on chain
@@ -54,41 +62,67 @@ export const tokenSlice = createSlice({
   name: 'token',
   initialState,
   reducers: {
-      decimalsEth: (state, action) => {
-        state.decimalsEth = action.payload;
+      symbolToken0: (state, action) => {
+        state.symbolToken0 = action.payload;
       },
-      decimalsDai: (state, action) => {
-        state.decimalsDai = action.payload
+      symbolToken1: (state, action) => {
+        state.symbolToken1 = action.payload;
       },
-      balanceEth: (state, action) => {
-        state.balanceEth = action.payload;
+      decimalsToken0: (state, action) => {
+        state.decimalsToken0 = action.payload;
       },
-      balanceDai: (state, action) => {
-        state.balanceDai = action.payload;
+      decimalsToken1: (state, action) => {
+        state.decimalsToken1 = action.payload
       },
-      allowanceEth: (state, action) => {
-        state.allowanceEth = action.payload;
+      balanceToken0: (state, action) => {
+        state.balanceToken0 = action.payload;
       },
-      allowanceDai: (state, action) => {
-        state.allowanceDai = action.payload;
+      balanceToken1: (state, action) => {
+        state.balanceToken1 = action.payload;
+      },
+      allowanceToken0: (state, action) => {
+        state.allowanceToken0 = action.payload;
+      },
+      allowanceToken1: (state, action) => {
+        state.allowanceToken1 = action.payload;
       },
       ratioToken: (state, action) => {
         if(action && action.payload){
           if(Number(action.payload[0]) !== 0 || Number(action.payload[1]) !== 0) {
-            state.ratioToken = decimalFormat(action.payload[0], state.decimalsEth) / decimalFormat(action.payload[1], state.decimalsDai)
+            state.ratioToken = decimalFormat(action.payload[0], state.decimalsToken0) / decimalFormat(action.payload[1], state.decimalsToken1)
           } else {
             state.ratioToken = 1
           }
         } else {
           state.ratioToken = 1
         }
-        console.log('ratio : ' + state.ratioToken)
+        //console.log('ratio : ' + state.ratioToken)
       }
   },
 });
 export default tokenSlice.reducer;
 
-export function Token(address){
+export function fetchAllToken(account, contract, dispatch, token01, vault, vaultTotalAmounts){
+
+     if (!contract){
+        return
+     }
+
+     if (token01 == "0" ) {
+        dispatch(fetchActionsToken.symbol(contract)).then(r => dispatch(tokenSlice.actions.symbolToken0(r.payload)));
+        dispatch(fetchActionsToken.decimals(contract)).then(r => dispatch(tokenSlice.actions.decimalsToken0(r.payload)));
+        dispatch(fetchActionsToken.balance({account,contract: contract})).then(r => dispatch(tokenSlice.actions.balanceToken0(r.payload)));
+        dispatch(fetchActionsToken.allowance({vault, account, contract: contract})).then(r => dispatch(tokenSlice.actions.allowanceToken0(r.payload)));
+     } else {
+        dispatch(fetchActionsToken.symbol(contract)).then(r => dispatch(tokenSlice.actions.symbolToken1(r.payload)));
+        dispatch(fetchActionsToken.decimals(contract)).then(r => dispatch(tokenSlice.actions.decimalsToken1(r.payload)));
+        dispatch(fetchActionsToken.balance({account,contract: contract})).then(r => dispatch(tokenSlice.actions.balanceToken1(r.payload)));
+        dispatch(fetchActionsToken.allowance({vault, account, contract: contract})).then(r => dispatch(tokenSlice.actions.allowanceToken1(r.payload)));
+     }
+     dispatch(tokenSlice.actions.ratioToken(vaultTotalAmounts))
+}
+
+export function GetToken(address){
     const {account, library, chainId} = useWeb3React()
 
     const [contract, setContract] = useState()
@@ -105,8 +139,8 @@ export function Token(address){
 
       setContract(c)
 
-      
-    }, [account, library, chainId])
+
+    }, [account, library, chainId, address])
 
     return contract;
 }

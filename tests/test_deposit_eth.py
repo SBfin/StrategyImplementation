@@ -2,10 +2,14 @@ from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
 import random
+<<<<<<< HEAD
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 
 """
 
+=======
+from collections import OrderedDict
+>>>>>>> 40f1f70dbd9aaab2339e222bb9ec479592f4c303
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
@@ -277,12 +281,15 @@ def test_deposit_checks(vault, user, tokens, gov):
 
     with reverts("amountTokenDesired or value"):
         vault.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
+<<<<<<< HEAD
 
     with reverts("to"):
         vault.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
 
 """
 
+=======
+>>>>>>> 40f1f70dbd9aaab2339e222bb9ec479592f4c303
 
 def test_withdraw(
     vaultAfterPriceMove,
@@ -359,6 +366,7 @@ def test_withdraw_checks(vault, user, recipient):
     with reverts("to"):
         vault.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
     with reverts("to"):
+<<<<<<< HEAD
         vault.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
 
     with reverts("amount0Min"):
@@ -366,6 +374,9 @@ def test_withdraw_checks(vault, user, recipient):
     with reverts("amount1Min"):
         vault.withdrawEth(shares - 1000, 0, 1e18, recipient, {"from": user})
 
+=======
+        vault.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
+>>>>>>> 40f1f70dbd9aaab2339e222bb9ec479592f4c303
 
 
 
