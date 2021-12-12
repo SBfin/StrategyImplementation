@@ -128,4 +128,4 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Router address: {router.address}")
-    print(f"Deposited token0: {amount0} token1: {amount1} shares: {shares}")
+    print("Deposited token0: {:.3e} token1: {:.3e} shares: {:.3e}".format(amount0, amount1, shares))

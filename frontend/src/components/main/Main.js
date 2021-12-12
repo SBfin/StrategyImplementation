@@ -7,7 +7,7 @@ import {ContractAddress} from '../../helpers/connector';
 import { useSelector, useDispatch } from 'react-redux';
 import './Main.scss';
 import { useWeb3React } from '@web3-react/core'
-import {decimalFormat, fetchAll, calculateRatio, validateNumber, dinamicFixed} from '../eth/helpers';
+import {fetchAll, validateNumber, truncateNumber} from '../eth/helpers';
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import DepositSection from './DepositSection'
 import InfoSection from './InfoSection'

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {connect} from "react-redux";
 import {Deposit,Withdraw} from '../eth/vault';
-import {decimalFormat, calculateRatio, validateNumber, dinamicFixed, FetchContract} from '../eth/helpers';
+import {fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract} from '../eth/helpers';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice, fetchAllToken, GetToken} from '../eth/TokenBalance';
 import { useSelector, useDispatch } from 'react-redux';
 import Loader from '../loader/Loader';

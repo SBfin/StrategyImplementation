@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {connect} from "react-redux";
 import {Deposit,Withdraw} from '../eth/vault';
-import {decimalFormat, calculateRatio, validateNumber, dinamicFixed, FetchContract} from '../eth/helpers';
+import {fromUnitsToDecimal, calculateRatio, validateNumber, truncateNumber, FetchContract} from '../eth/helpers';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice, fetchAllToken, GetToken} from '../eth/TokenBalance';
 import { useSelector, useDispatch } from 'react-redux';
 import Loader from '../loader/Loader';
@@ -39,19 +39,19 @@ function InfoSection(props) {
           </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>{tokenStore.symbolToken0} deposited: &nbsp;
-                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)} {tokenStore.symbolToken0}</span></label>
+                <span style={{color: 'green'}}>{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)} {tokenStore.symbolToken0}</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>{tokenStore.symbolToken1} deposited: &nbsp;
-                <span style={{color: 'green'}}>{dinamicFixed(decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),5)} {tokenStore.symbolToken1}</span></label>
+                <span style={{color: 'green'}}>{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),5)} {tokenStore.symbolToken1}</span></label>
             </div>
             <div className="element">
                 <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>{tokenStore.symbolToken0} & {tokenStore.symbolToken1} Ratio &nbsp;
-                <span style={{color: 'green'}}>{calculateRatio(decimalFormat(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), decimalFormat(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1))}</span></label>
+                <span style={{color: 'green'}}>{calculateRatio(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1))}</span></label>
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>{tokenStore.symbolToken0}/{tokenStore.symbolToken1} Vault total shares: &nbsp;
-              <span style={{color: 'green'}}> {dinamicFixed(decimalFormat(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
+              <span style={{color: 'green'}}> {truncateNumber(fromUnitsToDecimal(vaultStore.totalSupply.value, vaultStore.decimals),5)}</span></label>
             </div>
             <div className="element">
               <label className="paste-label fs-6" style={{textAlign: 'center', width: "100%"}}>{tokenStore.symbolToken1}/{tokenStore.symbolToken0} price: &nbsp;

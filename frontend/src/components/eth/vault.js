@@ -3,9 +3,9 @@ import { useWeb3React } from '@web3-react/core'
 import UniVault from "./abi/UniVault.json";
 import {Contract} from "@ethersproject/contracts";
 import {formatUnits} from "@ethersproject/units";
-import { decimalFormat, tickToPrice, dinamicFixed } from './helpers';
+import { tickToPrice, truncateNumber } from './helpers';
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
-import {fetchAll, calcTokenByShares} from '../eth/helpers';
+import {fetchAll} from '../eth/helpers';
 import { useDispatch } from 'react-redux';
 import {fetchActionsToken} from '../eth/TokenBalance';
 
@@ -71,16 +71,16 @@ export const fetchActionsVault = {
       async(vault) => {
         const baseUpper = await vault.baseUpper.call()
         const baseLower = await vault.baseLower.call()
-        return [ dinamicFixed(1/tickToPrice(baseLower,6,18),2),
-                 dinamicFixed(1/tickToPrice(baseUpper,6,18),2) ]
+        return [ truncateNumber(1/tickToPrice(baseLower,6,18),2),
+                 truncateNumber(1/tickToPrice(baseUpper,6,18),2) ]
     }),
     limitOrder: createAsyncThunk(
       'vault/fetchLimitOrder',
       async(vault) => {
         const limitUpper = await vault.baseUpper.call()
         const limitLower = await vault.baseLower.call()
-        return [ dinamicFixed(1/tickToPrice(limitLower,6,18),2),
-                 dinamicFixed(1/tickToPrice(limitUpper,6,18),2) ]
+        return [ truncateNumber(1/tickToPrice(limitLower,6,18),2),
+                 truncateNumber(1/tickToPrice(limitUpper,6,18),2) ]
     }),
     maxTotalSupply: createAsyncThunk(
       'vault/fetchMaxTotalSupply',

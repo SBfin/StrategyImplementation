@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import {connect} from "react-redux";
 import {Deposit,Withdraw} from '../eth/vault';
-import {decimalFormat, calculateRatio, validateNumber, dinamicFixed, FetchContract} from '../eth/helpers';
+import {fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract} from '../eth/helpers';
 import {TokenBalance,Token,fetchActionsToken, tokenSlice, fetchAllToken, GetToken} from '../eth/TokenBalance';
 import { useSelector, useDispatch } from 'react-redux';
 import Loader from '../loader/Loader';
@@ -64,10 +64,10 @@ function DepositSection(props) {
             value={input1}
             onChange={ (e) =>  {
               setInput1(e.target.value)
-              setInput2(dinamicFixed(e.target.value / tokenStore.ratioToken, 5))
+              setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5))
               const validate = validateNumber(e.target.value,  e.target.value / tokenStore.ratioToken,
-                decimalFormat(tokenStore.balanceToken0, tokenStore.decimalsToken0),
-                decimalFormat(tokenStore.balanceToken1, tokenStore.decimalsToken1))
+                fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
+                fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1))
               if(validate){
                 setDisable(true);
                 setMessageError(validate)
@@ -88,10 +88,10 @@ function DepositSection(props) {
             value={input2}
             onChange={ (e) => {
               setInput2(e.target.value)
-              setInput1(dinamicFixed(e.target.value * tokenStore.ratioToken, 5))
+              setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5))
               const validate = validateNumber(e.target.value * tokenStore.ratioToken,e.target.value,
-                decimalFormat(tokenStore.balanceToken0, tokenStore.decimalsToken0),
-                decimalFormat(tokenStore.balanceToken1, tokenStore.decimalsToken1))
+                fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
+                fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1))
               if(validate){
                 setDisable(true);
                 setMessageError(validate)
