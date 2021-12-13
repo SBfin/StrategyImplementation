@@ -24,9 +24,15 @@ export default function Nav() {
   return (
     <nav>
       <div className="left">
-        <div className="logo"></div>
+        <div className="logo">       <img className="img" src="./assets/Orbit_GIF.gif" /></div>
       </div>
       <div className="right">
+        <div className="wallet-info-section">
+          <span
+            className="wallet-info-content">
+              SELECT NETWORK &#9662;
+            </span>
+        </div>
         <div className="wallet-info-section">
             { 
               !account ?
@@ -36,11 +42,10 @@ export default function Nav() {
                     setActivatingConnector(MetaMask)
                     activate(MetaMask)
                   }}
-                >Connect MetaMask</span>
+                >CONNECT WALLET</span>
                 :<span className="wallet-info-content">{shortAccount}</span>
             }
         </div>
-        <div className="menu-item"></div>
       </div>
     </nav>
   );

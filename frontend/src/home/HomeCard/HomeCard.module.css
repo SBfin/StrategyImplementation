@@ -1,0 +1,34 @@
+.root {
+    width: 14rem;
+    background-color: #3a0ca3;
+    border-radius: 0.6rem;
+    height: 210px;
+}
+.body p {
+    font-size:10px;
+    margin-bottom:0;
+}
+.body h5 {
+    font-size: 18px;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 600;
+    color: #44ffd1;
+}
+.body h4 {
+    font-size: 16px;
+    font-weight: 600;
+    color: #44ffd1;
+}
+.body h6 {
+    font-size: 12px;
+    font-weight: 400;
+}
+.body span{
+    font-size: 10px;
+    color :#44ffd1;
+}
+.body hr {
+    background-color: white!important;
+    opacity: 1;
+    margin: 0.5rem 0rem;
+}
