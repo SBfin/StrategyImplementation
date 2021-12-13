@@ -1,9 +1,6 @@
-import { useState, useEffect } from "react";
 import s from "./HomeCard.module.css";
 
 export default function HomeCard(props) {
-  useEffect(() => {});
-
   return (
     <div className={`card ${s.root}`}>
       <div className={`card-body ${s.body}`}>

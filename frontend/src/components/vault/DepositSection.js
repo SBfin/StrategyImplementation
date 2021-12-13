@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { Deposit, Withdraw } from "../eth/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../eth/helpers";
-import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../eth/TokenBalance";
+import { Deposit, Withdraw } from "../common/vault";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../common/helpers";
+import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../loader/Loader";
 import { useWeb3React } from "@web3-react/core";
@@ -120,7 +120,7 @@ function DepositSection(props) {
       </div>
 
       <div className="element">
-        {tokenStore.allowanceToken0 == "0" && (
+        {tokenStore.allowanceToken0 === "0" && (
           <button
             className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""}`}
             onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token0Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken0(r.payload)))}
@@ -129,7 +129,7 @@ function DepositSection(props) {
             Approve {tokenStore.symbolToken0}
           </button>
         )}
-        {tokenStore.allowanceToken1 == "0" ? (
+        {tokenStore.allowanceToken1 === "0" ? (
           <button
             className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""}`}
             onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token1Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken1(r.payload)))}
@@ -138,8 +138,8 @@ function DepositSection(props) {
             Approve {tokenStore.symbolToken1}
           </button>
         ) : (
-          tokenStore.allowanceToken0 != "0" &&
-          tokenStore.allowanceToken1 != "0" && (
+          tokenStore.allowanceToken0 !== "0" &&
+          tokenStore.allowanceToken1 !== "0" && (
             <button className="btn btn-primary col-12 btn-lg" onClick={onDepositClick} disabled={disable}>
               {disable && <span>{messageError}</span>}
               {!disable && <span>Deposit</span>}

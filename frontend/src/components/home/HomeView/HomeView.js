@@ -1,11 +1,8 @@
-import { useState, useEffect } from "react";
 import { HomeCard } from "../HomeCard";
 import { HomeCardEmpty } from "../HomeCardEmpty";
 import s from "./HomeView.module.css";
 
 export default function HomeView(props) {
-  useEffect(() => {});
-
   return (
     <div className={`${s.root}`}>
       <div className={`row ${s.main}`}>

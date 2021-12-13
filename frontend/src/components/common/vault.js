@@ -5,9 +5,9 @@ import { Contract } from "@ethersproject/contracts";
 import { formatUnits } from "@ethersproject/units";
 import { tickToPrice, truncateNumber } from "./helpers";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { fetchAll } from "../eth/helpers";
+import { fetchAll } from "./helpers";
 import { useDispatch } from "react-redux";
-import { fetchActionsToken } from "../eth/TokenBalance";
+import { fetchActionsToken } from "./TokenBalance";
 
 const initialState = {
   totalSupply: {

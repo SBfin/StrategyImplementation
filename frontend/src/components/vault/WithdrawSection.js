@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { Deposit, Withdraw } from "../eth/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../eth/helpers";
-import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../eth/TokenBalance";
+import { Deposit, Withdraw } from "../common/vault";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../common/helpers";
+import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../loader/Loader";
 import { useWeb3React } from "@web3-react/core";

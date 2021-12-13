@@ -5,7 +5,7 @@ import { Contract } from "@ethersproject/contracts";
 import ERC20ABI from "./abi/MockToken.json";
 import { formatUnits } from "@ethersproject/units";
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { fromUnitsToDecimal } from "../eth/helpers";
+import { fromUnitsToDecimal } from "./helpers";
 
 const initialState = {
   symbolToken0: "",
@@ -40,8 +40,8 @@ export const fetchActionsToken = {
   }),
   approve: createAsyncThunk("token/fetchApprove", async (data) => {
     const { vault, contract } = data;
-    let approve_amount = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; //(2^256 - 1 )
-    const approveTx = await contract.approve(vault.address, approve_amount);
+    let approveamount = "115792089237316195423570985008687907853269984665640564039457584007913129639935"; //(2^256 - 1 )
+    const approveTx = await contract.approve(vault.address, approveamount);
     const result = await approveTx.wait(); //wait for the tx to be confirmed on chain
     return result.status;
   }),
