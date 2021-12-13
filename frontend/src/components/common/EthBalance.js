@@ -13,9 +13,9 @@ export default function EthBalance() {
 
       library
         .getBalance(account)
-        .then((balance) => {
+        .then((res) => {
           if (!stale) {
-            setBalance(balance);
+            setBalance(res);
           }
         })
         .catch(() => {

@@ -1,13 +1,13 @@
 import Loader from "../loader/Loader";
-import { TokenBalance, Token, fetchActionsToken, tokenSlice } from "../eth/TokenBalance";
-import { GetVault, GetStrategy, Deposit, Withdraw, vaultSlice, fetchAllVault } from "../eth/vault";
-import { Strategy } from "../eth/strategy";
+import { TokenBalance, Token, fetchActionsToken, tokenSlice } from "../common/TokenBalance";
+import { GetVault, GetStrategy, Deposit, Withdraw, vaultSlice, fetchAllVault } from "../common/vault";
+import { Strategy } from "../common/strategy";
 import { useState, useEffect } from "react";
 import { ContractAddress } from "../../helpers/connector";
 import { useSelector, useDispatch } from "react-redux";
 import "./Main.scss";
 import { useWeb3React } from "@web3-react/core";
-import { fetchAll, validateNumber, truncateNumber } from "../eth/helpers";
+import { fetchAll, validateNumber, truncateNumber } from "../common/helpers";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import DepositSection from "./DepositSection";
 import InfoSection from "./InfoSection";
@@ -36,7 +36,7 @@ export default function Main(props) {
 
   return (
     <div style={{ textAlign: "center", width: "50%" }}>
-      {vaultContractAddress == null && (
+      {vaultContractAddress === null && (
         <div className="main-container" style={{ background: "red" }}>
           <div>THIS CURRENT IS NOT SUPPORTED</div>
           <div>Please select a supported one</div>

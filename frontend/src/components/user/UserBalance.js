@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fromUnitsToDecimal, truncateNumber } from "../eth/helpers";
+import { fromUnitsToDecimal, truncateNumber } from "../common/helpers";
 import { useSelector } from "react-redux";
 import { connect } from "react-redux";
 import { BigNumber } from "@ethersproject/bignumber";
