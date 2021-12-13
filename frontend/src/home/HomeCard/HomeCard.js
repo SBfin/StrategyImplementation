@@ -10,14 +10,14 @@ export default function HomeCard(props) {
        return (
         <div className={`card ${s.root}`}>
             <div className={`card-body ${s.body}`}>
-                <p>state: ACTIVE</p>
+                <p>state: <span>ACTIVE</span></p>
                 <hr />
                 <h5 className="card-title">WETH / DAI</h5>
-                <hr />
-                <h6 className="card-subtitle mb-2 text-muted">Card subtitle</h6>
-                <p className="card-text">Some quick example text to build on the card title and make up the bulk of the card's content.</p>
-                <a href="#" className="card-link">Card link</a>
-                <a href="#" className="card-link">Another link</a>
+                <hr className="mb-3"/>
+                <h6 className="card-subtitle mb-2">TVL</h6>
+                <h4 className="card-text mb-3">$ 1400000</h4>
+                <h6 className="card-subtitle mb-2">Cap used</h6>
+                <h4 className="card-text">99.9%</h4>
             </div>
         </div>
 

@@ -2,8 +2,12 @@
 
 nav {
   position: relative;
-  margin: 0 1rem 8rem;
-  width: 100%;
+  margin: 0 1rem 6rem;
+  width: 54%;
+}
+.img {
+  width: auto!important;
+  height: 65px!important;
 }
 
 .left {
@@ -26,8 +30,8 @@ nav {
 
 .wallet-info-section {
   background-color: $dark3;
-  border: 2px solid $dark2;
-  border-radius: .5rem;
+  border: 2px solid #44ffd1;
+  border-radius: 1rem;
   display: flex;
   justify-content: center;
   align-content: center;
@@ -39,6 +43,7 @@ nav {
 .wallet-info-content {
   display: flex;
   align-items: center;
+  font-size: 10px;
 }
 
 .wallet-info-section:last-child {
