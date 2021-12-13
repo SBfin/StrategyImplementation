@@ -1,4 +1,4 @@
-@import './src/styles/colors.scss';
+@import "./src/styles/colors.scss";
 
 .main-container {
   width: 100%;
@@ -49,8 +49,8 @@
   color: $link-blue;
   cursor: pointer;
   font-size: 1.25rem;
-  transition: color .15s ease-out;
-  transition: background-color .15s ease-out;
+  transition: color 0.15s ease-out;
+  transition: background-color 0.15s ease-out;
   display: flex;
   justify-content: center;
   align-items: center;

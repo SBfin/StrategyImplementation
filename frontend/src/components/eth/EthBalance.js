@@ -1,39 +1,38 @@
-import { useWeb3React } from '@web3-react/core'
-import { useEffect,useState } from 'react'
-import { formatEther } from '@ethersproject/units'
+import { useWeb3React } from "@web3-react/core";
+import { useEffect, useState } from "react";
+import { formatEther } from "@ethersproject/units";
 
 export default function EthBalance() {
-  const { account, library, chainId }  = useWeb3React();
+  const { account, library, chainId } = useWeb3React();
 
-  const [balance, setBalance] = useState()
+  const [balance, setBalance] = useState();
 
   useEffect(() => {
     if (!!account && !!library) {
-      let stale = false
+      let stale = false;
 
-      library.getBalance(account)
+      library
+        .getBalance(account)
         .then((balance) => {
           if (!stale) {
-            setBalance(balance)
-          }
-        }).catch(() => {
-          if (!stale) {
-            setBalance(null)
+            setBalance(balance);
           }
         })
+        .catch(() => {
+          if (!stale) {
+            setBalance(null);
+          }
+        });
 
       return () => {
-        stale = true
-        setBalance(undefined)
-      }
+        stale = true;
+        setBalance(undefined);
+      };
     }
-  }, [account, library, chainId])
+  }, [account, library, chainId]);
 
-  if(!balance) {
-    return <span>...</span>
+  if (!balance) {
+    return <span>...</span>;
   }
-  return( 
-    <span>{parseFloat(formatEther(balance)).toPrecision(4)}</span> 
-  )
-  
+  return <span>{parseFloat(formatEther(balance)).toPrecision(4)}</span>;
 }

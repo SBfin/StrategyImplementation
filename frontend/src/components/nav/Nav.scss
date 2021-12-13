@@ -1,4 +1,4 @@
-@import './src/styles/colors.scss';
+@import "./src/styles/colors.scss";
 
 nav {
   position: relative;
@@ -6,8 +6,8 @@ nav {
   width: 54%;
 }
 .img {
-  width: auto!important;
-  height: 65px!important;
+  width: auto !important;
+  height: 65px !important;
 }
 
 .left {
@@ -35,9 +35,9 @@ nav {
   display: flex;
   justify-content: center;
   align-content: center;
-  padding: .5rem;
-  margin-right: .5rem;
-  transition: border .15s ease-out;
+  padding: 0.5rem;
+  margin-right: 0.5rem;
+  transition: border 0.15s ease-out;
 }
 
 .wallet-info-content {
@@ -66,11 +66,11 @@ nav {
   height: 2.5rem;
   width: 2.5rem;
   line-height: 2.5rem;
-  border-radius: .5rem;
-  margin-right: .75rem;
+  border-radius: 0.5rem;
+  margin-right: 0.75rem;
   cursor: pointer;
   border: 2px solid transparent;
-  transition: background-color .15s ease-out;
+  transition: background-color 0.15s ease-out;
 }
 
 .menu-item:hover {

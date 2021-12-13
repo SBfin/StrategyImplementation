@@ -1,1 +1,1 @@
-export {default as HomeCardEmpty} from './HomeCardEmpty'
+export { default as HomeCardEmpty } from "./HomeCardEmpty";
