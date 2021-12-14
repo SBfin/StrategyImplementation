@@ -173,7 +173,7 @@ def vaultOnlyWithToken1(vault, strategy, pool, router, gov, keeper):
 # hypothesis tests where function-scoped fixtures are not allowed
 @pytest.fixture(scope="module")
 def createPoolVaultStrategy(
-    pm, OrbitVault, AlphaStrategy, MockToken, router, gov, keeper, users, wethToken, tokens
+    pm, OrbitVault, AlphaStrategy, MockToken, router, gov, keeper, users
 ):
     UniswapV3Core = pm(UNISWAP_V3_CORE)
 
@@ -200,14 +200,14 @@ def createPoolVaultStrategy(
         chain.sleep(3600)
         
         
-        vault = gov.deploy(OrbitVault, pool, 10000, 100e18, tokens[wethToken])
+        vault = gov.deploy(OrbitVault, pool, 10000, 100e18, tokenB)
         for u in users:
             tokenA.approve(vault, 100e18, {"from": u})
             tokenB.approve(vault, 10000e18, {"from": u})
 
         strategy = gov.deploy(AlphaStrategy, vault, 2400, 1200, 200000, 600, keeper)
         vault.setStrategy(strategy, {"from": gov})
-        return pool, vault
+        return pool, vault, strategy
 
     yield f
 
