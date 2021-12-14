@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import Nav from "./components/nav/Nav";
 import Footer from "./components/footer/Footer";
-import Home from "./Pages/home";
-import Vault from "./Pages/vault";
+import Home from "./pages/home";
+import Vault from "./pages/vault";
 import "./App.scss";
 import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 

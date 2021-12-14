@@ -1,4 +1,4 @@
-import VaultView from "../components/vault/";
+import VaultView from "../components/vault";
 import { useParams } from "react-router-dom";
 
 const Vault = ({ props }) => {
@@ -8,4 +8,3 @@ const Vault = ({ props }) => {
 };
 
 export default Vault;
-//
