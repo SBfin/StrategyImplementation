@@ -42,6 +42,7 @@ contract OrbitVault is
         
         {
             weth = wethAddress;
+            token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
         }
 
     event EthRefund(
@@ -67,7 +68,6 @@ contract OrbitVault is
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
-        token0IsWeth = address(token0) == weth;
         uint256 amount0Desired;
         uint256 amount1Desired;
         uint256 amount1Min;
@@ -141,7 +141,7 @@ contract OrbitVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Push tokens to recipient
-        if (address(token0) == weth) {
+        if (token0IsWeth) {
             if (amount1 > 0) token1.safeTransfer(to, amount1);
             if (amount0 > 0) {
                 IWETH9(weth).withdraw(amount0);
