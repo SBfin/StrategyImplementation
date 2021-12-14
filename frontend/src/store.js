@@ -1,7 +1,7 @@
-import { configureStore } from '@reduxjs/toolkit';
-import vaultReducer from './components/eth/vault';
-import tokenReducer from './components/eth/TokenBalance'
-import strategyReducer from './components/eth/strategy'
+import { configureStore } from "@reduxjs/toolkit";
+import vaultReducer from "./components/common/vault";
+import tokenReducer from "./components/common/TokenBalance";
+import strategyReducer from "./components/common/strategy";
 
 export const store = configureStore({
   reducer: {

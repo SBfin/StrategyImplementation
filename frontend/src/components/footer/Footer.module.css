@@ -1,0 +1,22 @@
+.root {
+  width: 50%;
+}
+.line {
+  background-color: #3a0ca3 !important;
+}
+.row h2 {
+  font-size: 12px;
+  color: #44ffd1;
+  width: fit-content;
+  margin: auto;
+}
+.logo {
+  width: 60px;
+  height: 50px;
+  margin-right: 100px;
+  fill: white;
+}
+.icons {
+  width: 20px;
+  margin-right: 5px;
+}

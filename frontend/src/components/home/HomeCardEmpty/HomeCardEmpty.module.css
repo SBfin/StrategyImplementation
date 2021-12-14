@@ -1,0 +1,20 @@
+.root {
+  width: 14rem;
+  background-color: rgba(58, 12, 163, 0.25);
+  border-radius: 0.6rem;
+  border-color: #44ffd1;
+  color: #44ffd1;
+  height: 210px;
+}
+.body {
+  align-items: center;
+  display: flex;
+  height: 210px;
+}
+
+.body p {
+  width: 50%;
+  margin: auto;
+  text-align: center;
+  font-size: 14px;
+}
