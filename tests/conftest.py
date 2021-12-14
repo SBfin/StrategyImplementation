@@ -2,7 +2,7 @@ from brownie import chain
 from math import sqrt
 import pytest
 from web3 import Web3
-
+import random
 
 UNISWAP_V3_CORE = "Uniswap/v3-core@1.0.0"
 
@@ -36,6 +36,11 @@ def users(gov, user, recipient, keeper):
 def router(TestRouter, gov):
     yield gov.deploy(TestRouter)
 
+@pytest.fixture(scope="module")
+def wethToken():
+    wethToken = int(bool(random.getrandbits(1)))
+    yield wethToken
+
 
 @pytest.fixture
 def pool(MockToken, router, pm, gov, users):
@@ -68,6 +73,7 @@ def pool(MockToken, router, pm, gov, users):
     # Increase cardinality and fast forward so TWAP works
     pool.increaseObservationCardinalityNext(100, {"from": gov})
     chain.sleep(3600)
+    
     yield pool
 
 
@@ -77,10 +83,10 @@ def tokens(MockToken, pool):
 
 
 @pytest.fixture
-def vault(OrbitVault, AlphaStrategy, pool, router, tokens, gov, users, keeper):
+def vault(OrbitVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, wethToken):
     # protocolFee = 10000 (1%)
     # maxTotalSupply = 100e18 (100 tokens)
-    vault = gov.deploy(OrbitVault, pool, 10000, 100e18)
+    vault = gov.deploy(OrbitVault, pool, 10000, 100e18, tokens[wethToken])
 
     for u in users:
         tokens[0].approve(vault, 100e18, {"from": u})
@@ -167,7 +173,7 @@ def vaultOnlyWithToken1(vault, strategy, pool, router, gov, keeper):
 # hypothesis tests where function-scoped fixtures are not allowed
 @pytest.fixture(scope="module")
 def createPoolVaultStrategy(
-    pm, OrbitVault, AlphaStrategy, MockToken, router, gov, keeper, users
+    pm, OrbitVault, AlphaStrategy, MockToken, router, gov, keeper, users, wethToken
 ):
     UniswapV3Core = pm(UNISWAP_V3_CORE)
 
@@ -192,15 +198,16 @@ def createPoolVaultStrategy(
         # Increase cardinality and fast forward so TWAP works
         pool.increaseObservationCardinalityNext(100, {"from": gov})
         chain.sleep(3600)
-
-        vault = gov.deploy(OrbitVault, pool, 10000, 100e18)
+        
+        
+        vault = gov.deploy(OrbitVault, pool, 10000, 100e18, tokens[wethToken])
         for u in users:
             tokenA.approve(vault, 100e18, {"from": u})
             tokenB.approve(vault, 10000e18, {"from": u})
 
         strategy = gov.deploy(AlphaStrategy, vault, 2400, 1200, 200000, 600, keeper)
         vault.setStrategy(strategy, {"from": gov})
-        return pool, vault, strategy
+        return pool, vault
 
     yield f
 

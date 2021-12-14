@@ -2,7 +2,7 @@ from brownie import chain, reverts, ZERO_ADDRESS
 import pytest
 from pytest import approx
 
-"""
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [[0, 1], [1, 0], [1e18, 0], [0, 1e18], [1e4, 1e18], [1e18, 1e18]],
@@ -44,7 +44,7 @@ def test_initial_deposit(
         "amount0": amount0,
         "amount1": amount1,
     }
-"""
+
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",

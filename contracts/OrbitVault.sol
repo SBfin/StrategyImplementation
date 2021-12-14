@@ -28,17 +28,20 @@ contract OrbitVault is
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address public weth;
+    address immutable weth;
+    bool token0IsWeth;
 
     constructor(address _pool,
         uint256 _protocolFee,
-        uint256 _maxTotalSupply) 
+        uint256 _maxTotalSupply,
+        address wethAddress) 
 
         AlphaVault(_pool,
         _protocolFee,
         _maxTotalSupply) 
         
         {
+            weth = wethAddress;
         }
 
     event EthRefund(
@@ -64,9 +67,7 @@ contract OrbitVault is
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
-        bool token0IsWeth;
         token0IsWeth = address(token0) == weth;
-
         uint256 amount0Desired;
         uint256 amount1Desired;
         uint256 amount1Min;
@@ -166,10 +167,6 @@ contract OrbitVault is
         (bool success, ) = to.call{value: value}("");
         require(success, 'STE');
         emit EthRefund(to, value);
-    }
-
-    function setAddressWeth(address _address) external onlyGovernance {
-        weth = _address;
     }
 
     fallback() external payable {
