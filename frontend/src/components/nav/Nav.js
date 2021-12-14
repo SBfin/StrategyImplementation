@@ -3,6 +3,7 @@ import { useWeb3React } from "@web3-react/core";
 import { useEffect, useState } from "react";
 import { useEagerConnect, useInactiveListener } from "../../helpers/hooks";
 import { MetaMask } from "../../helpers/connector";
+import { Link } from "react-router-dom";
 
 export default function Nav() {
   const web3React = useWeb3React();
@@ -24,10 +25,12 @@ export default function Nav() {
   return (
     <nav>
       <div className="left">
-        <div className="logo">
-          {" "}
-          <img className="img" src="./assets/Orbit_GIF.gif" />
-        </div>
+        <Link to="/">
+          <div className="logo">
+            {" "}
+            <img className="img" src="./assets/Orbit_GIF.gif" />
+          </div>
+        </Link>
       </div>
       <div className="right">
         <div className="wallet-info-section">
