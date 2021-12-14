@@ -1,21 +1,26 @@
 import { useState, useEffect } from "react";
 import Nav from "./components/nav/Nav";
 import Footer from "./components/footer/Footer";
-import VaultView from "./components/vault";
-import HomeView from "./components/home";
+import Home from "./Pages/home";
+import Vault from "./Pages/vault";
 import "./App.scss";
+import { BrowserRouter as Router, Routes, Route, Link } from "react-router-dom";
 
 function App() {
   const [fetching, setFetching] = useState(false);
 
   return (
-    <div className="App">
-      <Nav />
-      <VaultView fetching={fetching} />
+    <Router>
+      <div className="App">
+        <Nav />
 
-      <HomeView />
-      <Footer />
-    </div>
+        <Routes>
+          <Route path="/vault/:vaultId" element={<Vault fetching={fetching} />} />
+          <Route path="/" element={<Home />} />
+        </Routes>
+        <Footer />
+      </div>
+    </Router>
   );
 }
 

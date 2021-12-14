@@ -1,8 +1,7 @@
 from brownie import (
     accounts,
     project,
-    MockToken,
-    AlphaVault,
+    OrbitVault,
     DynamicRangesStrategy,
     TestRouter,
     Contract,
@@ -15,6 +14,8 @@ import time
 from math import floor, sqrt
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 from brownie.network import gas_price, gas_limit
+
+KEEPER = "0xffa9FDa3050007645945e38E72B5a3dB1414A59b"
 
 # Uniswap v3 factory on Ropsten
 FACTORY="0x1F98431c8aD98523631AE4a59f267346ea31F984"
@@ -50,12 +51,13 @@ def main():
     pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, usdc, 500))
     print("pool address: ", pool)
 
-    vault = AlphaVault.deploy(
+    vault = OrbitVault.deploy(
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
         {"from": deployer}
     )
+    vault.setAddressWeth("0xc778417e063141139fce010982780140aa0cd5ab", {"from": deployer})
 
     strategy = deployer.deploy(
         DynamicRangesStrategy,
@@ -68,6 +70,7 @@ def main():
     )
 
     vault.setStrategy(strategy, {"from": deployer})
+    strategy.setKeeper(KEEPER, {"from": deployer})
 
     print("Doing the first deposit to set the price ratio..")
     eth.approve(vault, DEPOSIT_TOKEN_1, {"from": deployer})
