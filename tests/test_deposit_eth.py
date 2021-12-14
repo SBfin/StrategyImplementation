@@ -239,8 +239,6 @@ def test_deposit_when_vault_only_has_token1(
 
 def test_deposit_checks(vault, user, tokens, gov):
 
-    vault.setAddressWeth(tokens[1], {"from" : gov})
-
     with reverts("amount0Desired or amount1Desired"):
         vault.deposit(0, 0, 0, 0, user, {"from": user})
     
