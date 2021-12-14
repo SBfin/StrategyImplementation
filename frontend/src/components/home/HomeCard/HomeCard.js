@@ -1,6 +1,6 @@
 import s from "./HomeCard.module.css";
 
-export default function HomeCard(props) {
+export function HomeCard(props) {
   return (
     <div className={`card ${s.root}`}>
       <div className={`card-body ${s.body}`}>

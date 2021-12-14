@@ -1,0 +1,56 @@
+.main {
+  margin-bottom: 25px;
+}
+
+.inputDiv {
+  display: flex;
+  margin-bottom: 20px;
+}
+
+.labelToken {
+  font-size: 10px;
+  font-weight: 300;
+  text-align: right;
+  margin-bottom: 5px;
+}
+.labelToken * {
+  font-size: 10px;
+}
+.labelNameToken {
+  line-height: 1.5em;
+}
+.tokenImage {
+  width: 20px;
+  margin-right: 5px;
+}
+.tokenDiv {
+  margin: auto auto auto 0;
+}
+.input {
+  width: 70%;
+  text-align: right;
+  background-color: rgba(58, 12, 163, 0.25);
+  border: 1px solid #44ffd1;
+  border-radius: 0.6rem;
+  color: white;
+  font-size: 12px;
+  padding: 0.5rem;
+}
+
+.note {
+  font-size: 9px;
+  font-weight: 400;
+}
+
+.approveDiv {
+  display: flex;
+  justify-content: space-between;
+}
+.approveButton {
+  background-color: #44ffd1;
+  border-radius: 0.3rem;
+  font-size: 12px;
+  font-weight: 500;
+  width: 48%;
+  padding: 5px;
+}
