@@ -96,7 +96,7 @@ contract OrbitVault is
 
         // Pull in tokens from sender
         IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
-        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) refundETH();
+        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) safeTransferETH(msg.sender, msg.value - (token0IsWeth ? amount0 : amount1));
         if (token0IsWeth) {
             token1.safeTransferFrom(msg.sender, address(this), amount1);
         }
@@ -140,8 +140,6 @@ contract OrbitVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Push tokens to recipient
-        //if (amount0 > 0) token0.safeTransfer(to, amount0);
-        //if (amount1 > 0) token1.safeTransfer(to, amount1);
         if (address(token0) == weth) {
             if (amount1 > 0) token1.safeTransfer(to, amount1);
             if (amount0 > 0) {
@@ -160,12 +158,6 @@ contract OrbitVault is
         emit Withdraw(msg.sender, to, shares, amount0, amount1);
     }
 
-
-    function refundETH() internal {
-        if (address(this).balance > 0) safeTransferETH(msg.sender, address(this).balance);
-        emit EthRefund(msg.sender, address(this).balance);
-    }
-
     /// @notice Transfers ETH to the recipient address
     /// @dev Fails with `STE`
     /// @param to The destination of the transfer
@@ -173,6 +165,7 @@ contract OrbitVault is
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}("");
         require(success, 'STE');
+        emit EthRefund(to, value);
     }
 
     function setAddressWeth(address _address) external onlyGovernance {

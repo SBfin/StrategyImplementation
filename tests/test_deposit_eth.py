@@ -366,4 +366,43 @@ def test_withdraw_checks(vault, user, recipient):
 
 
 
+"""
+Test refund ETH
+"""
+@pytest.mark.parametrize(
+    "amount0Desired,amount1Desired, excessEth",
+    [[1, 1e18, 2e18], [1e18, 1, 1], [1e4, 1e18, 10e18], [1e18, 1e18, 1e14]]
+)
+def test_deposit_eth(
+    vaultAfterPriceMove,
+    tokens,
+    getPositions,
+    gov,
+    user,
+    recipient,
+    amount0Desired,
+    amount1Desired,
+    excessEth
+):
+    vault = vaultAfterPriceMove
+    wethtoken = int(bool(random.getrandbits(1)))
+    print(wethtoken)
+    # set address
+    tx = vault.setAddressWeth(tokens[wethtoken], {"from" : gov})   
 
+    # Deposit
+    value = amount0Desired + excessEth if (tokens[0] == tokens[wethtoken]) else amount1Desired + excessEth
+    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethtoken]) else amount1Desired
+    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    print(tx.events)
+    shares, amount0, amount1 = tx.return_value
+
+    # Check Eth amount is refunded correctly
+    diff0 = amount0Desired - amount0 if tokens[0] != tokens[wethtoken] else value - amount0
+    diff1 = amount1Desired - amount1 if tokens[0] == tokens[wethtoken] else value - amount1
+    
+    eth_diff = diff0 if tokens[0] == tokens[wethtoken] else diff1
+    if eth_diff > 0:
+        eth_refund = tx.events["EthRefund"]['amount']
+        assert approx(eth_diff) == eth_refund
+    
