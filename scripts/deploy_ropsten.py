@@ -15,6 +15,7 @@ from math import floor, sqrt
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 from brownie.network import gas_price, gas_limit
 from brownie.network import priority_fee
+import os
 
 KEEPER = "0xffa9FDa3050007645945e38E72B5a3dB1414A59b"
 
@@ -36,27 +37,28 @@ DEPOSIT_TOKEN_1 = 0.01e18
 DEPOSIT_TOKEN_2 = 40e6
 
 def main():
-    deployer = accounts.load("deployer")
 
-    print(deployer.balance())
+    deployer = accounts.load("deployer", "none")
+
+    print("deployer balance: ", deployer.balance())
 
     UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
     priority_fee("auto")
 
-    eth = interface.IERC20("0xc778417e063141139fce010982780140aa0cd5ab")
+    weth = interface.IERC20("0xc778417e063141139fce010982780140aa0cd5ab")
     usdc = interface.IERC20("0x07865c6E87B9F70255377e024ace6630C1Eaa37F")
     
     factory = UniswapV3Core.interface.IUniswapV3Factory(FACTORY)
 
-    pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(eth, usdc, 500))
+    pool = UniswapV3Core.interface.IUniswapV3Pool(factory.getPool(weth, usdc, 500))
     print("pool address: ", pool)
 
     vault = OrbitVault.deploy(
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
-        eth,
+        weth,
         {"from": deployer},
         publish_source = True
     )
@@ -76,8 +78,8 @@ def main():
     strategy.setKeeper(KEEPER, {"from": deployer})
 
     print("Doing the first deposit to set the price ratio..")
-    eth.approve(vault, DEPOSIT_TOKEN_1, {"from": deployer})
-    usdc.approve(vault, DEPOSIT_TOKEN_2, {"from": deployer})
+    weth.approve(vault, 1<<255, {"from": deployer})
+    usdc.approve(vault, 1<<255, {"from": deployer})
     tx = vault.deposit(DEPOSIT_TOKEN_1, DEPOSIT_TOKEN_2, 0, 0, deployer, {"from": deployer})
 
     print(f"Vault address: {vault.address}")
