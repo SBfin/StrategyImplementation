@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, calculateRatio, validateNumber, truncateNumber, FetchContract, tickToPrice } from "../../common/helpers";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, tickToPrice } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -21,12 +21,16 @@ const mapState = (state) => ({
     truncateNumber(1 / tickToPrice(state.vault.limit[0], state.token.decimalsToken0, state.token.decimalsToken1), 2),
     truncateNumber(1 / tickToPrice(state.vault.limit[1], state.token.decimalsToken0, state.token.decimalsToken1), 2),
   ],
+  totalAmountsInDecimals: [
+    fromUnitsToDecimal(state.vault.totalAmounts.value[0], state.token.decimalsToken0),
+    fromUnitsToDecimal(state.vault.totalAmounts.value[1], state.token.decimalsToken1),
+  ],
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultInfo(props) {
-  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder } = props;
+  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder, totalAmountsInDecimals } = props;
   const dispatch = useDispatch();
 
   const strategyContract = GetStrategy(vaultStore.strategyAddress.value);
@@ -70,10 +74,9 @@ function VaultInfo(props) {
           {tokenStore.symbolToken0} & {tokenStore.symbolToken1} ratio
         </p>
         <span className="col-3">
-          {calculateRatio(
-            fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0),
-            fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
-          )}
+          {totalAmountsInDecimals[0] > totalAmountsInDecimals[1]
+            ? truncateNumber(totalAmountsInDecimals[0] / totalAmountsInDecimals[1], 1) + " : 1"
+            : "1 : " + truncateNumber(totalAmountsInDecimals[1] / totalAmountsInDecimals[0], 1)}
         </span>
       </div>
       <h2>Vault positions</h2>

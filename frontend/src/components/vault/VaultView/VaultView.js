@@ -71,20 +71,3 @@ export default function VaultView(props) {
     </div>
   );
 }
-
-/*
-
-         <div style={{ textAlign: "center", width: "50%" }}>
-        {vaultContractAddress === null && (
-          <div className="main-container" style={{ background: "red" }}>
-            <div>THIS CURRENT IS NOT SUPPORTED</div>
-            <div>Please select a supported one</div>
-          </div>
-        )}
-  
-        <DepositSection vault={vault} />
-        <InfoSection />
-  
-        {vaultStore.balanceOf.value > 0 && <WithdrawSection vault={vault} />}
-        </div> 
-*/
