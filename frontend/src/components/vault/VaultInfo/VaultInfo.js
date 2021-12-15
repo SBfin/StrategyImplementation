@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, calculateRatio, validateNumber, truncateNumber, FetchContract } from "../../common/helpers";
+import { fromUnitsToDecimal, calculateRatio, validateNumber, truncateNumber, FetchContract, tickToPrice } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -12,12 +12,20 @@ const mapState = (state) => ({
   tokenStore: state.token,
   vaultStore: state.vault,
   strategyStore: state.strategy,
+  baseOrder: [
+    truncateNumber(1 / tickToPrice(state.vault.base[0], state.token.decimalsToken0, state.token.decimalsToken1), 2),
+    truncateNumber(1 / tickToPrice(state.vault.base[1], state.token.decimalsToken0, state.token.decimalsToken1), 2),
+  ],
+  limitOrder: [
+    truncateNumber(1 / tickToPrice(state.vault.limit[0], state.token.decimalsToken0, state.token.decimalsToken1), 2),
+    truncateNumber(1 / tickToPrice(state.vault.limit[1], state.token.decimalsToken0, state.token.decimalsToken1), 2),
+  ],
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultInfo(props) {
-  const { tokenStore, vaultStore, strategyStore } = props;
+  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder } = props;
   const dispatch = useDispatch();
 
   const strategyContract = GetStrategy(vaultStore.strategyAddress.value);
@@ -26,8 +34,8 @@ function VaultInfo(props) {
     if (!strategyContract) {
       return;
     }
-    dispatch(fetchActionsStrategy.price(strategyContract));
-  }, [strategyContract]);
+    dispatch(fetchActionsStrategy.price({ strategy: strategyContract, decimals0: tokenStore.decimalsToken0, decimals1: tokenStore.decimalsToken1 }));
+  }, [strategyContract, tokenStore.decimalsToken0, tokenStore.decimalsToken1]);
 
   return (
     <div className="row main-container">
@@ -96,13 +104,13 @@ function VaultInfo(props) {
       <div className="element">
         <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
           Base order: &nbsp;
-          <span style={{ color: "green" }}> {vaultStore.baseOrder.value[0] + " - " + vaultStore.baseOrder.value[1]} </span>
+          <span style={{ color: "green" }}> {baseOrder[0] + " - " + baseOrder[1]} </span>
         </label>
       </div>
       <div className="element">
         <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
           Limit order: &nbsp;
-          <span style={{ color: "green" }}> {vaultStore.limitOrder.value[0] + " - " + vaultStore.limitOrder.value[1]} </span>
+          <span style={{ color: "green" }}> {limitOrder[0] + " - " + limitOrder[1]} </span>
         </label>
       </div>
 
