@@ -14,6 +14,7 @@ import time
 from math import floor, sqrt
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 from brownie.network import gas_price, gas_limit
+from brownie.network import priority_fee
 
 KEEPER = "0xffa9FDa3050007645945e38E72B5a3dB1414A59b"
 
@@ -34,14 +35,14 @@ TWAP_DURATION = 60  # 60 seconds
 DEPOSIT_TOKEN_1 = 0.01e18
 DEPOSIT_TOKEN_2 = 40e6
 
-
 def main():
-    deployer = accounts.load("deployer", "none")
+    deployer = accounts.load("deployer")
+
+    print(deployer.balance())
+
     UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
-    gas_strategy = ExponentialScalingStrategy("10 gwei", "10000 gwei")
-    gas_price(gas_strategy)
-    gas_limit(8000000)
+    priority_fee("auto")
 
     eth = interface.IERC20("0xc778417e063141139fce010982780140aa0cd5ab")
     usdc = interface.IERC20("0x07865c6E87B9F70255377e024ace6630C1Eaa37F")
@@ -55,10 +56,11 @@ def main():
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
-        {"from": deployer}
+        eth,
+        {"from": deployer},
+        publish_source = True
     )
-    vault.setAddressWeth("0xc778417e063141139fce010982780140aa0cd5ab", {"from": deployer})
-
+    
     strategy = deployer.deploy(
         DynamicRangesStrategy,
         vault,
@@ -66,7 +68,8 @@ def main():
         LIMIT_THRESHOLD,
         MAX_TWAP_DEVIATION,
         TWAP_DURATION,
-        deployer
+        deployer,
+        publish_source = True
     )
 
     vault.setStrategy(strategy, {"from": deployer})
@@ -80,3 +83,4 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Deposited transaction: {tx}")
+    
