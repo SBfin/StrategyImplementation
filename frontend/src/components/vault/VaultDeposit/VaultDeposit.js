@@ -30,7 +30,7 @@ function VaultDeposit(props) {
   const [input1, setInput1] = useState("");
   const [input2, setInput2] = useState("");
   const [disable, setDisable] = useState(true);
-  const [messageError, setMessageError] = useState("Deposit");
+  const [messageError, setMessageError] = useState("DEPOSIT");
 
   const [loader, setLoader] = useState(false);
   const isButtonDisabled = props.fetching;
@@ -62,7 +62,7 @@ function VaultDeposit(props) {
         </p>
         <div className={`${s.inputDiv}`}>
           <div className={`${s.tokenDiv}`}>
-            <img className={`${s.tokenImage}`} src="./assets/Ethereum.png" />
+            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken0 + ".png"} />
             <label className={`pasta-label ${s.labelNameToken}`}>{tokenStore.symbolToken0}</label>
           </div>
           <input
@@ -94,7 +94,7 @@ function VaultDeposit(props) {
         </p>
         <div className={`${s.inputDiv}`}>
           <div className={`${s.tokenDiv}`}>
-            <img className={`${s.tokenImage}`} src="./assets/Ethereum.png" />
+            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken1 + ".png"} />
             <label className={`pasta-label ${s.labelNameToken}`}>{tokenStore.symbolToken1}</label>
           </div>
           <input
@@ -133,7 +133,7 @@ function VaultDeposit(props) {
             onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token0Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken0(r.payload)))}
             disabled={isButtonDisabled}
           >
-            Approve {tokenStore.symbolToken0}
+            APPROVE {tokenStore.symbolToken0}
           </button>
         )}
         {tokenStore.allowanceToken1 === "0" ? (
@@ -142,14 +142,14 @@ function VaultDeposit(props) {
             onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token1Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken1(r.payload)))}
             disabled={isButtonDisabled}
           >
-            Approve {tokenStore.symbolToken1}
+            APPROVE {tokenStore.symbolToken1}
           </button>
         ) : (
           tokenStore.allowanceToken0 !== "0" &&
           tokenStore.allowanceToken1 !== "0" && (
-            <button className="btn btn-primary col-12 btn-lg" onClick={onDepositClick} disabled={disable}>
+            <button className={`col-12 ${s.depositButton}`} onClick={onDepositClick} disabled={disable}>
               {disable && <span>{messageError}</span>}
-              {!disable && <span>Deposit</span>}
+              {!disable && <span>DEPOSIT</span>}
             </button>
           )
         )}

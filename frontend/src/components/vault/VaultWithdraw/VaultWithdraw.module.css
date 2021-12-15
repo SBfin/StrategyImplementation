@@ -1,10 +1,6 @@
-.main {
-  margin-bottom: 25px;
-}
-
 .inputDiv {
   display: flex;
-  margin-bottom: 20px;
+  margin-bottom: 30px;
 }
 
 .labelToken {
@@ -18,7 +14,7 @@
 }
 .labelNameToken {
   line-height: 1.5em;
-  font-weight: 500;
+  font-size: 12px;
 }
 .tokenImage {
   width: 20px;
@@ -28,7 +24,7 @@
   margin: auto auto auto 0;
 }
 .input {
-  width: 70%;
+  width: 60%;
   text-align: right;
   background-color: rgba(58, 12, 163, 0.25);
   border: 1px solid #44ffd1;
@@ -38,34 +34,39 @@
   padding: 0.5rem;
 }
 
-.note {
-  font-size: 9px;
-  font-weight: 400;
-  opacity: 0.5;
-}
-
-.approveDiv {
-  display: flex;
-  justify-content: space-between;
-}
-.approveButton {
-  background-color: #44ffd1;
-  border-radius: 0.3rem;
+.subTitle {
   font-size: 12px;
-  font-weight: 500;
-  width: 48%;
-  padding: 5px;
+  text-align: center;
 }
 
-.depositButton {
+.subDiv label {
+  font-size: 14px;
+}
+
+.subDiv span {
+  float: right;
+}
+.tokenSharesDiv {
+  margin-bottom: 5px;
+}
+.tokenSharesDiv hr {
+  background-color: #44ffd1;
+  opacity: 1;
+  margin: 0.5rem 0rem;
+  padding: 0.2px;
+  height: 0;
+}
+
+.withdrawButton {
   background-color: #44ffd1;
   border-radius: 0.3rem;
   font-size: 12px;
   font-weight: 500;
   width: 100%;
   padding: 5px;
+  margin-top: 20px;
 }
-.depositButton span {
+.withdrawButton span {
   font-size: 12px;
   font-weight: 500;
   color: #000b28;

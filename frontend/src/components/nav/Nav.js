@@ -28,7 +28,7 @@ export default function Nav() {
         <Link to="/">
           <div className="logo">
             {" "}
-            <img className="img" src="./assets/Orbit_GIF.gif" />
+            <img className="img" src="/assets/Orbit_GIF.gif" />
           </div>
         </Link>
       </div>

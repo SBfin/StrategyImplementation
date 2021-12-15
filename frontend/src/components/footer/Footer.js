@@ -19,6 +19,7 @@ export default function Footer() {
           Discord
         </h2>
       </div>
+      <hr className={s.line} />
     </div>
   );
 }

@@ -7,6 +7,7 @@ import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
 import { useWeb3React } from "@web3-react/core";
 import { GetStrategy, fetchActionsStrategy } from "../../common/strategy";
+import s from "./VaultInfo.module.css";
 
 const mapState = (state) => ({
   tokenStore: state.token,
@@ -29,6 +30,13 @@ function VaultInfo(props) {
   const dispatch = useDispatch();
 
   const strategyContract = GetStrategy(vaultStore.strategyAddress.value);
+  const shortAddressVault = vaultStore.address && `${vaultStore.address.slice(0, 5)}...${vaultStore.address.slice(vaultStore.address.length - 4, vaultStore.address.length)}`;
+  const shortAddressStrategy =
+    vaultStore.strategyAddress.value &&
+    `${vaultStore.strategyAddress.value.slice(0, 5)}...${vaultStore.strategyAddress.value.slice(
+      vaultStore.strategyAddress.value.length - 4,
+      vaultStore.strategyAddress.value.length,
+    )}`;
 
   useEffect(() => {
     if (!strategyContract) {
@@ -38,98 +46,63 @@ function VaultInfo(props) {
   }, [strategyContract, tokenStore.decimalsToken0, tokenStore.decimalsToken1]);
 
   return (
-    <div className="row main-container">
-      <div className="element">
-        <label className="paste-label fs-2" style={{ textAlign: "center", width: "100%" }}>
-          Holdings
-        </label>
+    <div className={`${s.root}`}>
+      <h1>VAULT DATA</h1>
+      <h2>Vault holdings</h2>
+      <div className="row">
+        <p className="col-7">TVL</p>
+        <span className="col-3">
+          $
+          {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 2) * strategyStore.price.value +
+            truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 2)}
+        </span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          {tokenStore.symbolToken0} deposited: &nbsp;
-          <span style={{ color: "green" }}>
-            {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)} {tokenStore.symbolToken0}
-          </span>
-        </label>
+      <div className="row">
+        <p className="col-7">Total {tokenStore.symbolToken0}</p>
+        <span className="col-3">{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)}</span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          {tokenStore.symbolToken1} deposited: &nbsp;
-          <span style={{ color: "green" }}>
-            {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 5)} {tokenStore.symbolToken1}
-          </span>
-        </label>
+      <div className="row">
+        <p className="col-7">Total {tokenStore.symbolToken1}</p>
+        <span className="col-3">{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 2)}</span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          {tokenStore.symbolToken0} & {tokenStore.symbolToken1} Ratio &nbsp;
-          <span style={{ color: "green" }}>
-            {calculateRatio(
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0),
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
-            )}
-          </span>
-        </label>
+      <div className="row">
+        <p className="col-7">
+          {tokenStore.symbolToken0} & {tokenStore.symbolToken1} ratio
+        </p>
+        <span className="col-3">
+          {calculateRatio(
+            fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0),
+            fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
+          )}
+        </span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          {tokenStore.symbolToken0}/{tokenStore.symbolToken1} Vault total shares: &nbsp;
-          <span style={{ color: "green" }}> {truncateNumber(fromUnitsToDecimal(vaultStore.totalSupply.value, vaultStore.decimals), 5)}</span>
-        </label>
+      <h2>Vault positions</h2>
+      <div className="row">
+        <p className="col-7">
+          {tokenStore.symbolToken0} / {tokenStore.symbolToken1} price
+        </p>
+        <span className="col-3">{strategyStore.price.value}</span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          {tokenStore.symbolToken1}/{tokenStore.symbolToken0} price: &nbsp;
-          <span style={{ color: "green" }}> {strategyStore.price.value}</span>
-        </label>
+      <div className="row">
+        <p className="col-7">Base order</p>
+        <span className="col-3">{baseOrder[0] + " - " + baseOrder[1]}</span>
       </div>
-
-      <div className="element">
-        <label className="paste-label fs-2" style={{ textAlign: "center", width: "100%" }}>
-          Deposit Cap
-        </label>
+      <div className="row">
+        <p className="col-7">Limit order</p>
+        <span className="col-3">{limitOrder[0] + " - " + limitOrder[1]}</span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          % of the cap used: &nbsp;
-          <span style={{ color: "green" }}>{(((vaultStore.totalSupply.value || 0) / (vaultStore.maxTotalSupply.value || 0)) * 100).toFixed(2)}%</span>
-        </label>
+      <h2>Contracts</h2>
+      <div className="row">
+        <p className="col-7">Vault</p>
+        <span className="col-3">{shortAddressVault}</span>
       </div>
-
-      <div className="element">
-        <label className="paste-label fs-2" style={{ textAlign: "center", width: "100%" }}>
-          Vault position
-        </label>
+      <div className="row">
+        <p className="col-7">Strategy</p>
+        <span className="col-3">{shortAddressStrategy}</span>
       </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          Base order: &nbsp;
-          <span style={{ color: "green" }}> {baseOrder[0] + " - " + baseOrder[1]} </span>
-        </label>
-      </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          Limit order: &nbsp;
-          <span style={{ color: "green" }}> {limitOrder[0] + " - " + limitOrder[1]} </span>
-        </label>
-      </div>
-
-      <div className="element">
-        <label className="paste-label fs-2" style={{ textAlign: "center", width: "100%" }}>
-          Contracts
-        </label>
-      </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          Vault: &nbsp;
-          <span style={{ color: "green", wordWrap: "break-word" }}> {vaultStore.address}</span>
-        </label>
-      </div>
-      <div className="element">
-        <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
-          Strategy: &nbsp;
-          <span style={{ color: "green", wordWrap: "break-word" }}> {vaultStore.strategyAddress.value}</span>
-        </label>
+      <div className="row">
+        <p className="col-7">Uniswap V3 Pool</p>
+        <span className="col-3">WETH / USDC</span>
       </div>
     </div>
   );
