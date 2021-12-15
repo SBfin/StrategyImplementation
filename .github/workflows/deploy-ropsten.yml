@@ -34,6 +34,8 @@ jobs:
         brownie pm install Uniswap/v3-core@1.0.0
     - name: Set infura key
       run: export WEB3_INFURA_PROJECT_ID=${{ secrets.INFURA_PROJECT_ID }}
+    - name: Set etherscan key
+      run: export ETHERSCAN_TOKEN=${{ secrets.ETHERSCAN_TOKEN }}
     - name: Set network
       run: brownie networks add live infura host=https://ropsten.infura.io/v3/${{ secrets.INFURA_PROJECT_ID }} chainid=3
     - name: Setup deployment account
