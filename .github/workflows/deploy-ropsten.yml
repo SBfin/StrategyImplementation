@@ -37,7 +37,7 @@ jobs:
     - name: Set etherscan key
       run: export ETHERSCAN_TOKEN=${{ secrets.ETHERSCAN_TOKEN }}
     - name: Set network
-      run: brownie networks add live infura host=https://ropsten.infura.io/v3/${{ secrets.INFURA_PROJECT_ID }} chainid=3
+      run: brownie networks add live infura host=https://ropsten.infura.io/v3/${{ secrets.INFURA_PROJECT_ID }} chainid=3 explorer=https://api-ropsten.etherscan.io/api
     - name: Setup deployment account
       run: |
         sed -i -e 's/PKEY/${{ secrets.KEY_3 }}/' ${GITHUB_WORKSPACE}/.github/workflows/scripts/import_account.exp
