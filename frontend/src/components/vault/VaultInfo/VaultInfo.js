@@ -20,12 +20,16 @@ const mapState = (state) => ({
     truncateNumber(1 / tickToPrice(state.vault.limit[0], state.token.decimalsToken0, state.token.decimalsToken1), 2),
     truncateNumber(1 / tickToPrice(state.vault.limit[1], state.token.decimalsToken0, state.token.decimalsToken1), 2),
   ],
+  totalAmountsInDecimals: [
+    fromUnitsToDecimal(state.vault.totalAmounts.value[0], state.token.decimalsToken0),
+    fromUnitsToDecimal(state.vault.totalAmounts.value[1], state.token.decimalsToken1),
+  ],
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultInfo(props) {
-  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder } = props;
+  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder, totalAmountsInDecimals } = props;
   const dispatch = useDispatch();
 
   const strategyContract = GetStrategy(vaultStore.strategyAddress.value);
@@ -48,7 +52,7 @@ function VaultInfo(props) {
         <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
           {tokenStore.symbolToken0} deposited: &nbsp;
           <span style={{ color: "green" }}>
-            {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)} {tokenStore.symbolToken0}
+            {truncateNumber(totalAmountsInDecimals[0], 5)} {tokenStore.symbolToken0}
           </span>
         </label>
       </div>
@@ -56,7 +60,7 @@ function VaultInfo(props) {
         <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
           {tokenStore.symbolToken1} deposited: &nbsp;
           <span style={{ color: "green" }}>
-            {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 5)} {tokenStore.symbolToken1}
+            {truncateNumber(totalAmountsInDecimals[1], 5)} {tokenStore.symbolToken1}
           </span>
         </label>
       </div>
@@ -64,10 +68,9 @@ function VaultInfo(props) {
         <label className="paste-label fs-6" style={{ textAlign: "center", width: "100%" }}>
           {tokenStore.symbolToken0} & {tokenStore.symbolToken1} Ratio &nbsp;
           <span style={{ color: "green" }}>
-            {calculateRatio(
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0),
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
-            )}
+            {totalAmountsInDecimals[0] > totalAmountsInDecimals[1]
+              ? truncateNumber(totalAmountsInDecimals[0] / totalAmountsInDecimals[1], 1) + " : 1"
+              : "1 : " + truncateNumber(totalAmountsInDecimals[1] / totalAmountsInDecimals[0], 1)}
           </span>
         </label>
       </div>
