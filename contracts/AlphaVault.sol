@@ -85,7 +85,7 @@ contract AlphaVault is
         address _pool,
         uint256 _protocolFee,
         uint256 _maxTotalSupply
-    ) ERC20("Alpha Vault", "AV") {
+    ) ERC20("Orbit Vault", "OV") {
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(IUniswapV3Pool(_pool).token0());
         token1 = IERC20(IUniswapV3Pool(_pool).token1());

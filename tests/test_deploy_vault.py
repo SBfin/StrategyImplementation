@@ -12,8 +12,8 @@ def test_constructor(AlphaVault, pool, gov):
     assert vault.governance() == gov
     assert vault.strategy() == ZERO_ADDRESS
 
-    assert vault.name() == "Alpha Vault"
-    assert vault.symbol() == "AV"
+    assert vault.name() == "Orbit Vault"
+    assert vault.symbol() == "OV"
     assert vault.decimals() == 18
 
     assert vault.getTotalAmounts() == (0, 0)
