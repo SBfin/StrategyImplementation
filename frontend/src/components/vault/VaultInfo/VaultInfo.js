@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, tickToPrice } from "../../common/helpers";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, tickToPrice, calculateTVL } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -58,8 +58,7 @@ function VaultInfo(props) {
         <span className="col-3">
           $
           {truncateNumber(
-            fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0) * strategyStore.price.value +
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
+            calculateTVL(vaultStore.totalAmounts.value[0], vaultStore.totalAmounts.value[1], tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.price.value),
             2,
           )}
         </span>

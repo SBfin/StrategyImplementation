@@ -17,7 +17,7 @@ export function truncateNumber(num, decimals): number {
 
 export function tickToPrice(tick, decimal0, decimal1) {
   tick = Math.abs(tick);
-  return truncateNumber(Math.pow(1.0001, tick) * Math.pow(10, decimal0 - decimal1), 5);
+  return truncateNumber(Math.pow(1.0001, tick) * Math.pow(10, -1 * Math.abs(decimal0 - decimal1)), 5);
 }
 
 export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) {
@@ -27,4 +27,11 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
   if (!(Number(token1) <= max1 && Number(token2) <= max2)) return "Insufficient balance";
 
   return false;
+}
+
+export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, price: number): number {
+  const first = fromUnitsToDecimal(token0, decimal0);
+  const second = fromUnitsToDecimal(token1, decimal1);
+
+  return Math.min(first, second) * price + Math.max(first, second);
 }

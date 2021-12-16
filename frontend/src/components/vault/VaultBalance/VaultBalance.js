@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { fromUnitsToDecimal, truncateNumber } from "../../common/helpers";
+import { fromUnitsToDecimal, truncateNumber, calculateTVL } from "../../common/helpers";
 import { useSelector } from "react-redux";
 import { connect } from "react-redux";
 import { BigNumber } from "@ethersproject/bignumber";
@@ -38,8 +38,7 @@ function VaultBalance(props) {
         <span>
           $
           {truncateNumber(
-            fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0) * strategyStore.price.value +
-              fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
+            calculateTVL(vaultStore.totalAmounts.value[0], vaultStore.totalAmounts.value[1], tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.price.value),
             2,
           )}
         </span>
