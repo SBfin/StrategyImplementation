@@ -57,8 +57,11 @@ function VaultInfo(props) {
         <p className="col-7">TVL</p>
         <span className="col-3">
           $
-          {truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 2) * strategyStore.price.value +
-            truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 2)}
+          {truncateNumber(
+            fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0) * strategyStore.price.value +
+              fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1),
+            2,
+          )}
         </span>
       </div>
       <div className="row">

@@ -21,13 +21,14 @@ const mapState = (state) => ({
 
 function VaultCap(props) {
   const { tokenStore, vaultStore, strategyStore, userToken0, userToken1 } = props;
+  const maxTvl = truncateNumber(strategyStore.price.value * vaultStore.maxTotalSupply.value, 5);
 
   return (
     <div className={`${s.root}`}>
       <h1>DEPOSIT CAP</h1>
       <div className="row">
         <p className="col-7">MAX TVL </p>
-        <span className="col-3">${strategyStore.price.value * vaultStore.maxTotalSupply.value}</span>
+        <span className="col-3">${maxTvl > 1e18 ? maxTvl.toExponential(3) : maxTvl}</span>
       </div>
       <div className="row">
         <p className="col-7">% of the cap used </p>
