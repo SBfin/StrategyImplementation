@@ -1,5 +1,5 @@
-import { HomeCard } from "../HomeCard";
-import { HomeCardEmpty } from "../HomeCardEmpty";
+import { HomeCard } from "../HomeCard/HomeCard";
+import { HomeCardEmpty } from "../HomeCardEmpty/HomeCardEmpty";
 import s from "./HomeView.module.css";
 
 export default function HomeView(props) {

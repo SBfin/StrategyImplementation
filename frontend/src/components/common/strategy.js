@@ -13,9 +13,10 @@ const initialState = {
 };
 
 export const fetchActionsStrategy = {
-  price: createAsyncThunk("strategy/fetchPrice", async (strategy) => {
+  price: createAsyncThunk("strategy/fetchPrice", async (data) => {
+    const { strategy, decimals0, decimals1 } = data;
     const tickValue = await strategy.getTick();
-    const price = tickToPrice(tickValue, 6, 18).toString();
+    const price = tickToPrice(tickValue, decimals0, decimals1).toString();
     return truncateNumber(1 / price, 2);
   }),
 };

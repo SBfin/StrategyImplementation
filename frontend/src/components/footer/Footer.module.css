@@ -3,6 +3,7 @@
 }
 .line {
   background-color: #3a0ca3 !important;
+  padding: 1px;
 }
 .row h2 {
   font-size: 12px;

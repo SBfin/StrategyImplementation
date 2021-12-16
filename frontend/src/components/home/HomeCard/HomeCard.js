@@ -1,7 +1,7 @@
 import s from "./HomeCard.module.css";
 import { Link } from "react-router-dom";
 
-export default function HomeCard(props) {
+export function HomeCard(props) {
   return (
     <div className={`card ${s.root}`}>
       <Link to="vault/0xblablabla" className="text-decoration-none">

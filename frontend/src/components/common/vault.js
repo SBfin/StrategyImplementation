@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
-import UniVault from "./abi/UniVault.json";
+import OrbitVault from "./abi/OrbitVault.json";
 import { Contract } from "@ethersproject/contracts";
 import { formatUnits } from "@ethersproject/units";
 import { tickToPrice, truncateNumber } from "./helpers";
@@ -22,14 +22,8 @@ const initialState = {
     value: 0,
     status: "idle",
   },
-  baseOrder: {
-    value: [0, 0],
-    status: "idle",
-  },
-  limitOrder: {
-    value: [0, 0],
-    status: "idle",
-  },
+  base: [0, 0],
+  limit: [0, 0],
   maxTotalSupply: {
     value: 0,
     status: "idle",
@@ -58,15 +52,15 @@ export const fetchActionsVault = {
     const balanceOf = await vault.balanceOf(account);
     return balanceOf.toString();
   }),
-  baseOrder: createAsyncThunk("vault/fetchBaseOrder", async (vault) => {
+  base: createAsyncThunk("vault/fetchBase", async (vault) => {
     const baseUpper = await vault.baseUpper.call();
     const baseLower = await vault.baseLower.call();
-    return [truncateNumber(1 / tickToPrice(baseLower, 6, 18), 2), truncateNumber(1 / tickToPrice(baseUpper, 6, 18), 2)];
+    return [baseLower.toString(), baseUpper.toString()];
   }),
-  limitOrder: createAsyncThunk("vault/fetchLimitOrder", async (vault) => {
-    const limitUpper = await vault.baseUpper.call();
-    const limitLower = await vault.baseLower.call();
-    return [truncateNumber(1 / tickToPrice(limitLower, 6, 18), 2), truncateNumber(1 / tickToPrice(limitUpper, 6, 18), 2)];
+  limit: createAsyncThunk("vault/fetchLimit", async (vault) => {
+    const limitLower = await vault.limitLower.call();
+    const limitUpper = await vault.limitUpper.call();
+    return [limitLower.toString(), limitUpper.toString()];
   }),
   maxTotalSupply: createAsyncThunk("vault/fetchMaxTotalSupply", async (vault) => {
     const maxTotalSupply = await vault.maxTotalSupply.call();
@@ -122,19 +116,11 @@ export const vaultSlice = createSlice({
         state.balanceOf.status = "idle";
         state.balanceOf.value = action.payload;
       })
-      .addCase(fetchActionsVault.baseOrder.pending, (state) => {
-        state.baseOrder.status = "loading";
+      .addCase(fetchActionsVault.base.fulfilled, (state, action) => {
+        state.base = action.payload;
       })
-      .addCase(fetchActionsVault.baseOrder.fulfilled, (state, action) => {
-        state.baseOrder.status = "idle";
-        state.baseOrder.value = action.payload;
-      })
-      .addCase(fetchActionsVault.limitOrder.pending, (state) => {
-        state.limitOrder.status = "loading";
-      })
-      .addCase(fetchActionsVault.limitOrder.fulfilled, (state, action) => {
-        state.limitOrder.status = "idle";
-        state.limitOrder.value = action.payload;
+      .addCase(fetchActionsVault.limit.fulfilled, (state, action) => {
+        state.limit = action.payload;
       })
       .addCase(fetchActionsVault.maxTotalSupply.pending, (state) => {
         state.maxTotalSupply.status = "loading";
@@ -172,8 +158,8 @@ export function fetchAllVault(account, vault, dispatch) {
   dispatch(fetchActionsVault.token1Address(vault));
 
   dispatch(fetchActionsVault.balanceOf({ account, vault }));
-  dispatch(fetchActionsVault.baseOrder(vault));
-  dispatch(fetchActionsVault.limitOrder(vault));
+  dispatch(fetchActionsVault.base(vault));
+  dispatch(fetchActionsVault.limit(vault));
   dispatch(fetchActionsVault.maxTotalSupply(vault));
   dispatch(fetchActionsVault.totalAmounts(vault));
   dispatch(fetchActionsVault.totalSupply(vault));
@@ -190,7 +176,7 @@ export function GetVault(address) {
       return;
     }
     const signer = library.getSigner(account).connectUnchecked();
-    const contract = new Contract(address, UniVault.abi, signer);
+    const contract = new Contract(address, OrbitVault.abi, signer);
 
     // more info: https://docs.ethers.io/v5/api/contract/example/
     if (contract && account && dispatch) {
