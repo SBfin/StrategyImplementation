@@ -110,22 +110,20 @@ export function fetchAllToken(account, contract, dispatch, token01, vault, vault
   dispatch(tokenSlice.actions.ratioToken(vaultTotalAmounts));
 }
 
+export function loadToken(account, library, address) {
+  if (!account || !library || !address) {
+    return;
+  }
+  const signer = library.getSigner(account).connectUnchecked();
+  return new Contract(address, ERC20ABI.abi, signer);
+}
+
 export function GetToken(address) {
   const { account, library, chainId } = useWeb3React();
-
   const [contract, setContract] = useState();
-  //const [decimals, setDecimals] = useState()
 
   useEffect(async () => {
-    if (!(!!account || !!library) || !address) {
-      return;
-    }
-    // listen for changes on an Ethereum address
-    console.log(`listening for Transfer...`);
-    const signer = library.getSigner(account).connectUnchecked();
-    const c = new Contract(address, ERC20ABI.abi, signer);
-
-    setContract(c);
+    setContract(loadToken(account, library, address));
   }, [account, library, chainId, address]);
 
   return contract;

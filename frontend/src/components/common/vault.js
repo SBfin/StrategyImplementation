@@ -165,34 +165,36 @@ export function fetchAllVault(account, vault, dispatch) {
   dispatch(fetchActionsVault.totalSupply(vault));
 }
 
+export function loadVault(account, library, address, dispatch) {
+  if (!account || !library || !address) {
+    return;
+  }
+  const signer = library.getSigner(account).connectUnchecked();
+  const contract = new Contract(address, OrbitVault.abi, signer);
+
+  // more info: https://docs.ethers.io/v5/api/contract/example/
+  if (contract && account && dispatch) {
+    const filterTo = contract.filters.Transfer(null, account);
+    library.on(filterTo, (from, to, amount, event) => {
+      console.log("Vault|Interaction", { from, to, amount, event });
+      fetchAllVault(account, contract, dispatch);
+    });
+    const filterFrom = contract.filters.Transfer(account, null);
+    library.on(filterFrom, (from, to, amount, event) => {
+      console.log("Vault|Interaction", { from, to, amount, event });
+      fetchAllVault(account, contract, dispatch);
+    });
+  }
+  return contract;
+}
+
 export function GetVault(address) {
   const { account, library, chainId } = useWeb3React();
   const [vault, setVault] = useState();
   const dispatch = useDispatch();
 
   useEffect(() => {
-    console.log("loading contract");
-    if (!(!!account || !!library) || !address) {
-      return;
-    }
-    const signer = library.getSigner(account).connectUnchecked();
-    const contract = new Contract(address, OrbitVault.abi, signer);
-
-    // more info: https://docs.ethers.io/v5/api/contract/example/
-    if (contract && account && dispatch) {
-      const filterTo = contract.filters.Transfer(null, account);
-      library.on(filterTo, (from, to, amount, event) => {
-        console.log("Vault|Interaction", { from, to, amount, event });
-        fetchAllVault(account, contract, dispatch);
-      });
-      const filterFrom = contract.filters.Transfer(account, null);
-      library.on(filterFrom, (from, to, amount, event) => {
-        console.log("Vault|Interaction", { from, to, amount, event });
-        fetchAllVault(account, contract, dispatch);
-      });
-    }
-
-    setVault(contract);
+    setVault(loadVault(account, library, address, dispatch));
   }, [address, library, chainId]);
   return vault;
 }
