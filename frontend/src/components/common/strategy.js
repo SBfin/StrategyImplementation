@@ -38,22 +38,21 @@ export const strategySlice = createSlice({
 });
 export default strategySlice.reducer;
 
+export function loadStrategy(account, library, address) {
+  if (!account || !library || !address) {
+    return;
+  }
+  const signer = library.getSigner(account).connectUnchecked();
+  return new Contract(address, DynamicRangesStrategy.abi, signer);
+}
+
 export function GetStrategy(address) {
   const { account, library, chainId } = useWeb3React();
 
   const [contract, setContract] = useState();
-  //const [decimals, setDecimals] = useState()
 
   useEffect(async () => {
-    if (!(!!account || !!library) || !address) {
-      return;
-    }
-    // listen for changes on an Ethereum address
-    console.log(`listening for Transfer...`);
-    const signer = library.getSigner(account).connectUnchecked();
-    const c = new Contract(address, DynamicRangesStrategy.abi, signer);
-
-    setContract(c);
+    setContract(loadStrategy(account, library, address));
   }, [account, library, chainId, address]);
 
   return contract;

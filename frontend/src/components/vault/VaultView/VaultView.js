@@ -4,7 +4,6 @@ import { TokenBalance, Token, fetchActionsToken, tokenSlice } from "../../common
 import { GetVault, GetStrategy, Deposit, Withdraw, vaultSlice, fetchAllVault } from "../../common/vault";
 import { Strategy } from "../../common/strategy";
 import { useState, useEffect } from "react";
-import { ContractAddress } from "../../../helpers/connector";
 import { useSelector, useDispatch } from "react-redux";
 import { useWeb3React } from "@web3-react/core";
 import { fetchAll } from "../../common/helpers";
@@ -19,12 +18,13 @@ const DEFAULT_BUTTON_TEXT = "Approve";
 const ENTER_KEY_CODE = "Enter";
 
 export default function VaultView(props) {
+  const { vaultId } = props;
+
   const { account, library, chainId } = useWeb3React();
   const vaultStore = useSelector((state) => state.vault);
   const tokenStore = useSelector((state) => state.token);
   const dispatch = useDispatch();
-  const vaultContractAddress = ContractAddress("vault");
-  const vault = GetVault(vaultContractAddress);
+  const vault = GetVault(vaultId);
 
   const [section, setSection] = useState(true);
 
