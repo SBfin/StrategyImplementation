@@ -133,7 +133,7 @@ export function GetToken(address) {
 
 export function TokenBalance({ balance, decimals }) {
   if (!balance) {
-    return <div>...</div>;
+    return <span>...</span>;
   }
   return <span>{Math.round(parseFloat(formatUnits(balance, decimals)) * 100) / 100}</span>;
 }

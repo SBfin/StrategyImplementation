@@ -35,3 +35,10 @@ export function calculateTVL(token0: number, token1: number, decimal0: number, d
 
   return Math.min(first, second) * price + Math.max(first, second);
 }
+
+export function getSymbolToken(useEth: boolean, token: string) {
+  console.log("inside getSymbolToken");
+  if (token == "ETH" && !useEth) return "WETH";
+  if (token == "WETH" && useEth) return "ETH";
+  return token;
+}

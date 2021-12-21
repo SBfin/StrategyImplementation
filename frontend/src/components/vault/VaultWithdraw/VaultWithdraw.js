@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../../common/helpers";
+import { Deposit, Withdraw, vaultSlice } from "../../common/vault";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -21,12 +21,14 @@ const mapState = (state) => ({
     state.vault.totalSupply.value !== 0
       ? BigNumber.from(state.vault.balanceOf.value).div(BigNumber.from(state.vault.totalSupply.value)).mul(BigNumber.from(state.vault.totalAmounts.value[1]))
       : 1,
+  symbolToken0: getSymbolToken(state.vault.useEth, state.token.symbolToken0),
+  symbolToken1: getSymbolToken(state.vault.useEth, state.token.symbolToken1),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultWithdraw(props) {
-  const { tokenStore, vaultStore, vault, userToken0, userToken1 } = props;
+  const { tokenStore, vaultStore, vault, userToken0, userToken1, symbolToken0, symbolToken1 } = props;
 
   const dispatch = useDispatch();
 
@@ -35,27 +37,15 @@ function VaultWithdraw(props) {
   const [input, setInput] = useState("");
   const [token0, setToken0] = useState(0);
   const [token1, setToken1] = useState(0);
-  const [ethWithdraw, setEthWithdraw] = useState(false);
 
   const ethWithdrawChange = (checkEth) => {
-    if (tokenStore.symbolToken1 == "WETH" && checkEth) {
-      dispatch(tokenSlice.actions.symbolToken1("ETH"));
-    }
-    if (tokenStore.symbolToken1 == "ETH" && !checkEth) {
-      dispatch(tokenSlice.actions.symbolToken1("WETH"));
-    }
-    if (tokenStore.symbolToken0 == "WETH" && checkEth) {
-      dispatch(tokenSlice.actions.symbolToken0("ETH"));
-    }
-    if (tokenStore.symbolToken0 == "ETH" && !checkEth) {
-      dispatch(tokenSlice.actions.symbolToken0("WETH"));
-    }
+    dispatch(vaultSlice.actions.useEth(!checkEth));
   };
 
   const onWithdrawClick = async () => {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10, vaultStore.decimals);
-    await Withdraw(vault, val, ethWithdraw);
+    await Withdraw(vault, val, vaultStore.useEth);
     setLoader(false);
   };
 
@@ -92,11 +82,10 @@ function VaultWithdraw(props) {
           <input
             type="checkbox"
             onChange={(e) => {
-              setEthWithdraw(e.target.checked);
               ethWithdrawChange(e.target.checked);
             }}
           />
-          <label>Deposit Eth</label>
+          <label className={`${s.labelCheck}`}>Use WETH</label>
         </div>
         <div className={`${s.subDiv}`}>
           <h3 className={`${s.subTitle}`}>You'll receive</h3>
