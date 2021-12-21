@@ -31,6 +31,7 @@ function VaultDeposit(props) {
   const [input2, setInput2] = useState("");
   const [disable, setDisable] = useState(true);
   const [messageError, setMessageError] = useState("DEPOSIT");
+  const [ethDeposit, setEthDeposit] = useState(false);
 
   const [loader, setLoader] = useState(false);
   const isButtonDisabled = props.fetching;
@@ -39,17 +40,33 @@ function VaultDeposit(props) {
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsToken0);
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsToken1);
-    await Deposit(vault, val1, val2);
+    await Deposit(vault, val2, val1, ethDeposit, tokenStore.symbolToken0 == "ETH" ? val1 : val2);
     setLoader(false);
   };
 
   const token0Contract = GetToken(token0Address);
   const token1Contract = GetToken(token1Address);
 
+  const ethDepositChange = (checkEth) => {
+    if (tokenStore.symbolToken1 == "WETH" && checkEth) {
+      dispatch(tokenSlice.actions.symbolToken1("ETH"));
+    }
+    if (tokenStore.symbolToken1 == "ETH" && !checkEth) {
+      dispatch(tokenSlice.actions.symbolToken1("WETH"));
+    }
+    if (tokenStore.symbolToken0 == "WETH" && checkEth) {
+      dispatch(tokenSlice.actions.symbolToken0("ETH"));
+    }
+    if (tokenStore.symbolToken0 == "ETH" && !checkEth) {
+      dispatch(tokenSlice.actions.symbolToken0("WETH"));
+    }
+  };
+
   useEffect(() => {
     if (!token0Contract || !token1Contract) {
       return;
     }
+
     fetchAllToken(account, token0Contract, dispatch, "0", vault, vaultTotalAmounts);
     fetchAllToken(account, token1Contract, dispatch, "1", vault, vaultTotalAmounts);
   }, [token0Contract, token1Contract, vaultStore]);
@@ -121,6 +138,16 @@ function VaultDeposit(props) {
             }}
           />
         </div>
+      </div>
+      <div>
+        <input
+          type="checkbox"
+          onChange={(e) => {
+            setEthDeposit(e.target.checked);
+            ethDepositChange(e.target.checked);
+          }}
+        />
+        <label>Deposit Eth</label>
       </div>
       <div>
         <p className={`${s.note}`}>Note thet the deposits are in the same ratio as the vault’s current holdings and are therefore not necessarely in a 1:1 ratio.</p>

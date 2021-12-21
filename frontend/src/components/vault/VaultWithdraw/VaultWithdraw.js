@@ -28,16 +28,34 @@ const mapDispatchToProps = (dispatch, ownProps) => ({});
 function VaultWithdraw(props) {
   const { tokenStore, vaultStore, vault, userToken0, userToken1 } = props;
 
+  const dispatch = useDispatch();
+
   const [loader, setLoader] = useState(false);
   const [shares, setShares] = useState("");
   const [input, setInput] = useState("");
   const [token0, setToken0] = useState(0);
   const [token1, setToken1] = useState(0);
+  const [ethWithdraw, setEthWithdraw] = useState(false);
+
+  const ethWithdrawChange = (checkEth) => {
+    if (tokenStore.symbolToken1 == "WETH" && checkEth) {
+      dispatch(tokenSlice.actions.symbolToken1("ETH"));
+    }
+    if (tokenStore.symbolToken1 == "ETH" && !checkEth) {
+      dispatch(tokenSlice.actions.symbolToken1("WETH"));
+    }
+    if (tokenStore.symbolToken0 == "WETH" && checkEth) {
+      dispatch(tokenSlice.actions.symbolToken0("ETH"));
+    }
+    if (tokenStore.symbolToken0 == "ETH" && !checkEth) {
+      dispatch(tokenSlice.actions.symbolToken0("WETH"));
+    }
+  };
 
   const onWithdrawClick = async () => {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10, vaultStore.decimals);
-    await Withdraw(vault, val);
+    await Withdraw(vault, val, ethWithdraw);
     setLoader(false);
   };
 
@@ -69,6 +87,16 @@ function VaultWithdraw(props) {
               setShares(e.target.value);
             }}
           />
+        </div>
+        <div>
+          <input
+            type="checkbox"
+            onChange={(e) => {
+              setEthWithdraw(e.target.checked);
+              ethWithdrawChange(e.target.checked);
+            }}
+          />
+          <label>Deposit Eth</label>
         </div>
         <div className={`${s.subDiv}`}>
           <h3 className={`${s.subTitle}`}>You'll receive</h3>
