@@ -212,9 +212,9 @@ export async function Deposit(vault, val1, val2, isEth, ethValue) {
   var vaultDep;
 
   if (isEth) {
-    vaultDep = vault.depositEth(val1.toString(), 0, 0, accounts[0], { from: accounts[0], gasLimit: 1000000, value: ethValue.toString() });
+    vaultDep = vault.depositEth(val1.toString(), 0, 0, accounts[0], { from: accounts[0], value: ethValue.toString() });
   } else {
-    vaultDep = vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], { from: accounts[0], gasLimit: 1000000 });
+    vaultDep = vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], { from: accounts[0] });
   }
 
   return vaultDep
