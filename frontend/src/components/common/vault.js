@@ -36,6 +36,7 @@ const initialState = {
   address: 0,
   token0Address: "",
   token1Address: "",
+  useEth: true,
 };
 
 export const fetchActionsVault = {
@@ -89,6 +90,9 @@ export const vaultSlice = createSlice({
     },
     address: (state, action) => {
       state.address = action.payload;
+    },
+    useEth: (state, action) => {
+      state.useEth = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -199,15 +203,23 @@ export function GetVault(address) {
   return vault;
 }
 
-export async function Deposit(vault, val1, val2) {
+export async function Deposit(vault, val1, val2, isEth, ethValue) {
   const accounts = await window.ethereum.request({ method: "eth_accounts" });
   console.log("deposit - vault.js");
   console.log(accounts[0]);
   console.log(val1);
   console.log(val2);
+  console.log(isEth);
+  console.log(ethValue);
+  var vaultDep;
 
-  return vault
-    .deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], { from: accounts[0], gasLimit: 1000000 })
+  if (isEth) {
+    vaultDep = vault.depositEth(val1.toString(), 0, 0, accounts[0], { from: accounts[0], value: ethValue.toString() });
+  } else {
+    vaultDep = vault.deposit(val1.toString(), val2.toString(), 0, 0, accounts[0], { from: accounts[0] });
+  }
+
+  return vaultDep
     .then((r) => {
       //setResult(r.toString());
       console.log("deposit function");
@@ -223,11 +235,12 @@ export async function Deposit(vault, val1, val2) {
     });
 }
 
-export async function Withdraw(vault, shares) {
+export async function Withdraw(vault, shares, ethWithdraw) {
   const accounts = await window.ethereum.request({ method: "eth_accounts" });
 
-  return vault
-    .withdraw(shares.toString(), 0, 0, accounts[0])
+  var vaultWith = ethWithdraw ? vault.withdrawEth(shares.toString(), 0, 0, accounts[0]) : vault.withdraw(shares.toString(), 0, 0, accounts[0]);
+
+  return vaultWith
     .then((r) => {
       console.log(r);
       return r.wait();

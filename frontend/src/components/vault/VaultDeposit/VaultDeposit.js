@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../../common/helpers";
+import { Deposit, Withdraw, vaultSlice } from "../../common/vault";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
+import EthBalance from "../../common/EthBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
 import { useWeb3React } from "@web3-react/core";
@@ -14,6 +15,8 @@ const mapState = (state) => ({
   token0Address: state.vault.token0Address,
   token1Address: state.vault.token1Address,
   vaultTotalAmounts: state.vault.totalAmounts.value,
+  symbolToken0: getSymbolToken(state.vault.useEth, state.token.symbolToken0),
+  symbolToken1: getSymbolToken(state.vault.useEth, state.token.symbolToken1),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({
@@ -22,7 +25,7 @@ const mapDispatchToProps = (dispatch, ownProps) => ({
 });
 
 function VaultDeposit(props) {
-  const { tokenStore, vault, vaultStore, token0Address, token1Address, vaultTotalAmounts } = props;
+  const { tokenStore, vault, vaultStore, token0Address, token1Address, vaultTotalAmounts, symbolToken0, symbolToken1 } = props;
 
   const dispatch = useDispatch();
   const { account, library, chainId } = useWeb3React();
@@ -31,7 +34,6 @@ function VaultDeposit(props) {
   const [input2, setInput2] = useState("");
   const [disable, setDisable] = useState(true);
   const [messageError, setMessageError] = useState("DEPOSIT");
-
   const [loader, setLoader] = useState(false);
   const isButtonDisabled = props.fetching;
 
@@ -39,17 +41,22 @@ function VaultDeposit(props) {
     setLoader(true);
     const val1 = parseFloat(input1 || 0) * Math.pow(10, tokenStore.decimalsToken0);
     const val2 = parseFloat(input2 || 0) * Math.pow(10, tokenStore.decimalsToken1);
-    await Deposit(vault, val1, val2);
+    await Deposit(vault, val1, val2, vaultStore.useEth, symbolToken0 == "ETH" ? val1 : val2);
     setLoader(false);
   };
 
   const token0Contract = GetToken(token0Address);
   const token1Contract = GetToken(token1Address);
 
+  const ethDepositChange = (checkEth) => {
+    dispatch(vaultSlice.actions.useEth(!checkEth));
+  };
+
   useEffect(() => {
     if (!token0Contract || !token1Contract) {
       return;
     }
+
     fetchAllToken(account, token0Contract, dispatch, "0", vault, vaultTotalAmounts);
     fetchAllToken(account, token1Contract, dispatch, "1", vault, vaultTotalAmounts);
   }, [token0Contract, token1Contract, vaultStore]);
@@ -58,12 +65,12 @@ function VaultDeposit(props) {
     <div className="main-container">
       <div className={`${s.main}`}>
         <p className={`${s.labelToken}`}>
-          Balance: <TokenBalance balance={tokenStore.balanceToken0} decimals={tokenStore.decimalsToken0} />
+          Balance: {symbolToken0 == "ETH" ? <EthBalance /> : <TokenBalance balance={tokenStore.balanceToken0} decimals={tokenStore.decimalsToken0} />}
         </p>
         <div className={`${s.inputDiv}`}>
           <div className={`${s.tokenDiv}`}>
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken0 + ".png"} />
-            <label className={`pasta-label ${s.labelNameToken}`}>{tokenStore.symbolToken0}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken0 + ".png"} />
+            <label className={`pasta-label ${s.labelNameToken}`}>{symbolToken0}</label>
           </div>
           <input
             type="text"
@@ -90,12 +97,12 @@ function VaultDeposit(props) {
         </div>
 
         <p className={`${s.labelToken}`}>
-          Balance: <TokenBalance balance={tokenStore.balanceToken1} decimals={tokenStore.decimalsToken1} />
+          Balance: {symbolToken1 == "ETH" ? <EthBalance /> : <TokenBalance balance={tokenStore.balanceToken1} decimals={tokenStore.decimalsToken1} />}
         </p>
         <div className={`${s.inputDiv}`}>
           <div className={`${s.tokenDiv}`}>
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken1 + ".png"} />
-            <label className={`pasta-label ${s.labelNameToken}`}>{tokenStore.symbolToken1}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken1 + ".png"} />
+            <label className={`pasta-label ${s.labelNameToken}`}>{symbolToken1}</label>
           </div>
           <input
             type="text"
@@ -121,6 +128,16 @@ function VaultDeposit(props) {
             }}
           />
         </div>
+      </div>
+      <div>
+        <a
+          onClick={() => {
+            ethDepositChange(vaultStore.useEth);
+          }}
+        >
+          <input type="checkbox" id="useEth" value={vaultStore.useEth} checked={!vaultStore.useEth} readOnly />
+          <label className={`${s.labelCheck}`}>Use WETH</label>
+        </a>
       </div>
       <div>
         <p className={`${s.note}`}>Note thet the deposits are in the same ratio as the vault’s current holdings and are therefore not necessarely in a 1:1 ratio.</p>

@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
-import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract } from "../../common/helpers";
+import { Deposit, Withdraw, vaultSlice } from "../../common/vault";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -21,12 +21,16 @@ const mapState = (state) => ({
     state.vault.totalSupply.value !== 0
       ? BigNumber.from(state.vault.balanceOf.value).div(BigNumber.from(state.vault.totalSupply.value)).mul(BigNumber.from(state.vault.totalAmounts.value[1]))
       : 1,
+  symbolToken0: getSymbolToken(state.vault.useEth, state.token.symbolToken0),
+  symbolToken1: getSymbolToken(state.vault.useEth, state.token.symbolToken1),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultWithdraw(props) {
-  const { tokenStore, vaultStore, vault, userToken0, userToken1 } = props;
+  const { tokenStore, vaultStore, vault, userToken0, userToken1, symbolToken0, symbolToken1 } = props;
+
+  const dispatch = useDispatch();
 
   const [loader, setLoader] = useState(false);
   const [shares, setShares] = useState("");
@@ -34,10 +38,14 @@ function VaultWithdraw(props) {
   const [token0, setToken0] = useState(0);
   const [token1, setToken1] = useState(0);
 
+  const ethWithdrawChange = (checkEth) => {
+    dispatch(vaultSlice.actions.useEth(!checkEth));
+  };
+
   const onWithdrawClick = async () => {
     setLoader(true);
     const val = parseFloat(shares) * Math.pow(10, vaultStore.decimals);
-    await Withdraw(vault, val);
+    await Withdraw(vault, val, vaultStore.useEth);
     setLoader(false);
   };
 
@@ -70,18 +78,28 @@ function VaultWithdraw(props) {
             }}
           />
         </div>
+        <div>
+          <a
+            onClick={() => {
+              ethWithdrawChange(vaultStore.useEth);
+            }}
+          >
+            <input type="checkbox" id="useEth" value={vaultStore.useEth} checked={!vaultStore.useEth} readOnly />
+            <label className={`${s.labelCheck}`}>Use WETH</label>
+          </a>
+        </div>
         <div className={`${s.subDiv}`}>
           <h3 className={`${s.subTitle}`}>You'll receive</h3>
 
           <div className={`${s.tokenSharesDiv}`}>
             <hr />
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken0 + ".png"} />
-            <label>{tokenStore.symbolToken0}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken0 + ".png"} />
+            <label>{symbolToken0}</label>
             <span>{token0}</span>
           </div>
           <div className={`${s.tokenSharesDiv}`}>
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken1 + ".png"} />
-            <label>{tokenStore.symbolToken1}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken1 + ".png"} />
+            <label>{symbolToken1}</label>
             <span>{token1}</span>
             <hr />
           </div>

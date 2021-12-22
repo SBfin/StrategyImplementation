@@ -16,6 +16,12 @@
   line-height: 1.5em;
   font-size: 12px;
 }
+
+.labelCheck {
+  margin-left: 10px;
+  font-size: 14px;
+}
+
 .tokenImage {
   width: 20px;
   margin-right: 5px;

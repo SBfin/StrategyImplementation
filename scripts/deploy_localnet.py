@@ -2,7 +2,7 @@ from brownie import (
     accounts,
     project,
     MockToken,
-    AlphaVault,
+    OrbitVault,
     PassiveStrategy,
     DynamicRangesStrategy,
     TestRouter,
@@ -30,7 +30,9 @@ DEPOSIT_TOKEN_2 = 2000e6
 
 
 def main():
-    deployer = accounts[0]
+    deployer = accounts.load("deployer")
+    accounts[0].transfer(deployer, 1000000000000000000)
+    
     UniswapV3Core = project.load("Uniswap/v3-core@1.0.0")
 
     gas_strategy = ExponentialScalingStrategy("10000 wei", "1000 gwei")
@@ -79,10 +81,11 @@ def main():
     )
 
     vault = deployer.deploy(
-        AlphaVault,
+        OrbitVault,
         pool,
         PROTOCOL_FEE,
         MAX_TOTAL_SUPPLY,
+        eth,
         gas_price=gas_strategy,
     )
 

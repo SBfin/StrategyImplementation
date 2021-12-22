@@ -1,9 +1,11 @@
 import { useWeb3React } from "@web3-react/core";
 import { useEffect, useState } from "react";
 import { formatEther } from "@ethersproject/units";
+import { useSelector } from "react-redux";
 
 export default function EthBalance() {
   const { account, library, chainId } = useWeb3React();
+  const vaultStore = useSelector((state) => state.vault);
 
   const [balance, setBalance] = useState();
 
@@ -22,14 +24,14 @@ export default function EthBalance() {
           if (!stale) {
             setBalance(null);
           }
-        });
+        }, [vaultStore]);
 
       return () => {
         stale = true;
         setBalance(undefined);
       };
     }
-  }, [account, library, chainId]);
+  }, [account, library, chainId, vaultStore]);
 
   if (!balance) {
     return <span>...</span>;

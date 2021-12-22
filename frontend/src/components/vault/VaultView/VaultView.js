@@ -1,12 +1,13 @@
 import s from "./VaultView.module.css";
 import Loader from "../../loader/Loader";
+import { connect } from "react-redux";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice } from "../../common/TokenBalance";
 import { GetVault, GetStrategy, Deposit, Withdraw, vaultSlice, fetchAllVault } from "../../common/vault";
 import { Strategy } from "../../common/strategy";
 import { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useWeb3React } from "@web3-react/core";
-import { fetchAll } from "../../common/helpers";
+import { fetchAll, getSymbolToken } from "../../common/helpers";
 import { BigNumber, BigNumberish } from "@ethersproject/bignumber";
 import DepositSection from "../VaultDeposit/VaultDeposit";
 import VaultInfo from "../VaultInfo/VaultInfo";
@@ -17,8 +18,18 @@ import VaultCap from "../VaultCap/VaultCap";
 const DEFAULT_BUTTON_TEXT = "Approve";
 const ENTER_KEY_CODE = "Enter";
 
-export default function VaultView(props) {
-  const { vaultId } = props;
+const mapState = (state) => ({
+  symbolToken0: getSymbolToken(true, state.token.symbolToken0),
+  symbolToken1: getSymbolToken(true, state.token.symbolToken1),
+});
+
+const mapDispatchToProps = (dispatch, ownProps) => ({
+  // TODO: move actions on state here
+  //toggleTodo: () => dispatch(toggleTodo(ownProps.todoId)),
+});
+
+function VaultView(props) {
+  const { symbolToken0, symbolToken1, vaultId  } = props;
 
   const { account, library, chainId } = useWeb3React();
   const vaultStore = useSelector((state) => state.vault);
@@ -41,7 +52,7 @@ export default function VaultView(props) {
     <div className={`${s.root}`}>
       <div className={`${s.main}`}>
         <h1 className={`${s.title}`}>
-          {tokenStore.symbolToken0} / {tokenStore.symbolToken1} VAULT
+          {tokenStore.symbolToken0} / {symbolToken1} VAULT
         </h1>
         <div className="row">
           <div className="col-6">
@@ -71,3 +82,5 @@ export default function VaultView(props) {
     </div>
   );
 }
+
+export default connect(mapState, mapDispatchToProps)(VaultView);

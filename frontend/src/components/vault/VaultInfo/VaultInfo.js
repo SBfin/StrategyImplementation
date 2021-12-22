@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, tickToPrice, calculateTVL } from "../../common/helpers";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, tickToPrice, calculateTVL, getSymbolToken } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
@@ -25,12 +25,14 @@ const mapState = (state) => ({
     fromUnitsToDecimal(state.vault.totalAmounts.value[0], state.token.decimalsToken0),
     fromUnitsToDecimal(state.vault.totalAmounts.value[1], state.token.decimalsToken1),
   ],
+  symbolToken0: getSymbolToken(true, state.token.symbolToken0),
+  symbolToken1: getSymbolToken(true, state.token.symbolToken1),
 });
 
 const mapDispatchToProps = (dispatch, ownProps) => ({});
 
 function VaultInfo(props) {
-  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder, totalAmountsInDecimals } = props;
+  const { tokenStore, vaultStore, strategyStore, baseOrder, limitOrder, totalAmountsInDecimals, symbolToken0, symbolToken1 } = props;
   const dispatch = useDispatch();
 
   const strategyContract = GetStrategy(vaultStore.strategyAddress.value);
@@ -64,16 +66,16 @@ function VaultInfo(props) {
         </span>
       </div>
       <div className="row">
-        <p className="col-7">Total {tokenStore.symbolToken0}</p>
+        <p className="col-7">Total {symbolToken0}</p>
         <span className="col-3">{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[0], tokenStore.decimalsToken0), 5)}</span>
       </div>
       <div className="row">
-        <p className="col-7">Total {tokenStore.symbolToken1}</p>
+        <p className="col-7">Total {symbolToken1}</p>
         <span className="col-3">{truncateNumber(fromUnitsToDecimal(vaultStore.totalAmounts.value[1], tokenStore.decimalsToken1), 2)}</span>
       </div>
       <div className="row">
         <p className="col-7">
-          {tokenStore.symbolToken0} & {tokenStore.symbolToken1} ratio
+          {symbolToken0} & {symbolToken1} ratio
         </p>
         <span className="col-3">
           {totalAmountsInDecimals[0] > totalAmountsInDecimals[1]
@@ -84,7 +86,7 @@ function VaultInfo(props) {
       <h2>Vault positions</h2>
       <div className="row">
         <p className="col-7">
-          {tokenStore.symbolToken0} / {tokenStore.symbolToken1} price
+          {symbolToken0} / {symbolToken1} price
         </p>
         <span className="col-3">{strategyStore.price.value}</span>
       </div>
