@@ -130,13 +130,14 @@ function VaultDeposit(props) {
         </div>
       </div>
       <div>
-        <input
-          type="checkbox"
-          onChange={(e) => {
-            ethDepositChange(e.target.checked);
+        <a
+          onClick={() => {
+            ethDepositChange(vaultStore.useEth);
           }}
-        />
-        <label className={`${s.labelCheck}`}>Use WETH</label>
+        >
+          <input type="checkbox" id="useEth" value={vaultStore.useEth} checked={!vaultStore.useEth} readOnly />
+          <label className={`${s.labelCheck}`}>Use WETH</label>
+        </a>
       </div>
       <div>
         <p className={`${s.note}`}>Note thet the deposits are in the same ratio as the vault’s current holdings and are therefore not necessarely in a 1:1 ratio.</p>

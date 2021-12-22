@@ -79,26 +79,27 @@ function VaultWithdraw(props) {
           />
         </div>
         <div>
-          <input
-            type="checkbox"
-            onChange={(e) => {
-              ethWithdrawChange(e.target.checked);
+          <a
+            onClick={() => {
+              ethWithdrawChange(vaultStore.useEth);
             }}
-          />
-          <label className={`${s.labelCheck}`}>Use WETH</label>
+          >
+            <input type="checkbox" id="useEth" value={vaultStore.useEth} checked={!vaultStore.useEth} readOnly />
+            <label className={`${s.labelCheck}`}>Use WETH</label>
+          </a>
         </div>
         <div className={`${s.subDiv}`}>
           <h3 className={`${s.subTitle}`}>You'll receive</h3>
 
           <div className={`${s.tokenSharesDiv}`}>
             <hr />
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken0 + ".png"} />
-            <label>{tokenStore.symbolToken0}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken0 + ".png"} />
+            <label>{symbolToken0}</label>
             <span>{token0}</span>
           </div>
           <div className={`${s.tokenSharesDiv}`}>
-            <img className={`${s.tokenImage}`} src={"/assets/" + tokenStore.symbolToken1 + ".png"} />
-            <label>{tokenStore.symbolToken1}</label>
+            <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken1 + ".png"} />
+            <label>{symbolToken1}</label>
             <span>{token1}</span>
             <hr />
           </div>

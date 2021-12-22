@@ -37,7 +37,6 @@ export function calculateTVL(token0: number, token1: number, decimal0: number, d
 }
 
 export function getSymbolToken(useEth: boolean, token: string) {
-  console.log("inside getSymbolToken");
   if (token == "ETH" && !useEth) return "WETH";
   if (token == "WETH" && useEth) return "ETH";
   return token;
