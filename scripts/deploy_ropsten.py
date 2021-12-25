@@ -17,7 +17,7 @@ from brownie.network import gas_price, gas_limit
 from brownie.network import priority_fee
 import os
 
-KEEPER = "0xffa9FDa3050007645945e38E72B5a3dB1414A59b"
+KEEPER = "0x1bcfFbd9151Da963F874a77B60397d4cD8215a0D"
 
 # Uniswap v3 factory on Ropsten
 FACTORY="0x1F98431c8aD98523631AE4a59f267346ea31F984"
@@ -85,4 +85,3 @@ def main():
     print(f"Vault address: {vault.address}")
     print(f"Strategy address: {strategy.address}")
     print(f"Deposited transaction: {tx}")
-    
