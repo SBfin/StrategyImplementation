@@ -18,31 +18,34 @@ import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
 
 contract OrbitVault is 
-    IVault,
     IUniswapV3MintCallback,
     IUniswapV3SwapCallback,
     ERC20,
-    ReentrancyGuard,
-    AlphaVault
+    ReentrancyGuard
 {   
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
     address immutable weth;
     bool token0IsWeth;
+    IUniswapV3Pool public immutable pool;
+    IERC20 public immutable token0;
+    IERC20 public immutable token1;
+    address public vaultActions;
+    address public governance;
 
     constructor(address _pool,
         uint256 _protocolFee,
         uint256 _maxTotalSupply,
-        address wethAddress) 
+        address wethAddress
+    ) ERC20("Orbit Vault", "OV") {
+           pool = IUniswapV3Pool(_pool);
+           token0 = IERC20(IUniswapV3Pool(_pool).token0());
+           token1 = IERC20(IUniswapV3Pool(_pool).token1());
 
-        AlphaVault(_pool,
-        _protocolFee,
-        _maxTotalSupply) 
-        
-        {
             weth = wethAddress;
             token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
+            governance = msg.sender;
         }
 
     event EthRefund(
@@ -170,6 +173,45 @@ contract OrbitVault is
     }
 
     fallback() external payable {
+    }
+
+    function transferToken(IERC20 token, address to, uint256 amount) public onlyVaultActions{
+        token.safeTransfer(to, amount);
+    }
+
+    function mint(address to, uint256 shares) public onlyVaultActions{
+        _mint(to, shares);
+    }
+
+    function mintUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions{
+        pool.mint(address(this), tickLower, tickUpper, liquidity, "");
+    }
+
+    function burnUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions
+        returns (
+            uint256 burned0,
+            uint256 burned1
+        ) {
+        (burned0, burned1) = pool.burn(tickLower, tickUpper, liquidity);
+    }
+
+    function collectUniswap(int24 tickLower, int24 tickUpper) public onlyVaultActions
+        returns (
+            uint256 collect0,
+            uint256 collect1
+        ) {
+        (uint256 collect0, uint256 collect1) =
+             pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+    }
+
+    function setVaultActions(address _vaultActions) public {
+        require(msg.sender == governance, "requires vault creator");
+        vaultActions = _vaultActions;
+    }
+
+    modifier onlyVaultActions {
+        require(msg.sender == vaultActions, "not allowed");
+        _;
     }
 
 }

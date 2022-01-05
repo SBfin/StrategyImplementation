@@ -22,11 +22,10 @@ import "../interfaces/IVault.sol";
  * @title   Alpha Vault
  * @notice  A vault that provides liquidity on Uniswap V3.
  */
-contract AlphaVault is
+contract VaultActions is
     IVault,
     IUniswapV3MintCallback,
     IUniswapV3SwapCallback,
-    ERC20,
     ReentrancyGuard
 {
     using SafeERC20 for IERC20;
@@ -75,6 +74,8 @@ contract AlphaVault is
     uint256 public accruedProtocolFees0;
     uint256 public accruedProtocolFees1;
 
+    IERC20 public immutable vault;
+
     /**
      * @dev After deploying, strategy needs to be set via `setStrategy()`
      * @param _pool Underlying Uniswap V3 pool
@@ -84,7 +85,8 @@ contract AlphaVault is
     constructor(
         address _pool,
         uint256 _protocolFee,
-        uint256 _maxTotalSupply
+        uint256 _maxTotalSupply,
+        address _vault
     ) ERC20("Orbit Vault", "OV") {
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(IUniswapV3Pool(_pool).token0());
@@ -95,6 +97,7 @@ contract AlphaVault is
         protocolFee = _protocolFee;
         maxTotalSupply = _maxTotalSupply;
         governance = msg.sender;
+        vault = _vault;
 
         require(_protocolFee < 1e6, "protocolFee");
     }
@@ -144,13 +147,13 @@ contract AlphaVault is
             require(amount1 >= amount1Min, "amount1Min");
 
             // Pull in tokens from sender
-            if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(this), amount0);
-            if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(this), amount1);
+            if (amount0 > 0) token0.safeTransferFrom(msg.sender, address(vault), amount0);
+            if (amount1 > 0) token1.safeTransferFrom(msg.sender, address(vault), amount1);
 
             // Mint shares to recipient
-            _mint(to, shares);
+            vault.mint(to, shares);
             emit Deposit(msg.sender, to, shares, amount0, amount1);
-            require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
+            require(vault.totalSupply() <= maxTotalSupply, "maxTotalSupply");
     }
 
 
@@ -160,7 +163,7 @@ contract AlphaVault is
     function _poke(int24 tickLower, int24 tickUpper) internal {
         (uint128 liquidity, , , , ) = _position(tickLower, tickUpper);
         if (liquidity > 0) {
-            pool.burn(tickLower, tickUpper, 0);
+            vault.burnUniswap(tickLower, tickUpper, 0);
         }
     }
 
@@ -176,7 +179,7 @@ contract AlphaVault is
             uint256 amount1
         )
     {
-        uint256 totalSupply = totalSupply();
+        uint256 totalSupply = vault.totalSupply();
         (uint256 total0, uint256 total1) = getTotalAmounts();
 
         // If total supply > 0, vault can't be empty
@@ -220,8 +223,8 @@ contract AlphaVault is
         address to
     ) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
-        require(to != address(0) && to != address(this), "to");
-        uint256 totalSupply = totalSupply();
+        require(to != address(0) && to != address(this) && to != address(vault), "to");
+        uint256 totalSupply = vault.totalSupply();
 
         // Burn shares
         _burn(msg.sender, shares);
@@ -243,8 +246,8 @@ contract AlphaVault is
         require(amount1 >= amount1Min, "amount1Min");
 
         // Push tokens to recipient
-        if (amount0 > 0) token0.safeTransfer(to, amount0);
-        if (amount1 > 0) token1.safeTransfer(to, amount1);
+        if (amount0 > 0) vault.transferToken(token0, to, amount0);
+        if (amount1 > 0) vault.transferToken(token1, to, amount1);
 
         emit Withdraw(msg.sender, to, shares, amount0, amount1);
     }
@@ -306,7 +309,7 @@ contract AlphaVault is
         // Emit snapshot to record balances and supply
         uint256 balance0 = getBalance0();
         uint256 balance1 = getBalance1();
-        emit Snapshot(tick, balance0, balance1, totalSupply());
+        emit Snapshot(tick, balance0, balance1, vault.totalSupply());
 
         if (swapAmount != 0) {
             pool.swap(
@@ -365,18 +368,11 @@ contract AlphaVault is
         )
     {
         if (liquidity > 0) {
-            (burned0, burned1) = pool.burn(tickLower, tickUpper, liquidity);
+            (burned0, burned1) = vault.burnUniswap(tickLower, tickUpper, liquidity);
         }
 
         // Collect all owed tokens including earned fees
-        (uint256 collect0, uint256 collect1) =
-            pool.collect(
-                address(this),
-                tickLower,
-                tickUpper,
-                type(uint128).max,
-                type(uint128).max
-            );
+        (uint256 collect0, uint256 collect1) = vault.collectUniswap(tickLower, tickUpper);
 
         feesToVault0 = collect0.sub(burned0);
         feesToVault1 = collect1.sub(burned1);
@@ -403,7 +399,7 @@ contract AlphaVault is
         uint128 liquidity
     ) internal {
         if (liquidity > 0) {
-            pool.mint(address(this), tickLower, tickUpper, liquidity, "");
+            vault.mintUniswap(tickLower, tickUpper, liquidity);
         }
     }
 
@@ -444,14 +440,14 @@ contract AlphaVault is
      * @notice Balance of token0 in vault not used in any position.
      */
     function getBalance0() public view returns (uint256) {
-        return token0.balanceOf(address(this)).sub(accruedProtocolFees0);
+        return token0.balanceOf(address(vault)).sub(accruedProtocolFees0);
     }
 
     /**
      * @notice Balance of token1 in vault not used in any position.
      */
     function getBalance1() public view returns (uint256) {
-        return token1.balanceOf(address(this)).sub(accruedProtocolFees1);
+        return token1.balanceOf(address(vault)).sub(accruedProtocolFees1);
     }
 
     /// @dev Wrapper around `IUniswapV3Pool.positions()`.
@@ -466,7 +462,7 @@ contract AlphaVault is
             uint128
         )
     {
-        bytes32 positionKey = PositionKey.compute(address(this), tickLower, tickUpper);
+        bytes32 positionKey = PositionKey.compute(address(vault), tickLower, tickUpper);
         return pool.positions(positionKey);
     }
 
@@ -594,8 +590,8 @@ contract AlphaVault is
         int24 tickUpper,
         uint128 liquidity
     ) external onlyGovernance {
-        pool.burn(tickLower, tickUpper, liquidity);
-        pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+        vault.burnUniswap(tickLower, tickUpper, liquidity);
+        vault.collectUniswap(tickLower, tickUpper);
     }
 
     /**
