@@ -9,8 +9,6 @@ import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/SafeERC20.sol";
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
-import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol";
-import "@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3SwapCallback.sol";
 import "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 import "@uniswap/v3-core/contracts/libraries/TickMath.sol";
 import "@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol";
@@ -24,8 +22,6 @@ import "../interfaces/IVault.sol";
  */
 contract VaultActions is
     IVault,
-    IUniswapV3MintCallback,
-    IUniswapV3SwapCallback,
     ReentrancyGuard
 {
     using SafeERC20 for IERC20;
@@ -87,7 +83,7 @@ contract VaultActions is
         uint256 _protocolFee,
         uint256 _maxTotalSupply,
         address _vault
-    ) ERC20("Orbit Vault", "OV") {
+    ) {
         pool = IUniswapV3Pool(_pool);
         token0 = IERC20(IUniswapV3Pool(_pool).token0());
         token1 = IERC20(IUniswapV3Pool(_pool).token1());
@@ -134,7 +130,7 @@ contract VaultActions is
         )
     {
             require(amount0Desired > 0 || amount1Desired > 0, "amount0Desired or amount1Desired");
-            require(to != address(0) && to != address(this), "to");
+            require(to != address(0) && to != address(this) && to != address(vault), "to");
 
             // Poke positions so vault's current holdings are up-to-date
             _poke(baseLower, baseUpper);
@@ -312,12 +308,10 @@ contract VaultActions is
         emit Snapshot(tick, balance0, balance1, vault.totalSupply());
 
         if (swapAmount != 0) {
-            pool.swap(
-                address(this),
+            vault.swapUniswap(
                 swapAmount > 0,
                 swapAmount > 0 ? swapAmount : -swapAmount,
-                sqrtPriceLimitX96,
-                ""
+                sqrtPriceLimitX96
             );
             balance0 = getBalance0();
             balance1 = getBalance1();
@@ -506,28 +500,6 @@ contract VaultActions is
         return uint128(x);
     }
 
-    /// @dev Callback for Uniswap V3 pool.
-    function uniswapV3MintCallback(
-        uint256 amount0,
-        uint256 amount1,
-        bytes calldata data
-    ) external override {
-        require(msg.sender == address(pool));
-        if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
-        if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
-    }
-
-    /// @dev Callback for Uniswap V3 pool.
-    function uniswapV3SwapCallback(
-        int256 amount0Delta,
-        int256 amount1Delta,
-        bytes calldata data
-    ) external override {
-        require(msg.sender == address(pool));
-        if (amount0Delta > 0) token0.safeTransfer(msg.sender, uint256(amount0Delta));
-        if (amount1Delta > 0) token1.safeTransfer(msg.sender, uint256(amount1Delta));
-    }
-
     /**
      * @notice Used to collect accumulated protocol fees.
      */
@@ -538,8 +510,8 @@ contract VaultActions is
     ) external onlyGovernance {
         accruedProtocolFees0 = accruedProtocolFees0.sub(amount0);
         accruedProtocolFees1 = accruedProtocolFees1.sub(amount1);
-        if (amount0 > 0) token0.safeTransfer(to, amount0);
-        if (amount1 > 0) token1.safeTransfer(to, amount1);
+        if (amount0 > 0) vault.transferToken(token0, to, amount0);
+        if (amount1 > 0) vault.transferToken(token1, to, amount1);
     }
 
     /**
@@ -551,7 +523,7 @@ contract VaultActions is
         address to
     ) external onlyGovernance {
         require(token != token0 && token != token1, "token");
-        token.safeTransfer(to, amount);
+        vault.transferToken(token, to, amount);
     }
 
     /**

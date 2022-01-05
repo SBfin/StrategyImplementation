@@ -183,25 +183,46 @@ contract OrbitVault is
         _mint(to, shares);
     }
 
-    function mintUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions{
-        pool.mint(address(this), tickLower, tickUpper, liquidity, "");
+    function mintUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions
+        returns (uint256 amount0, uint256 amount1) {
+        (amount0, amount1) = pool.mint(address(this), tickLower, tickUpper, liquidity, "");
     }
 
     function burnUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions
-        returns (
-            uint256 burned0,
-            uint256 burned1
-        ) {
+        returns (uint256 burned0, uint256 burned1) {
         (burned0, burned1) = pool.burn(tickLower, tickUpper, liquidity);
     }
 
     function collectUniswap(int24 tickLower, int24 tickUpper) public onlyVaultActions
-        returns (
-            uint256 collect0,
-            uint256 collect1
-        ) {
-        (uint256 collect0, uint256 collect1) =
-             pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+        returns (uint256 collect0, uint256 collect1) {
+        (collect0, collect1) = pool.collect(address(this), tickLower, tickUpper, type(uint128).max, type(uint128).max);
+    }
+
+    function swapUniswap(bool zeroForOne, int256 amountSpecified, uint160 sqrtPriceLimitX96) public onlyVaultActions
+        returns (int256 amount0, int256 amount1) {
+        (amount0, amount1) = pool.swap(address(this), zeroForOne, amountSpecified, sqrtPriceLimitX96, "");
+    }
+
+    /// @dev Callback for Uniswap V3 pool.
+    function uniswapV3MintCallback(
+        uint256 amount0,
+        uint256 amount1,
+        bytes calldata data
+    ) external override {
+        require(msg.sender == address(pool));
+        if (amount0 > 0) token0.safeTransfer(msg.sender, amount0);
+        if (amount1 > 0) token1.safeTransfer(msg.sender, amount1);
+    }
+
+    /// @dev Callback for Uniswap V3 pool.
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        require(msg.sender == address(pool));
+        if (amount0Delta > 0) token0.safeTransfer(msg.sender, uint256(amount0Delta));
+        if (amount1Delta > 0) token1.safeTransfer(msg.sender, uint256(amount1Delta));
     }
 
     function setVaultActions(address _vaultActions) public {
