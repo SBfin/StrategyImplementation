@@ -58,7 +58,6 @@ contract VaultActions is
     int24 public immutable tickSpacing;
 
     uint256 public protocolFee;
-    uint256 public maxTotalSupply;
     address public strategy;
     address public governance;
     address public pendingGovernance;
@@ -67,8 +66,6 @@ contract VaultActions is
     int24 public baseUpper;
     int24 public limitLower;
     int24 public limitUpper;
-    uint256 public accruedProtocolFees0;
-    uint256 public accruedProtocolFees1;
 
     IERC20 public immutable vault;
 
@@ -76,12 +73,11 @@ contract VaultActions is
      * @dev After deploying, strategy needs to be set via `setStrategy()`
      * @param _pool Underlying Uniswap V3 pool
      * @param _protocolFee Protocol fee expressed as multiple of 1e-6
-     * @param _maxTotalSupply Cap on total supply
+     * @param _vault The ECR20 Vault
      */
     constructor(
         address _pool,
         uint256 _protocolFee,
-        uint256 _maxTotalSupply,
         address _vault
     ) {
         pool = IUniswapV3Pool(_pool);
@@ -91,7 +87,6 @@ contract VaultActions is
         tickSpacing = IUniswapV3Pool(_pool).tickSpacing();
 
         protocolFee = _protocolFee;
-        maxTotalSupply = _maxTotalSupply;
         governance = msg.sender;
         vault = _vault;
 
@@ -149,7 +144,7 @@ contract VaultActions is
             // Mint shares to recipient
             vault.mint(to, shares);
             emit Deposit(msg.sender, to, shares, amount0, amount1);
-            require(vault.totalSupply() <= maxTotalSupply, "maxTotalSupply");
+            require(vault.totalSupply() <= vault.maxTotalSupply, "maxTotalSupply");
     }
 
 
@@ -380,8 +375,7 @@ contract VaultActions is
             feesToProtocol1 = feesToVault1.mul(_protocolFee).div(1e6);
             feesToVault0 = feesToVault0.sub(feesToProtocol0);
             feesToVault1 = feesToVault1.sub(feesToProtocol1);
-            accruedProtocolFees0 = accruedProtocolFees0.add(feesToProtocol0);
-            accruedProtocolFees1 = accruedProtocolFees1.add(feesToProtocol1);
+            vault.addFeesToVault(feesToProtocol0, feesToProtocol1);
         }
         emit CollectFees(feesToVault0, feesToVault1, feesToProtocol0, feesToProtocol1);
     }
@@ -434,14 +428,14 @@ contract VaultActions is
      * @notice Balance of token0 in vault not used in any position.
      */
     function getBalance0() public view returns (uint256) {
-        return token0.balanceOf(address(vault)).sub(accruedProtocolFees0);
+        return token0.balanceOf(address(vault)).sub(vault.accruedProtocolFees0);
     }
 
     /**
      * @notice Balance of token1 in vault not used in any position.
      */
     function getBalance1() public view returns (uint256) {
-        return token1.balanceOf(address(vault)).sub(accruedProtocolFees1);
+        return token1.balanceOf(address(vault)).sub(vault.accruedProtocolFees1);
     }
 
     /// @dev Wrapper around `IUniswapV3Pool.positions()`.
@@ -501,20 +495,6 @@ contract VaultActions is
     }
 
     /**
-     * @notice Used to collect accumulated protocol fees.
-     */
-    function collectProtocol(
-        uint256 amount0,
-        uint256 amount1,
-        address to
-    ) external onlyGovernance {
-        accruedProtocolFees0 = accruedProtocolFees0.sub(amount0);
-        accruedProtocolFees1 = accruedProtocolFees1.sub(amount1);
-        if (amount0 > 0) vault.transferToken(token0, to, amount0);
-        if (amount1 > 0) vault.transferToken(token1, to, amount1);
-    }
-
-    /**
      * @notice Removes tokens accidentally sent to this vault.
      */
     function sweep(
@@ -542,16 +522,6 @@ contract VaultActions is
     function setProtocolFee(uint256 _protocolFee) external onlyGovernance {
         require(_protocolFee < 1e6, "protocolFee");
         protocolFee = _protocolFee;
-    }
-
-    /**
-     * @notice Used to change deposit cap for a guarded launch or to ensure
-     * vault doesn't grow too large relative to the pool. Cap is on total
-     * supply rather than amounts of token0 and token1 as those amounts
-     * fluctuate naturally over time.
-     */
-    function setMaxTotalSupply(uint256 _maxTotalSupply) external onlyGovernance {
-        maxTotalSupply = _maxTotalSupply;
     }
 
     /**

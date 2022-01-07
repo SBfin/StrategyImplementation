@@ -34,8 +34,11 @@ contract OrbitVault is
     address public vaultActions;
     address public governance;
 
+    uint256 public maxTotalSupply;
+    uint256 public accruedProtocolFees0;
+    uint256 public accruedProtocolFees1;
+
     constructor(address _pool,
-        uint256 _protocolFee,
         uint256 _maxTotalSupply,
         address wethAddress
     ) ERC20("Orbit Vault", "OV") {
@@ -43,10 +46,12 @@ contract OrbitVault is
            token0 = IERC20(IUniswapV3Pool(_pool).token0());
            token1 = IERC20(IUniswapV3Pool(_pool).token1());
 
-            weth = wethAddress;
-            token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
-            governance = msg.sender;
-        }
+           weth = wethAddress;
+           token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
+           governance = msg.sender;
+
+           maxTotalSupply = _maxTotalSupply;
+    }
 
     event EthRefund(
         address indexed to,
@@ -183,6 +188,11 @@ contract OrbitVault is
         _mint(to, shares);
     }
 
+    function addFeesToVault(uint256 feesToProtocol0, uint256 feesToProtocol1) public onlyVaultActions{
+        accruedProtocolFees0 = accruedProtocolFees0.add(feesToProtocol0);
+        accruedProtocolFees1 = accruedProtocolFees1.add(feesToProtocol1);
+    }
+
     function mintUniswap(int24 tickLower, int24 tickUpper, uint128 liquidity) public onlyVaultActions
         returns (uint256 amount0, uint256 amount1) {
         (amount0, amount1) = pool.mint(address(this), tickLower, tickUpper, liquidity, "");
@@ -225,13 +235,49 @@ contract OrbitVault is
         if (amount1Delta > 0) token1.safeTransfer(msg.sender, uint256(amount1Delta));
     }
 
-    function setVaultActions(address _vaultActions) public {
-        require(msg.sender == governance, "requires vault creator");
+    function setVaultActions(address _vaultActions) external onlyGovernance {
         vaultActions = _vaultActions;
     }
 
+    /**
+     * @notice Governance address is not updated until the new governance
+     * address has called `acceptGovernance()` to accept this responsibility.
+     */
+    function setGovernance(address _governance) external onlyGovernance {
+        governance = _governance;
+    }
+
+    /**
+     * @notice Used to change deposit cap for a guarded launch or to ensure
+     * vault doesn't grow too large relative to the pool. Cap is on total
+     * supply rather than amounts of token0 and token1 as those amounts
+     * fluctuate naturally over time.
+     */
+    function setMaxTotalSupply(uint256 _maxTotalSupply) public onlyGovernance {
+        maxTotalSupply = _maxTotalSupply;
+    }
+
+    /**
+     * @notice Used to collect accumulated protocol fees.
+     */
+    function collectProtocol(
+        uint256 amount0,
+        uint256 amount1,
+        address to
+    ) external onlyGovernance {
+        accruedProtocolFees0 = accruedProtocolFees0.sub(amount0);
+        accruedProtocolFees1 = accruedProtocolFees1.sub(amount1);
+        if (amount0 > 0) token0.safeTransfer(to, amount0);
+        if (amount1 > 0) token1.safeTransfer(to, amount1);
+    }
+
     modifier onlyVaultActions {
-        require(msg.sender == vaultActions, "not allowed");
+        require(msg.sender == vaultActions, "vaultActions");
+        _;
+    }
+
+    modifier onlyGovernance {
+        require(msg.sender == governance, "governance");
         _;
     }
 
