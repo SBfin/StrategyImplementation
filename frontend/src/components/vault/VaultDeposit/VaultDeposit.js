@@ -147,19 +147,27 @@ function VaultDeposit(props) {
         {tokenStore.allowanceToken0 === "0" && (
           <button
             className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
-            onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token0Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken0(r.payload)))}
+            onClick={() =>
+              dispatch(fetchActionsToken.approve({ vault, contract: token0Contract })).then((r) =>
+                dispatch(tokenSlice.actions.allowanceToken0(r.payload != undefined ? r.payload : "0")),
+              )
+            }
             disabled={isButtonDisabled}
           >
-            APPROVE {tokenStore.symbolToken0}
+            APPROVE {symbolToken0}
           </button>
         )}
         {tokenStore.allowanceToken1 === "0" ? (
           <button
             className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
-            onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token1Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken1(r.payload)))}
+            onClick={() =>
+              dispatch(fetchActionsToken.approve({ vault, contract: token1Contract })).then((r) =>
+                dispatch(tokenSlice.actions.allowanceToken1(r.payload != undefined ? r.payload : "0")),
+              )
+            }
             disabled={isButtonDisabled}
           >
-            APPROVE {tokenStore.symbolToken1}
+            APPROVE {symbolToken1}
           </button>
         ) : (
           tokenStore.allowanceToken0 !== "0" &&

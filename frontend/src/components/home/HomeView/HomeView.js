@@ -7,7 +7,7 @@ import { loadStrategy } from "../../common/strategy";
 import { loadToken } from "../../common/TokenBalance";
 import { useState, useEffect } from "react";
 import { useWeb3React } from "@web3-react/core";
-import { tickToPrice, fromUnitsToDecimal, truncateNumber, calculateTVL } from "../../common/helpers";
+import { tickToPrice, fromUnitsToDecimal, truncateNumber, calculateTVL, getSymbolToken } from "../../common/helpers";
 
 export default function HomeView(props) {
   const vaultAddresses = VaultContractAddresses();
@@ -87,7 +87,6 @@ export default function HomeView(props) {
         </h1>
       </div>
       <hr />
-
       <div className={`${s.scrollable}`}>
         <div className="row">
           {[...Array(3)].map((x, i) => (

@@ -16,8 +16,9 @@ export function truncateNumber(num, decimals): number {
 }
 
 export function tickToPrice(tick, decimal0, decimal1) {
-  tick = Math.abs(tick);
-  return truncateNumber(Math.pow(1.0001, tick) * Math.pow(10, -1 * Math.abs(decimal0 - decimal1)), 5);
+  truncateNumber(Math.pow(1.0001, tick) * Math.pow(10, -1 * Math.abs(decimal0 - decimal1)), 5);
+
+  return Math.sqrt(Math.pow(1.0001, tick)) * Math.pow(2, 96);
 }
 
 export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) {
@@ -33,7 +34,15 @@ export function calculateTVL(token0: number, token1: number, decimal0: number, d
   const first = fromUnitsToDecimal(token0, decimal0);
   const second = fromUnitsToDecimal(token1, decimal1);
 
-  return Math.min(first, second) * price + Math.max(first, second);
+  const newprice = (price * price * 1e18) / Math.pow(2, 96 * 2);
+  console.log(newprice);
+  const nav = token0 + (token1 * newprice) / 1e18;
+  console.log(nav);
+  const final = (token1 * newprice) / 1e18;
+  console.log(final);
+  return final;
+
+  // return Math.min(first, second) * price + Math.max(first, second);
 }
 
 export function getSymbolToken(useEth: boolean, token: string) {

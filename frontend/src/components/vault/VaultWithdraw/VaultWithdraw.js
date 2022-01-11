@@ -64,6 +64,9 @@ function VaultWithdraw(props) {
             value={input}
             onChange={(e) => {
               setInput(e.target.value);
+              console.log(truncateNumber(fromUnitsToDecimal(userToken0, tokenStore.decimalsToken0), 4));
+              console.log(truncateNumber(fromUnitsToDecimal(vaultStore.balanceOf.value, vaultStore.decimals), 4));
+
               setToken0(
                 (truncateNumber(fromUnitsToDecimal(userToken0, tokenStore.decimalsToken0), 4) /
                   truncateNumber(fromUnitsToDecimal(vaultStore.balanceOf.value, vaultStore.decimals), 4)) *
@@ -74,6 +77,7 @@ function VaultWithdraw(props) {
                   truncateNumber(fromUnitsToDecimal(vaultStore.balanceOf.value, vaultStore.decimals), 4)) *
                   e.target.value,
               );
+              console.log(token0);
               setShares(e.target.value);
             }}
           />
@@ -95,12 +99,12 @@ function VaultWithdraw(props) {
             <hr />
             <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken0 + ".png"} />
             <label>{symbolToken0}</label>
-            <span>{token0}</span>
+            <span>{isNaN(token0) ? 0 : token0}</span>
           </div>
           <div className={`${s.tokenSharesDiv}`}>
             <img className={`${s.tokenImage}`} src={"/assets/" + symbolToken1 + ".png"} />
             <label>{symbolToken1}</label>
-            <span>{token1}</span>
+            <span>{isNaN(token1) ? 0 : token1}</span>
             <hr />
           </div>
         </div>
