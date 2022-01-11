@@ -76,10 +76,15 @@ contract AlphaVaultUtility {
         }
 
         // Pull in tokens from sender
-        IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
-        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) safeTransferETH(msg.sender, msg.value - (token0IsWeth ? amount0 : amount1));
+        IWETH9(weth).deposit{value: msg.value }();
 
         (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
+
+        uint256 amountWeth = token0IsWeth ? amount0 : amount1;
+        if (msg.value >  amountWeth) {
+            IWETH9(weth).withdraw(msg.value - amountWeth);
+            safeTransferETH(msg.sender, msg.value - amountWeth);
+        }
     }
 
     function withdrawEth(
