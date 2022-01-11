@@ -35,14 +35,7 @@ export function calculateTVL(token0: number, token1: number, decimal0: number, d
 
   const sqrtTick = Math.sqrt(Math.pow(1.0001, price)) * Math.pow(2, 96);
   const newprice = (sqrtTick * sqrtTick * 1e18) / Math.pow(2, 96 * 2);
-  console.log(newprice);
-  const nav = token0 + (token1 * newprice) / 1e18;
-  console.log(nav);
-  const final = (token1 * newprice) / 1e18;
-  console.log(final);
-  return nav;
-
-  // return Math.min(first, second) * price + Math.max(first, second);
+  return token1 + (token0 * newprice) / 1e18;
 }
 
 export function getSymbolToken(useEth: boolean, token: string) {
