@@ -17,7 +17,9 @@ import "../interfaces/IVault.sol";
 import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
 
-contract AlphaVaultUtility {
+contract AlphaVaultUtility is 
+    ReentrancyGuard
+    {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
@@ -25,14 +27,11 @@ contract AlphaVaultUtility {
     AlphaVault public immutable alphaVault;
     bool token0IsWeth;
 
-    constructor(address _pool,
-        address _alphaVault,
-        address wethAddress)
-        
-        {
-            weth = wethAddress;
-            token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
+    constructor(address _alphaVault, address wethAddress) {
             alphaVault = AlphaVault(_alphaVault);
+            weth = wethAddress;
+            IUniswapV3Pool pool = AlphaVault(_alphaVault).pool();
+            token0IsWeth = pool.token0() == wethAddress;
         }
 
     event EthRefund(
@@ -58,6 +57,9 @@ contract AlphaVaultUtility {
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
         require(to != address(0) && to != address(this), "to");
 
+        IERC20 token0 = IERC20(alphaVault.token0());
+        IERC20 token1 = IERC20(alphaVault.token1());
+
         uint256 amount0Desired;
         uint256 amount1Desired;
         uint256 amount1Min;
@@ -77,16 +79,34 @@ contract AlphaVaultUtility {
 
         // Pull in tokens from sender
         IWETH9(weth).deposit{value: msg.value }();
+        if (token0IsWeth) {
+            token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+        }
+        else { 
+            token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+        }
 
+        //Approving amount desired for this contract
+        token0.approve(address(alphaVault), amount1Desired);
+        token1.approve(address(alphaVault), amount0Desired);
+        
+        //Deposit in AlphaVault
         (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
 
-        uint256 amountWeth = token0IsWeth ? amount0 : amount1;
-        if (msg.value >  amountWeth) {
-            IWETH9(weth).withdraw(msg.value - amountWeth);
-            safeTransferETH(msg.sender, msg.value - amountWeth);
+        // Giving back the remainder
+        // Notice that only one of the two tokens can be greater than amount desired
+        uint256 remainder = Math.max(amount0Desired.sub(amount0) , amount1Desired.sub(amount1));
+        if (address(this).balance > 0) {
+            IWETH9(weth).withdraw(remainder);
+            safeTransferETH(msg.sender, remainder);
+            }
+        else {
+            token0IsWeth ? 
+            token1.safeTransferFrom(address(this), msg.sender, remainder) : 
+            token0.safeTransferFrom(address(this), msg.sender, remainder);
         }
     }
-
+    /*
     function withdrawEth(
         uint256 shares,
         uint256 amount0Min,
@@ -95,6 +115,9 @@ contract AlphaVaultUtility {
     ) external nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0) && to != address(this), "to");
+
+        IERC20 token0 = IERC20(alphaVault.token0());
+        IERC20 token1 = IERC20(alphaVault.token1());
 
         (amount0, amount1) = alphaVault.withdraw(shares, amount0Min, amount1Min, to);
 
@@ -113,7 +136,7 @@ contract AlphaVaultUtility {
                 safeTransferETH(to, amount1);
             }
         }
-    }
+    }*/
 
     /// @notice Transfers ETH to the recipient address
     /// @dev Fails with `STE`

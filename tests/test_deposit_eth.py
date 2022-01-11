@@ -10,6 +10,7 @@ from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialSca
     [ [0, 1e15] , [1, 0], [1e18, 0], [0, 1e10], [1e4, 1e10], [1e18, 1e10]],
 )
 def test_initial_deposit(
+    utility,
     vault,
     tokens,
     gov,
@@ -25,7 +26,7 @@ def test_initial_deposit(
     
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts are same as inputs
@@ -58,6 +59,7 @@ def test_initial_deposit(
     [[1, 1e18], [1e18, 1], [1e4, 1e18], [1e18, 1e18]]
 )
 def test_deposit_eth(
+    utility,
     vaultAfterPriceMove,
     tokens,
     getPositions,
@@ -80,7 +82,7 @@ def test_deposit_eth(
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -124,6 +126,7 @@ def test_deposit_eth(
     [[1e4, 1e18], [1e18, 1e18]],
 )
 def test_deposit_when_vault_only_has_token0(
+    utility,
     vaultOnlyWithToken0,
     pool,
     tokens,
@@ -148,7 +151,7 @@ def test_deposit_when_vault_only_has_token0(
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -183,6 +186,7 @@ def test_deposit_when_vault_only_has_token0(
     [[1e4, 1e18], [1e18, 1e18]],
 )
 def test_deposit_when_vault_only_has_token1(
+    utility,
     vaultOnlyWithToken1,
     pool,
     tokens,
@@ -207,7 +211,7 @@ def test_deposit_when_vault_only_has_token1(
     # Deposit
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
-    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -237,7 +241,7 @@ def test_deposit_when_vault_only_has_token1(
     assert approx(total1 * totalSupplyAfter) == total1After * totalSupply
 
 
-def test_deposit_checks(vault, user, tokens, gov):
+def test_deposit_checks(vault, utility, user, tokens, gov):
 
     with reverts("amount0Desired or amount1Desired"):
         vault.deposit(0, 0, 0, 0, user, {"from": user})
@@ -258,14 +262,15 @@ def test_deposit_checks(vault, user, tokens, gov):
         vault.deposit(1e8, 200e18, 0, 0, user, {"from": user})
 
     with reverts("amountTokenDesired or value"):
-        vault.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
+        utility.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
 
     with reverts("to"):
-        vault.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
+        utility.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
 
 
-
-def test_withdraw(
+"""
+def test_withdraw_eth(
+    utility,
     vaultAfterPriceMove,
     strategy,
     pool,
@@ -348,9 +353,7 @@ def test_withdraw_checks(vault, user, recipient):
 
 
 
-"""
-Test refund ETH
-"""
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, excessEth",
     [[1, 1e18, 2e18], [1e18, 1, 1], [1e4, 1e18, 10e18], [1e18, 1e18, 1e14]]
@@ -385,4 +388,4 @@ def test_refund_eth(
     if eth_diff > 0:
         eth_refund = tx.events["EthRefund"]['amount']
         assert approx(eth_diff) == eth_refund
-    
+"""
