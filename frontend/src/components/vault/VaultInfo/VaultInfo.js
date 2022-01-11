@@ -49,6 +49,7 @@ function VaultInfo(props) {
       return;
     }
     dispatch(fetchActionsStrategy.price({ strategy: strategyContract, decimals0: tokenStore.decimalsToken0, decimals1: tokenStore.decimalsToken1 }));
+    dispatch(fetchActionsStrategy.tick({ strategy: strategyContract }));
   }, [strategyContract, tokenStore.decimalsToken0, tokenStore.decimalsToken1]);
 
   return (
@@ -60,7 +61,7 @@ function VaultInfo(props) {
         <span className="col-3">
           $
           {truncateNumber(
-            calculateTVL(vaultStore.totalAmounts.value[0], vaultStore.totalAmounts.value[1], tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.price.value),
+            calculateTVL(vaultStore.totalAmounts.value[0], vaultStore.totalAmounts.value[1], tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.tick.value),
             2,
           )}
         </span>
