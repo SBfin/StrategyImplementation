@@ -4,7 +4,7 @@ from pytest import approx
 import random
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 
-"""
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [ [0, 1e15] , [1, 0], [1e18, 0], [0, 1e10], [1e4, 1e10], [1e18, 1e10]],
@@ -268,7 +268,6 @@ def test_deposit_checks(vault, utility, user, tokens, gov):
         utility.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
 
 
-"""
 def test_withdraw_eth(
     utility,
     vaultAfterPriceMove,
@@ -286,7 +285,7 @@ def test_withdraw_eth(
     gas_strategy = ExponentialScalingStrategy("10000000 wei", "1000000 gwei")
 
     # Deposit and rebalance
-    gov.transfer(tokens[wethToken], "50 ether")
+    gov.transfer(tokens[wethToken], "1 ether")
     tokens[wethToken].deposit({"from" : gov, "value" : 1e18})
     tokens[wethToken].withdraw(1e18, {"from" : gov})
     tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user, "gas_price" : gas_strategy})
