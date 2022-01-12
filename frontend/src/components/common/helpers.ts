@@ -30,9 +30,6 @@ export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN,
 }
 
 export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, price: number): number {
-  const first = fromUnitsToDecimal(token0, decimal0);
-  const second = fromUnitsToDecimal(token1, decimal1);
-
   const sqrtTick = Math.sqrt(Math.pow(1.0001, price)) * Math.pow(2, 96);
   const newprice = (sqrtTick * sqrtTick * 1e18) / Math.pow(2, 96 * 2);
   return token1 + (token0 * newprice) / 1e18;

@@ -33,8 +33,8 @@ export default function HomeView(props) {
     const totalAmounts = await totalAmountsP;
     const strategy = await strategyP;
 
-    const price = 1 / tickToPrice(await strategy.getTick(), decimals0, decimals1);
-    const tvl = calculateTVL(totalAmounts[0], totalAmounts[1], decimals0, decimals1, price);
+    const price = await strategy.getTick();
+    const tvl = truncateNumber(calculateTVL(totalAmounts[0].toString(), totalAmounts[1].toString(), decimals0, decimals1, price), 2);
 
     const cap = ((((await totalSupply) || 0) / ((await maxTotalSupply) || 1)) * 100).toFixed(2);
 
