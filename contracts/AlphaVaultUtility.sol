@@ -28,6 +28,22 @@ contract AlphaVaultUtility is
     bool token0IsWeth;
     IERC20 public immutable token0;
     IERC20 public immutable token1;
+    uint256 public immutable PRECISION = 1e36;
+    
+    event SwapAmount(
+        uint amount0Desired,
+        uint amountToSwap,
+        uint amount1Desired,
+        uint256 shares,
+        uint256 amount0,
+        uint256 amount1
+    );
+
+    event TokenRatio(
+        uint ratio,
+        uint token0in1,
+        uint price
+    );
 
     constructor(address _alphaVault, address wethAddress) {
             alphaVault = AlphaVault(_alphaVault);
@@ -124,6 +140,101 @@ contract AlphaVaultUtility is
             }
         }
     }
+
+    //TODO: compound and earn fees
+    //TODO: deposit eth
+    //TODO: checkDeviation / add chainlink
+    //TODO: tests - add flashloan test
+    function swapDeposit(
+        uint256 amount0Desired,
+        uint256 amount1Desired
+    )   external
+        nonReentrant
+        override
+        returns (
+            uint256 shares
+        )
+        {
+            require(amount0Desired > 0 || amount1Desired > 0, "At least one amount has to be gt 0");
+            require(amount0Desired == 0 || amount1Desired == 0, "At least one amount has to be eq 0");
+            
+            // Poke positions so vault's current holdings are up-to-date
+            // Necessary to consider UNI fees in the total token quantities. This is internal to vault only
+            // We could allow this contract to poke vault fees
+            alphaVault._poke(baseLower, baseUpper);
+            alphaVault._poke(limitLower, limitUpper);
+
+            // Calculate amounts proportional to vault's holdings
+            // Ratio is between the values, not quantity, that's why also price is returned
+            // Price is later used to compute swap amount
+            (uint256 ratio, uint256 price) = _getTokenRatio();
+            emit TokenRatio(ratio, price);
+
+            // Define which is the token desired and the ratio or the inverse to compute swap amount
+            // Only one token can be deposited, therefore taking the max and detecting which token 
+            // is required for the swap
+            uint256 amountTokenDesired = Math.max(amount0Desired, amount1Desired);
+            IERC20 tokenDesired = (amount0Desired > 0 ? token0 : token1);
+            // Depending on which token is desired, consider ratio or its inserve
+            ratio = (amount0Desired > 0 ? ratio : (PRECISION).sub(ratio)); 
+
+            // Compute swap amount and sign
+            // This uses only the ratio, it would be better to use uniswap quoter
+            // With quoter and slippage, we can determine exact input for given output
+            int256 amountToSwap;
+            if (tokenDesired == token0) {
+                    amountToSwap = int256(amountTokenDesired.sub((ratio).mul(amountTokenDesired).div(PRECISION)));
+                } else {
+                    amountToSwap = -int256(amountTokenDesired.sub((ratio).mul(amountTokenDesired).div(PRECISION)));
+                }
+
+            //Transfer tokenDesired
+            tokenDesired.safeTransferFrom(msg.sender, address(this), amountTokenDesired);
+            
+            // TODO: INSERT SLIPPAGE
+            uint160 priceToUse = uint160(price);
+            (int256 amount0Swapped, int256 amount1Swapped) = _swap(amountToSwap, priceToUse);
+            emit SwapAmount(amount0Desired, amount1Desired, amount0Swapped, amount1Swapped);
+
+            // The result of int256(amount0Desired) - amount0Swapped is always positive
+            amount0Desired = uint256(int256(amount0Desired) - amount0Swapped);
+            amount1Desired = uint256(int256(amount1Desired) - amount1Swapped);
+            
+            (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
+            require(shares > 0, "shares");
+
+            //Return any remaining (maybe a function for this?)
+            (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
+
+    }
+
+    function _getTokenRatio() internal view returns(uint256 ratio, uint256 token0in1, uint256 price) {
+            (uint256 total0, uint256 total1) = alphaVault.getTotalAmounts();
+            //no proportion with 0
+            
+            int24 tick;
+            (, tick, , , , , ) = pool.slot0();
+            uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
+            
+            price = FullMath.mulDiv(uint256(sqrtPrice).mul(uint256(sqrtPrice)), 1e18, 2**(96 * 2)); //token1 / token0
+            token0in1 = total0.mul(price).div(1e18);
+            ratio = token0in1.mul(1e18).div(total1.add(token0in1));
+            
+    }
+
+    //TODO : compute slippage
+    function _swap(int256 amountToSwap, uint160 sqrtPrice) internal returns(int256 amountSwapped0, int256 amountSwapped1) {
+            (int256 amount0, int256 amount1) = pool.swap(
+                address(this),
+                amountToSwap > 0,
+                amountToSwap, //amountToSwap > 0 ? amountToSwap : -amountToSwap,
+                sqrtPrice, 
+                ""
+            );
+            amountSwapped0 = amount0;
+            amountSwapped1 = amount1;
+    }
+
 
 
     /// @notice Transfers ETH to the recipient address
