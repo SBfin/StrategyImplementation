@@ -149,6 +149,7 @@ contract AlphaVaultUtility is
         uint256 amount0Desired,
         uint256 amount1Desired
     )   external
+        payable
         nonReentrant
         override
         returns (
@@ -175,7 +176,7 @@ contract AlphaVaultUtility is
             // is required for the swap
             uint256 amountTokenDesired = Math.max(amount0Desired, amount1Desired);
             IERC20 tokenDesired = (amount0Desired > 0 ? token0 : token1);
-            // Depending on which token is desired, consider ratio or its inserve
+            // Depending on which token is desired, consider ratio or its inverse
             ratio = (amount0Desired > 0 ? ratio : (PRECISION).sub(ratio)); 
 
             // Compute swap amount and sign
@@ -189,9 +190,15 @@ contract AlphaVaultUtility is
                 }
 
             //Transfer tokenDesired
-            tokenDesired.safeTransferFrom(msg.sender, address(this), amountTokenDesired);
-            
+            if (address(tokenDesidered) != address(weth)) {
+                tokenDesired.safeTransferFrom(msg.sender, address(this), amountTokenDesired);
+            } else {
+                require(msg.value == amountTokenDesired);
+                IWETH9(weth).deposit{value: amountTokenDesired}();
+            }
+        
             // TODO: INSERT SLIPPAGE
+            // Doing swaps and computing amount swapped and amounts after swaps
             uint160 priceToUse = uint160(price);
             (int256 amount0Swapped, int256 amount1Swapped) = _swap(amountToSwap, priceToUse);
             emit SwapAmount(amount0Desired, amount1Desired, amount0Swapped, amount1Swapped);
@@ -202,9 +209,11 @@ contract AlphaVaultUtility is
             
             (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
             require(shares > 0, "shares");
-
-            //Return any remaining (maybe a function for this?)
             (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
+
+            // Return any remaining
+            if (amount0Desired.sub(amount0)) token0.safeTransferFrom(address(this), msg.sender, amount0Desired.sub(amount0));
+            if (amount1Desired.sub(amount1)) token1.safeTransferFrom(address(this), msg.sender, amount1Desired.sub(amount1));
 
     }
 
