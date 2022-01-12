@@ -38,25 +38,16 @@ contract AlphaVaultUtility is
             token0 = IERC20(AlphaVault(_alphaVault).token0());
             token1 = IERC20(AlphaVault(_alphaVault).token1());
             
-            IERC20(AlphaVault(_alphaVault).token0()).approve(_alphaVault, 2^256 - 1);
-            IERC20(AlphaVault(_alphaVault).token1()).approve(_alphaVault, 2^256 - 1);
+            bool approve0 = IERC20(AlphaVault(_alphaVault).token0()).approve(_alphaVault, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
+            bool approve1 = IERC20(AlphaVault(_alphaVault).token1()).approve(_alphaVault, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
+            require(approve0 && approve1, "approval");
         }
 
     event EthRefund(
         address indexed to,
         uint256 amount
     );
-    
-    event Remainder(
-        uint256 remainder,
-        uint256 balance0,
-        uint256 balance1
-    );
 
-    event Allowances(
-        uint256 allowance0,
-        uint256 allowance1
-    );
 
     function depositEth(
         uint256 amountTokenDesired,
@@ -94,44 +85,21 @@ contract AlphaVaultUtility is
             amount1Min = amountEthMin;
         }
 
-        // Pull in tokens from sender
-        emit Allowances(token0.allowance(address(this), address(alphaVault)), token1.allowance(address(this), address(alphaVault)));
+        ( , amount0, amount1) = alphaVault._calcSharesAndAmounts(amount0Desired, amount1Desired);
 
-        IWETH9(weth).deposit{value: msg.value }();
+        // Pull in tokens from sender
+        IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
+        if (msg.value >  (token0IsWeth ? amount0 : amount1) ) safeTransferETH(msg.sender, msg.value - (token0IsWeth ? amount0 : amount1));
+
         if (token0IsWeth) {
-            token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+            token1.safeTransferFrom(msg.sender, address(this), amount1);
         }
         else { 
-            token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+            token0.safeTransferFrom(msg.sender, address(this), amount0);
         }
         
         //Deposit in AlphaVault
         (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
-
-        // Giving back the remainder
-        // Notice that only one of the two tokens can be greater than amount desired
-        uint256 remainder = Math.max(amount0Desired.sub(amount0) , amount1Desired.sub(amount1));
-        emit Remainder(remainder, token0.balanceOf(address(this)), token1.balanceOf(address(this)));
-        
-        if (token0.balanceOf(address(this)) > 0) {
-            
-            if (token0IsWeth) {
-                IWETH9(weth).withdraw(remainder);
-                safeTransferETH(msg.sender, remainder);
-            } else {
-                token0.safeTransferFrom(address(this), msg.sender, remainder);
-            }   
-        }
-        
-        else if (token1.balanceOf(address(this)) > 0) {
-            
-            if (token0IsWeth) {
-                token1.safeTransferFrom(address(this), msg.sender, remainder);
-            } else {
-                IWETH9(weth).withdraw(remainder); 
-                safeTransferETH(msg.sender, remainder);
-            }
-        }
     }
         
     /*

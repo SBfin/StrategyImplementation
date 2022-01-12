@@ -168,7 +168,7 @@ contract AlphaVault is
     /// they're in the same proportion as total amounts, but not greater than
     /// `amount0Desired` and `amount1Desired` respectively.
     function _calcSharesAndAmounts(uint256 amount0Desired, uint256 amount1Desired)
-        internal
+        public
         view
         returns (
             uint256 shares,
