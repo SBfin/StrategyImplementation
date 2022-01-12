@@ -252,15 +252,6 @@ contract AlphaVault is
         emit Withdraw(msg.sender, to, shares, amount0, amount1);
     }
 
-    /*
-    function _burnVaultShares(bool toUtility) private {
-            if (toUtility) {
-                _burn(msg.sender, shares);
-            } else {
-                _burn(tx.origin, shares);
-            }
-    }*/
-
     /// @dev Withdraws share of liquidity in a range from Uniswap pool.
     function _burnLiquidityShare(
         int24 tickLower,

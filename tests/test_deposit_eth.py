@@ -304,6 +304,8 @@ def test_withdraw_eth(
     tx = utility.withdrawEth(shares, 0, 0, recipient, {"from": user, "gas_price" : gas_strategy})
     amount0, amount1 = tx.return_value
 
+    print(tx.events)
+
     # Check is empty now
     assert vault.balanceOf(user) == 0
 
@@ -327,8 +329,8 @@ def test_withdraw_eth(
 
     # Check event
     assert tx.events["Withdraw"] == {
-        "sender": utility,
-        "to": recipient,
+        "sender": utility.address,
+        "to": utility.address,
         "shares": shares,
         "amount0": amount0,
         "amount1": amount1,
@@ -352,39 +354,3 @@ def test_withdraw_checks(vault, user, recipient, utility):
 
 
 
-"""
-@pytest.mark.parametrize(
-    "amount0Desired,amount1Desired, excessEth",
-    [[1, 1e18, 2e18], [1e18, 1, 1], [1e4, 1e18, 10e18], [1e18, 1e18, 1e14]]
-)
-def test_refund_eth(
-    vaultAfterPriceMove,
-    tokens,
-    getPositions,
-    gov,
-    user,
-    recipient,
-    amount0Desired,
-    amount1Desired,
-    excessEth,
-    wethToken
-):
-    vault = vaultAfterPriceMove
-    # set address
-
-    # Deposit
-    value = amount0Desired + excessEth if (tokens[0] == tokens[wethToken]) else amount1Desired + excessEth
-    amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = vault.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
-    print(tx.events)
-    shares, amount0, amount1 = tx.return_value
-
-    # Check Eth amount is refunded correctly
-    diff0 = amount0Desired - amount0 if tokens[0] != tokens[wethToken] else value - amount0
-    diff1 = amount1Desired - amount1 if tokens[0] == tokens[wethToken] else value - amount1
-    
-    eth_diff = diff0 if tokens[0] == tokens[wethToken] else diff1
-    if eth_diff > 0:
-        eth_refund = tx.events["EthRefund"]['amount']
-        assert approx(eth_diff) == eth_refund
-"""
