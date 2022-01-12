@@ -81,6 +81,9 @@ def test_deposit_eth(
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
     tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
+    print(tx.events)
+    print("0 balance ", tokens[0].balanceOf(utility))
+    print("1 balance ", tokens[1].balanceOf(utility))
 
     # Check amounts don't exceed desired
     assert amount0 <= amount0Desired
