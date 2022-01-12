@@ -217,15 +217,17 @@ contract AlphaVault is
         uint256 shares,
         uint256 amount0Min,
         uint256 amount1Min,
-        address to,
-        bool    toUtility) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
+        address to) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0) && to != address(this), "to");
         uint256 totalSupply = totalSupply();
 
         // Burn shares
-        // If coming from utility, burn user shares
-        //  burnShares(shares, toUtility);
+        if (balanceOf(msg.sender) > 0) {
+            _burn(msg.sender, shares);
+        } else {
+            _burn(tx.origin, shares);
+        }
 
         // Calculate token amounts proportional to unused balances
         uint256 unusedAmount0 = getBalance0().mul(shares).div(totalSupply);

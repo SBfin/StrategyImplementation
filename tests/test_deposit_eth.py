@@ -344,11 +344,11 @@ def test_withdraw_checks(vault, user, recipient, utility):
     with reverts("to"):
         utility.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
     with reverts("to"):
-        vault.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
     with reverts("amount0Min"):
-        vault.withdrawEth(shares - 1000, 1e18, 0, recipient, {"from": user})
+        utility.withdrawEth(shares - 1000, 1e18, 0, recipient, {"from": user})
     with reverts("amount1Min"):
-        vault.withdrawEth(shares - 1000, 0, 1e18, recipient, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 1e18, recipient, {"from": user})
 
 
 

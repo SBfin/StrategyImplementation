@@ -48,16 +48,6 @@ contract AlphaVaultUtility is
         uint256 amount
     );
 
-    event WithdrawEth(
-        uint256 amount0,
-        uint256 amount1
-    );
-
-    event Balances(
-        uint256 balance0,
-        uint256 balance1
-    );
-
 
     function depositEth(
         uint256 amountTokenDesired,
@@ -76,7 +66,7 @@ contract AlphaVaultUtility is
     {      
         // switch to and
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
-        require(to != address(0) && to != address(this), "to");
+        require(to != address(0) && to != address(this) && to != address(alphaVault), "to");
 
         uint256 amount0Desired;
         uint256 amount1Desired;
@@ -120,11 +110,9 @@ contract AlphaVaultUtility is
         address to
     ) external nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
-        require(to != address(0) && to != address(this), "to");
+        require(to != address(0) && to != address(this) && to != address(alphaVault), "to");
 
-        (amount0, amount1) = alphaVault.withdraw(shares, amount0Min, amount1Min, to);
-        emit WithdrawEth(amount0, amount1);
-        emit Balances(token0.balanceOf(address(this)), token1.balanceOf(address(this)));
+        (amount0, amount1) = alphaVault.withdraw(shares, amount0Min, amount1Min, address(this));
         
         // Push tokens to recipient
         if (token0IsWeth) {
