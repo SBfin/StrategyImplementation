@@ -17,38 +17,31 @@ import "../interfaces/IVault.sol";
 import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
 
-contract OrbitVault is 
-    IVault,
-    IUniswapV3MintCallback,
-    IUniswapV3SwapCallback,
-    ERC20,
-    ReentrancyGuard,
-    AlphaVault
-{   
+contract AlphaVaultUtility is 
+    ReentrancyGuard
+    {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address immutable weth;
+    address public immutable weth;
+    AlphaVault public immutable alphaVault;
     bool token0IsWeth;
+    IERC20 public immutable token0;
+    IERC20 public immutable token1;
 
-    constructor(address _pool,
-        uint256 _protocolFee,
-        uint256 _maxTotalSupply,
-        address wethAddress) 
-
-        AlphaVault(_pool,
-        _protocolFee,
-        _maxTotalSupply) 
-        
-        {
+    constructor(address _alphaVault, address wethAddress) {
+            alphaVault = AlphaVault(_alphaVault);
             weth = wethAddress;
-            token0IsWeth = IUniswapV3Pool(_pool).token0() == wethAddress;
-        }
+            IUniswapV3Pool pool = AlphaVault(_alphaVault).pool();
+            token0IsWeth = pool.token0() == wethAddress;
 
-    event EthRefund(
-        address indexed to,
-        uint256 amount
-    );
+            token0 = IERC20(AlphaVault(_alphaVault).token0());
+            token1 = IERC20(AlphaVault(_alphaVault).token1());
+            
+            bool approve0 = IERC20(AlphaVault(_alphaVault).token0()).approve(_alphaVault, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
+            bool approve1 = IERC20(AlphaVault(_alphaVault).token1()).approve(_alphaVault, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
+            require(approve0 && approve1, "approval");
+        }
 
     function depositEth(
         uint256 amountTokenDesired,
@@ -65,8 +58,9 @@ contract OrbitVault is
             uint256 amount1
         )
     {      
+        // switch to and
         require(amountTokenDesired > 0 || msg.value > 0, "amountTokenDesired or value");
-        require(to != address(0) && to != address(this), "to");
+        require(to != address(0) && to != address(this) && to != address(alphaVault), "to");
 
         uint256 amount0Desired;
         uint256 amount1Desired;
@@ -84,33 +78,25 @@ contract OrbitVault is
             amount0Min = amountTokenMin;
             amount1Min = amountEthMin;
         }
-        
-        // Poke positions so vault's current holdings are up-to-date
-        _poke(baseLower, baseUpper);
-        _poke(limitLower, limitUpper);
 
-        // Calculate amounts proportional to vault's holdings
-        (shares, amount0, amount1) = _calcSharesAndAmounts(amount0Desired, amount1Desired);
-        require(shares > 0, "shares");
-        require(amount0 >= amount0Min, "amount0Min");
-        require(amount1 >= amount1Min, "amount1Min");
+        ( , amount0, amount1) = alphaVault._calcSharesAndAmounts(amount0Desired, amount1Desired);
 
         // Pull in tokens from sender
         IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
         if (msg.value >  (token0IsWeth ? amount0 : amount1) ) safeTransferETH(msg.sender, msg.value - (token0IsWeth ? amount0 : amount1));
+
         if (token0IsWeth) {
             token1.safeTransferFrom(msg.sender, address(this), amount1);
         }
         else { 
             token0.safeTransferFrom(msg.sender, address(this), amount0);
         }
-
-        // Mint shares to recipient
-        _mint(to, shares);
-        emit Deposit(msg.sender, to, shares, amount0, amount1);
-        require(totalSupply() <= maxTotalSupply, "maxTotalSupply");
+        
+        //Deposit in AlphaVault
+        (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
     }
-
+        
+    
     function withdrawEth(
         uint256 shares,
         uint256 amount0Min,
@@ -118,28 +104,10 @@ contract OrbitVault is
         address to
     ) external nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
-        require(to != address(0) && to != address(this), "to");
-        uint256 totalSupply = totalSupply();
+        require(to != address(0) && to != address(this) && to != address(alphaVault), "to");
 
-        // Burn shares
-        _burn(msg.sender, shares);
-
-        // Calculate token amounts proportional to unused balances
-        uint256 unusedAmount0 = getBalance0().mul(shares).div(totalSupply);
-        uint256 unusedAmount1 = getBalance1().mul(shares).div(totalSupply);
-
-        // Withdraw proportion of liquidity from Uniswap pool
-        (uint256 baseAmount0, uint256 baseAmount1) =
-            _burnLiquidityShare(baseLower, baseUpper, shares, totalSupply);
-        (uint256 limitAmount0, uint256 limitAmount1) =
-            _burnLiquidityShare(limitLower, limitUpper, shares, totalSupply);
-
-        // Sum up total amounts owed to recipient
-        amount0 = unusedAmount0.add(baseAmount0).add(limitAmount0);
-        amount1 = unusedAmount1.add(baseAmount1).add(limitAmount1);
-        require(amount0 >= amount0Min, "amount0Min");
-        require(amount1 >= amount1Min, "amount1Min");
-
+        (amount0, amount1) = alphaVault.withdraw(shares, amount0Min, amount1Min, address(this));
+        
         // Push tokens to recipient
         if (token0IsWeth) {
             if (amount1 > 0) token1.safeTransfer(to, amount1);
@@ -155,9 +123,8 @@ contract OrbitVault is
                 safeTransferETH(to, amount1);
             }
         }
-
-        emit Withdraw(msg.sender, to, shares, amount0, amount1);
     }
+
 
     /// @notice Transfers ETH to the recipient address
     /// @dev Fails with `STE`
@@ -166,7 +133,6 @@ contract OrbitVault is
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}("");
         require(success, 'STE');
-        emit EthRefund(to, value);
     }
 
     fallback() external payable {

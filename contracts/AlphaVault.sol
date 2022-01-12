@@ -168,7 +168,7 @@ contract AlphaVault is
     /// they're in the same proportion as total amounts, but not greater than
     /// `amount0Desired` and `amount1Desired` respectively.
     function _calcSharesAndAmounts(uint256 amount0Desired, uint256 amount1Desired)
-        internal
+        public
         view
         returns (
             uint256 shares,
@@ -217,14 +217,17 @@ contract AlphaVault is
         uint256 shares,
         uint256 amount0Min,
         uint256 amount1Min,
-        address to
-    ) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
+        address to) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0) && to != address(this), "to");
         uint256 totalSupply = totalSupply();
 
         // Burn shares
-        _burn(msg.sender, shares);
+        if (balanceOf(msg.sender) > 0) {
+            _burn(msg.sender, shares);
+        } else {
+            _burn(tx.origin, shares);
+        }
 
         // Calculate token amounts proportional to unused balances
         uint256 unusedAmount0 = getBalance0().mul(shares).div(totalSupply);
