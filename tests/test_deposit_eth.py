@@ -4,7 +4,7 @@ from pytest import approx
 import random
 from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialScalingStrategy
 
-
+"""
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [ [0, 1e15] , [1, 0], [1e18, 0], [0, 1e10], [1e4, 1e10], [1e18, 1e10]],
@@ -47,13 +47,13 @@ def test_initial_deposit(
     print(tx.events)
     dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
     assert dct == {
-        "sender": user,
+        "sender": utility,
         "to": recipient,
         "shares": shares,
         "amount0": amount0,
         "amount1": amount1,
     }
-
+"""
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [[1, 1e18], [1e18, 1], [1e4, 1e18], [1e18, 1e18]]
@@ -62,8 +62,6 @@ def test_deposit_eth(
     utility,
     vaultAfterPriceMove,
     tokens,
-    getPositions,
-    gov,
     user,
     recipient,
     amount0Desired,
@@ -77,7 +75,6 @@ def test_deposit_eth(
     
     totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
-    govShares = vault.balanceOf(gov)
 
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
@@ -114,7 +111,7 @@ def test_deposit_eth(
     # Check event
     dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
     assert dct == {
-        "sender": user,
+        "sender": utility,
         "to": recipient,
         "shares": shares,
         "amount0": amount0,

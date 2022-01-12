@@ -87,8 +87,8 @@ contract AlphaVaultUtility is
         }
 
         //Approving amount desired for this contract
-        token0.approve(address(alphaVault), amount1Desired);
-        token1.approve(address(alphaVault), amount0Desired);
+        token0.approve(address(alphaVault), amount0Desired);
+        token1.approve(address(alphaVault), amount1Desired);
         
         //Deposit in AlphaVault
         (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
