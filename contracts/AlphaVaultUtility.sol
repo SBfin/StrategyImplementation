@@ -23,7 +23,7 @@ contract AlphaVaultUtility is
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
 
-    address immutable weth;
+    address public immutable weth;
     AlphaVault public immutable alphaVault;
     bool token0IsWeth;
     IERC20 public immutable token0;
@@ -42,12 +42,6 @@ contract AlphaVaultUtility is
             bool approve1 = IERC20(AlphaVault(_alphaVault).token1()).approve(_alphaVault, 115792089237316195423570985008687907853269984665640564039457584007913129639935);
             require(approve0 && approve1, "approval");
         }
-
-    event EthRefund(
-        address indexed to,
-        uint256 amount
-    );
-
 
     function depositEth(
         uint256 amountTokenDesired,
@@ -131,6 +125,7 @@ contract AlphaVaultUtility is
         }
     }
 
+
     /// @notice Transfers ETH to the recipient address
     /// @dev Fails with `STE`
     /// @param to The destination of the transfer
@@ -138,7 +133,6 @@ contract AlphaVaultUtility is
     function safeTransferETH(address to, uint256 value) internal {
         (bool success, ) = to.call{value: value}("");
         require(success, 'STE');
-        emit EthRefund(to, value);
     }
 
     fallback() external payable {
