@@ -21,7 +21,8 @@ interface IVault {
         uint256,
         uint256,
         uint256,
-        address
+        address,
+        bool toUtility
     ) external returns (uint256, uint256);
 
     function getTotalAmounts() external view returns (uint256, uint256);

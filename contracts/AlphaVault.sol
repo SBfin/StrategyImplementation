@@ -217,14 +217,15 @@ contract AlphaVault is
         uint256 shares,
         uint256 amount0Min,
         uint256 amount1Min,
-        address to
-    ) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
+        address to,
+        bool    toUtility) external override nonReentrant returns (uint256 amount0, uint256 amount1) {
         require(shares > 0, "shares");
         require(to != address(0) && to != address(this), "to");
         uint256 totalSupply = totalSupply();
 
         // Burn shares
-        _burn(msg.sender, shares);
+        // If coming from utility, burn user shares
+        //  burnShares(shares, toUtility);
 
         // Calculate token amounts proportional to unused balances
         uint256 unusedAmount0 = getBalance0().mul(shares).div(totalSupply);
@@ -248,6 +249,15 @@ contract AlphaVault is
 
         emit Withdraw(msg.sender, to, shares, amount0, amount1);
     }
+
+    /*
+    function _burnVaultShares(bool toUtility) private {
+            if (toUtility) {
+                _burn(msg.sender, shares);
+            } else {
+                _burn(tx.origin, shares);
+            }
+    }*/
 
     /// @dev Withdraws share of liquidity in a range from Uniswap pool.
     function _burnLiquidityShare(

@@ -53,7 +53,7 @@ def test_initial_deposit(
         "amount0": amount0,
         "amount1": amount1,
     }
-"""
+
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
     [[1, 1e18], [1e18, 1], [1e4, 1e18], [1e18, 1e18]]
@@ -301,7 +301,7 @@ def test_withdraw_eth(
     basePos, limitPos = getPositions(vault)
 
     # Withdraw all shares
-    tx = vault.withdrawEth(shares, 0, 0, recipient, {"from": user, "gas_price" : gas_strategy})
+    tx = utility.withdrawEth(shares, 0, 0, recipient, {"from": user, "gas_price" : gas_strategy})
     amount0, amount1 = tx.return_value
 
     # Check is empty now
@@ -327,7 +327,7 @@ def test_withdraw_eth(
 
     # Check event
     assert tx.events["Withdraw"] == {
-        "sender": user,
+        "sender": utility,
         "to": recipient,
         "shares": shares,
         "amount0": amount0,
@@ -335,17 +335,16 @@ def test_withdraw_eth(
     }
 
 
-def test_withdraw_checks(vault, user, recipient):
+def test_withdraw_checks(vault, user, recipient, utility):
     tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user})
     shares, _, _ = tx.return_value
 
     with reverts("shares"):
-        vault.withdrawEth(0, 0, 0, recipient, {"from": user})
+        utility.withdrawEth(0, 0, 0, recipient, {"from": user})
     with reverts("to"):
-        vault.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
     with reverts("to"):
         vault.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
-
     with reverts("amount0Min"):
         vault.withdrawEth(shares - 1000, 1e18, 0, recipient, {"from": user})
     with reverts("amount1Min"):
@@ -353,7 +352,7 @@ def test_withdraw_checks(vault, user, recipient):
 
 
 
-
+"""
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, excessEth",
     [[1, 1e18, 2e18], [1e18, 1, 1], [1e4, 1e18, 10e18], [1e18, 1e18, 1e14]]
