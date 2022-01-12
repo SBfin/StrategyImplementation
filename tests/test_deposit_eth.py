@@ -286,7 +286,7 @@ def test_withdraw_eth(
     gas_strategy = ExponentialScalingStrategy("10000000 wei", "1000000 gwei")
 
     # Deposit and rebalance
-    gov.transfer(tokens[wethToken], "50 ether")
+    gov.transfer(tokens[wethToken], "1 ether")
     tokens[wethToken].deposit({"from" : gov, "value" : 1e18})
     tokens[wethToken].withdraw(1e18, {"from" : gov})
     tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user, "gas_price" : gas_strategy})
@@ -328,7 +328,7 @@ def test_withdraw_eth(
     # Check event
     assert tx.events["Withdraw"] == {
         "sender": utility,
-        "to": recipient,
+        "to": utility,
         "shares": shares,
         "amount0": amount0,
         "amount1": amount1,
