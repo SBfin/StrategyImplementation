@@ -78,7 +78,7 @@ function VaultDeposit(props) {
             value={input1}
             onChange={(e) => {
               setInput1(e.target.value);
-              setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
+              if (tokenStore.ratioToken !== 0) setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
             }}
           />
         </div>
@@ -99,7 +99,7 @@ function VaultDeposit(props) {
             value={input2}
             onChange={(e) => {
               setInput2(e.target.value);
-              setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
+              if (tokenStore.ratioToken !== 0) setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
             }}
           />
         </div>

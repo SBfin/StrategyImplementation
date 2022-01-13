@@ -75,7 +75,7 @@ function ButtonVault(props) {
           Connect Wallet
         </button>
       )}
-      {account && input1 && tokenStore.allowanceToken0 === "0" && (
+      {(account && input1 && tokenStore.allowanceToken0 === "0" && symbolToken0 !== "ETH") == true && (
         <button
           className={`search-button col-12 ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
           onClick={() =>
@@ -88,7 +88,7 @@ function ButtonVault(props) {
           APPROVE {symbolToken0}
         </button>
       )}
-      {account && input2 && tokenStore.allowanceToken1 === "0" && (
+      {(account && input2 && tokenStore.allowanceToken1 === "0" && symbolToken1 !== "ETH") == true && (
         <button
           className={`search-button col-12 ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
           onClick={() =>
@@ -101,7 +101,7 @@ function ButtonVault(props) {
           APPROVE {symbolToken1}
         </button>
       )}
-      {!input1 && !input2 && (
+      {((!input1 && !input2) || (input1 == 0 && input2 == 0)) == true && (
         <button
           className={`search-button col-12 ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
           onClick={() => console.log("invalid value")}
@@ -110,7 +110,7 @@ function ButtonVault(props) {
           INSERT SOME VALUE
         </button>
       )}
-      {tokenStore.allowanceToken0 !== "0" && tokenStore.allowanceToken1 !== "0" && (input1 || input2) && (
+      {(tokenStore.allowanceToken0 !== "0" && tokenStore.allowanceToken1 !== "0" && (input1.toString() !== "0" || input2.toString() !== "0") && (input1 || input2)) == true && (
         <button className={`col-12 ${s.depositButton}`} onClick={onDepositClick} disabled={validateNum.disable}>
           <span>{validateNum.message}</span>
         </button>

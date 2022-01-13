@@ -44,6 +44,14 @@ function VaultInfo(props) {
       vaultStore.strategyAddress.value.length,
     )}`;
 
+  const displayRatio = () => {
+    if (totalAmountsInDecimals[0] > totalAmountsInDecimals[1])
+      if (totalAmountsInDecimals[1] == 0) return `${truncateNumber(totalAmountsInDecimals[0], 2)}:0`;
+      else return truncateNumber(totalAmountsInDecimals[0] / totalAmountsInDecimals[1], 1) + " : 1";
+    else if (totalAmountsInDecimals[0] == 0) return `0:${truncateNumber(totalAmountsInDecimals[1], 2)}`;
+    else return "1 : " + truncateNumber(totalAmountsInDecimals[1] / totalAmountsInDecimals[0], 1);
+  };
+
   useEffect(() => {
     if (!strategyContract) {
       return;
@@ -78,11 +86,7 @@ function VaultInfo(props) {
         <p className="col-7">
           {symbolToken0} & {symbolToken1} ratio
         </p>
-        <span className="col-3">
-          {totalAmountsInDecimals[0] > totalAmountsInDecimals[1]
-            ? truncateNumber(totalAmountsInDecimals[0] / totalAmountsInDecimals[1], 1) + " : 1"
-            : "1 : " + truncateNumber(totalAmountsInDecimals[1] / totalAmountsInDecimals[0], 1)}
-        </span>
+        <span className="col-3">{displayRatio()}</span>
       </div>
       <h2>Vault positions</h2>
       <div className="row">
