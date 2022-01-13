@@ -106,8 +106,8 @@ def vault(AlphaVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, w
 def utility(AlphaVaultUtility, vault, tokens, wethToken, gov, users):
     utility = gov.deploy(AlphaVaultUtility, vault, tokens[wethToken])
     for u in users:
-        interface.IERC20(utility.token0()).approve(utility, 1<<255, {"from": u})
-        interface.IERC20(utility.token1()).approve(utility, 1<<255, {"from": u})
+        tokens[0].approve(utility, 1<<255, {"from": u})
+        tokens[1].approve(utility, 1<<255, {"from": u})
     
     yield utility
 

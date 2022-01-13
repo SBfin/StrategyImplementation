@@ -19,7 +19,8 @@ import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
 
 contract AlphaVaultUtility is 
-    ReentrancyGuard
+    ReentrancyGuard,
+    IUniswapV3SwapCallback
     {
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
@@ -142,11 +143,12 @@ contract AlphaVaultUtility is
 
     //TODO: compound and earn fees
     //TODO: deposit eth
-    //TODO: checkDeviation / add chainlink
+    //TODO: checkDeviation
     //TODO: tests - add flashloan test
     function swapDeposit(
         uint256 amount0Desired,
-        uint256 amount1Desired
+        uint256 amount1Desired,
+        address to
         )   
         external
         payable
@@ -165,26 +167,28 @@ contract AlphaVaultUtility is
             // Price is later used to compute swap amount
             (int256 amountToSwap, uint256 price, IERC20 tokenDesired) = _getSwapInputs(amount0Desired, amount1Desired);
             emit SwapInputs(amountToSwap, price);
+            require(uint256(amountToSwap) <= Math.max(amount0Desired, amount1Desired), "amountToSwap gte amountDesired");
             
             //Transfer tokenDesired
-            tokenDesired.safeTransferFrom(msg.sender, address(this), Math.max(amount0Desired, amount1Desired));
+            token0.safeTransferFrom(msg.sender, address(this), Math.max(amount0Desired, amount1Desired));
 
             // TODO: INSERT SLIPPAGE
             // Doing swaps and computing amount swapped and amounts after swaps
             (int256 amount0Swapped, int256 amount1Swapped) = _swap(amountToSwap, uint160(price));
             emit SwapAmount(amount0Desired, amount1Desired, amount0Swapped, amount1Swapped);
             
+            amount0Desired = uint256(int256(amount0Desired).sub(amount0Swapped));
+            amount1Desired = uint256(int256(amount1Desired).sub(amount1Swapped));
+            
             // TODO: compute amount0 and amount1 min now at 0
-            (shares, amount0, amount1) = alphaVault.deposit(uint256(int256(amount0Desired).sub(amount0Swapped)), 
-                                                            uint256(int256(amount1Desired).sub(amount1Swapped)), 
+            (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, 
+                                                            amount1Desired, 
+                                                            0,
                                                             0, 
-                                                            0, 
-                                                            msg.sender);
-
+                                                            to);
             // Return any remaining
-            if (amount0Desired.sub(amount0) > 0) token0.safeTransferFrom(address(this), msg.sender, amount0Desired.sub(amount0));
-            if (amount1Desired.sub(amount1) > 0) token1.safeTransferFrom(address(this), msg.sender, amount1Desired.sub(amount1));
-
+            if (amount0Desired.sub(amount0) > 0) token0.safeTransfer(msg.sender, amount0Desired.sub(amount0));
+            if (amount1Desired.sub(amount1) > 0) token1.safeTransfer(msg.sender, amount1Desired.sub(amount1));
     }
 
     function _getSwapInputs(uint256 amount0Desired, 
@@ -199,7 +203,7 @@ contract AlphaVaultUtility is
             (, tick, , , , , ) = alphaVault.pool().slot0();
             uint160 sqrtPrice = TickMath.getSqrtRatioAtTick(tick);
             
-            price = FullMath.mulDiv(uint256(sqrtPrice).mul(uint256(sqrtPrice)), 1e18, 2**(96 * 2)); //token1 / token0
+            price = FullMath.mulDiv(uint256(sqrtPrice).mul(uint256(sqrtPrice)), PRECISION, 2**(96 * 2)); //token1 / token0
             uint256 token0in1 = total0.mul(price).div(PRECISION);
             uint256 ratio = token0in1.mul(PRECISION).div(total1.add(token0in1));
             
@@ -221,6 +225,16 @@ contract AlphaVaultUtility is
                 }
     }
 
+    /// @dev Callback for Uniswap V3 pool.
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata data
+    ) external override {
+        require(msg.sender == address(alphaVault.pool()));
+        if (amount0Delta > 0) token0.safeTransfer(msg.sender, uint256(amount0Delta));
+        if (amount1Delta > 0) token1.safeTransfer(msg.sender, uint256(amount1Delta));
+    }
 
     //TODO : compute slippage
     function _swap(int256 amountToSwap, uint160 sqrtPrice) internal returns(int256 amountSwapped0, int256 amountSwapped1) {
