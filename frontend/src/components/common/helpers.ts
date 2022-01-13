@@ -17,16 +17,18 @@ export function truncateNumber(num, decimals): number {
 
 export function tickToPrice(tick, decimal0, decimal1) {
   tick = Math.abs(tick);
-  return truncateNumber(Math.pow(1.0001, tick) * Math.pow(10, -1 * Math.abs(decimal0 - decimal1)), 5);
+  return Math.pow(1.0001, tick) * Math.pow(10, -1 * Math.abs(decimal0 - decimal1));
 }
 
-export function validateNumber(token1, token2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) {
+export function validateNumber(token1, token2, symbol1, symbol2, max1, max2, min1 = MINIMUN_TOKEN, min2 = MINIMUN_TOKEN) {
   // get the number to validate, a max value (<=) and a min (>=) (if not passed, the min should be 1)
-  if (isNaN(Number(token1)) || isNaN(Number(token2)) || !(Number(token1) >= min1 && Number(token2) >= min2)) return "Insert a valid number";
+  const res = { message: "DEPOSIT", disable: true };
+  if (isNaN(Number(token1)) || isNaN(Number(token2)) || !(Number(token1) >= min1 && Number(token2) >= min2)) res.message = "Insert a valid number";
+  else if (!(Number(token1) <= max1)) res.message = "Insufficient balance of " + symbol1;
+  else if (!(Number(token2) <= max2)) res.message = "Insufficient balance of " + symbol2;
+  else res.disable = false;
 
-  if (!(Number(token1) <= max1 && Number(token2) <= max2)) return "Insufficient balance";
-
-  return false;
+  return res;
 }
 
 export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, price: number): number {
@@ -39,4 +41,8 @@ export function getSymbolToken(useEth: boolean, token: string) {
   if (token == "ETH" && !useEth) return "WETH";
   if (token == "WETH" && useEth) return "ETH";
   return token;
+}
+
+export function validateButton(account: string, allowanceToken0: boolean) {
+  return "<div>ciao</div>";
 }
