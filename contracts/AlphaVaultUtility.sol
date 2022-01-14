@@ -41,8 +41,15 @@ contract AlphaVaultUtility is
     );
 
     event SwapInputs(
+        uint amountTokenDesired,
         int amountToSwap,
+        uint ratio,
         uint price
+    );
+
+    event AmountsPostSwap(
+        uint total0,
+        uint total1
     );
 
     constructor(address _alphaVault, address wethAddress) {
@@ -166,11 +173,14 @@ contract AlphaVaultUtility is
             // Ratio is between the values, not quantity, that's why also price is returned
             // Price is later used to compute swap amount
             (int256 amountToSwap, uint256 price, IERC20 tokenDesired) = _getSwapInputs(amount0Desired, amount1Desired);
-            emit SwapInputs(amountToSwap, price);
-            require(uint256(amountToSwap) <= Math.max(amount0Desired, amount1Desired), "amountToSwap gte amountDesired");
-            
-            //Transfer tokenDesired
-            token0.safeTransferFrom(msg.sender, address(this), Math.max(amount0Desired, amount1Desired));
+            // require(uint256(amountToSwap) <= Math.max(amount0Desired, amount1Desired), "amountToSwap gte amountDesired");
+             
+            // Transfer tokenDesired
+            if (tokenDesired == token0) {
+                token0.safeTransferFrom(msg.sender, address(this), Math.max(amount0Desired, amount1Desired));
+            } else {
+                token1.safeTransferFrom(msg.sender, address(this), Math.max(amount0Desired, amount1Desired));
+            }
 
             // TODO: INSERT SLIPPAGE
             // Doing swaps and computing amount swapped and amounts after swaps
@@ -186,6 +196,7 @@ contract AlphaVaultUtility is
                                                             0,
                                                             0, 
                                                             to);
+            // (shares, amount0, amount1) = (0,0,0);
             // Return any remaining
             if (amount0Desired.sub(amount0) > 0) token0.safeTransfer(msg.sender, amount0Desired.sub(amount0));
             if (amount1Desired.sub(amount1) > 0) token1.safeTransfer(msg.sender, amount1Desired.sub(amount1));
@@ -223,6 +234,9 @@ contract AlphaVaultUtility is
                 } else {
                     amountToSwap = -int256(amountTokenDesired.sub((ratio).mul(amountTokenDesired).div(PRECISION)));
                 }
+
+            emit SwapInputs(amountTokenDesired, amountToSwap, ratio, price);
+
     }
 
     /// @dev Callback for Uniswap V3 pool.
@@ -249,6 +263,7 @@ contract AlphaVaultUtility is
             );
             amountSwapped0 = amount0;
             amountSwapped1 = amount1;
+
     }
 
 
