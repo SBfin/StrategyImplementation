@@ -41,8 +41,8 @@ function ButtonVault(props) {
     input2,
     symbolToken0,
     symbolToken1,
-    vaultStore.useEth ? ethBalance : fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
-    fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1),
+    vaultStore.useEth && symbolToken0 == "ETH" ? ethBalance : fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
+    vaultStore.useEth && symbolToken1 == "ETH" ? ethBalance : fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1),
   );
 
   const onDepositClick = async () => {
