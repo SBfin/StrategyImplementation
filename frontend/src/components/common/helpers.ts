@@ -31,10 +31,11 @@ export function validateNumber(token1, token2, symbol1, symbol2, max1, max2, min
   return res;
 }
 
-export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, price: number): number {
-  const sqrtTick = Math.sqrt(Math.pow(1.0001, price)) * Math.pow(2, 96);
-  const newprice = (sqrtTick * sqrtTick * 1e18) / Math.pow(2, 96 * 2);
-  return token1 + (token0 * newprice) / 1e18;
+export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, tick: number): string {
+  const sqrtTick = Math.sqrt(Math.pow(1.0001, tick)) * Math.pow(2, 96);
+  const price = (sqrtTick * sqrtTick * 1e18) / Math.pow(2, 96 * 2);
+  const tvl = parseFloat(token1) + (parseFloat(token0) * price) / 1e18;
+  return fromUnitsToDecimal(parseInt(tvl, 10) + "", Math.min(decimal0, decimal1));
 }
 
 export function getSymbolToken(useEth: boolean, token: string) {
