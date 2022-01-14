@@ -31,8 +31,8 @@ function VaultDeposit(props) {
   const dispatch = useDispatch();
   const { account, library, chainId } = useWeb3React();
 
-  const [input1, setInput1] = useState("");
-  const [input2, setInput2] = useState("");
+  const [input1, setInput1] = useState(0);
+  const [input2, setInput2] = useState(0);
   const [loader, setLoader] = useState(false);
   const [validate, setValidate] = useState(false);
 
