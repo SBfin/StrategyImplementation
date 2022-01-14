@@ -70,12 +70,11 @@ function ButtonVault(props) {
 
   return (
     <div className={`${s.approveDiv}`}>
-      {!account && (
+      {!account ? (
         <button className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`} onClick={() => activate(MetaMask)} disabled={isButtonDisabled}>
           Connect Wallet
         </button>
-      )}
-      {((!input1 && !input2) || (input1 == 0 && input2 == 0)) == true ? (
+      ) : ((!input1 && !input2) || (input1 == 0 && input2 == 0)) == true ? (
         <button
           className={`search-button col-12 ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
           onClick={() => console.log("invalid value")}
@@ -108,11 +107,9 @@ function ButtonVault(props) {
           APPROVE {symbolToken1}
         </button>
       ) : (
-        (tokenStore.allowanceToken0 !== "0" && tokenStore.allowanceToken1 !== "0" && (input1.toString() !== "0" || input2.toString() !== "0") && (input1 || input2)) == true && (
-          <button className={`col-12 ${s.depositButton}`} onClick={onDepositClick} disabled={validateNum.disable}>
-            <span>{validateNum.message}</span>
-          </button>
-        )
+        <button className={`col-12 ${s.depositButton}`} onClick={onDepositClick} disabled={validateNum.disable}>
+          <span>{validateNum.message}</span>
+        </button>
       )}
     </div>
   );

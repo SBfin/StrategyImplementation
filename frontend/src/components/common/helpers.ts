@@ -43,7 +43,3 @@ export function getSymbolToken(useEth: boolean, token: string) {
   if (token == "WETH" && useEth) return "ETH";
   return token;
 }
-
-export function validateButton(account: string, allowanceToken0: boolean) {
-  return "<div>ciao</div>";
-}
