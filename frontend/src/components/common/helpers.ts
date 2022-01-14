@@ -2,7 +2,7 @@ import { formatUnits } from "@ethersproject/units";
 import { ethers } from "ethers";
 import { BigNumber } from "@ethersproject/bignumber";
 
-const MINIMUN_TOKEN = 0.00001;
+const MINIMUN_TOKEN = 0;
 
 export function fromUnitsToDecimal(num, decimals): string {
   if (!num || !decimals) {
