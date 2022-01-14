@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw, vaultSlice } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken } from "../../common/helpers";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken, validateRatio } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import EthBalance from "../../common/EthBalance";
 import { useSelector, useDispatch } from "react-redux";
@@ -78,7 +78,7 @@ function VaultDeposit(props) {
             value={input1}
             onChange={(e) => {
               setInput1(e.target.value);
-              if (tokenStore.ratioToken !== 0) setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
+              if (validateRatio(tokenStore.ratioToken)) setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
             }}
           />
         </div>
@@ -99,7 +99,7 @@ function VaultDeposit(props) {
             value={input2}
             onChange={(e) => {
               setInput2(e.target.value);
-              if (tokenStore.ratioToken !== 0) setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
+              if (validateRatio(tokenStore.ratioToken)) setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
             }}
           />
         </div>

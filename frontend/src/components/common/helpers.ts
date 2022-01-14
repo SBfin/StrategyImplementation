@@ -31,6 +31,11 @@ export function validateNumber(token1, token2, symbol1, symbol2, max1, max2, min
   return res;
 }
 
+export function validateRatio(ratio) {
+  if (isFinite(ratio) && ratio !== 0 && !isNaN(ratio)) return true;
+  return false;
+}
+
 export function calculateTVL(token0: number, token1: number, decimal0: number, decimal1: number, tick: number): string {
   const sqrtTick = Math.sqrt(Math.pow(1.0001, tick)) * Math.pow(2, 96);
   const price = (sqrtTick * sqrtTick * 1e18) / Math.pow(2, 96 * 2);
