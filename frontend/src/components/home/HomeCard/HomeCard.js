@@ -1,10 +1,13 @@
 import s from "./HomeCard.module.css";
 import { Link } from "react-router-dom";
 import Loader from "../../loader/Loader";
-import { truncateNumber } from "../../common/helpers";
+import { truncateNumber, getSymbolToken } from "../../common/helpers";
 
 export function HomeCard(props) {
   const { tokenData, tokensDetails } = props;
+
+  const symbolToken0 = getSymbolToken(true, tokenData?.token0);
+  const symbolToken1 = getSymbolToken(true, tokenData?.token1);
 
   return (
     <div className={`card ${s.root}`}>
@@ -16,7 +19,7 @@ export function HomeCard(props) {
             </p>
             <hr />
             <h5 className="card-title">
-              {tokenData.token0} / {tokenData.token1}
+              {symbolToken0} / {symbolToken1}
             </h5>
             <hr className="mb-3" />
             <h6 className="card-subtitle mb-2">TVL</h6>

@@ -36,14 +36,7 @@ function VaultBalance(props) {
       </p>
       <hr />
       <p>
-        Value{" "}
-        <span>
-          $
-          {truncateNumber(
-            calculateTVL(vaultStore.totalAmounts.value[0], vaultStore.totalAmounts.value[1], tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.price.value),
-            2,
-          )}
-        </span>
+        Value <span>${truncateNumber(calculateTVL(userToken0, userToken1, tokenStore.decimalsToken0, tokenStore.decimalsToken1, strategyStore.tick.value), 2)}</span>
       </p>
       <hr />
     </div>

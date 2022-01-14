@@ -1,13 +1,14 @@
 import { useState, useEffect } from "react";
 import { connect } from "react-redux";
 import { Deposit, Withdraw, vaultSlice } from "../../common/vault";
-import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken } from "../../common/helpers";
+import { fromUnitsToDecimal, validateNumber, truncateNumber, FetchContract, getSymbolToken, validateRatio } from "../../common/helpers";
 import { TokenBalance, Token, fetchActionsToken, tokenSlice, fetchAllToken, GetToken } from "../../common/TokenBalance";
 import EthBalance from "../../common/EthBalance";
 import { useSelector, useDispatch } from "react-redux";
 import Loader from "../../loader/Loader";
 import { useWeb3React } from "@web3-react/core";
 import s from "./VaultDeposit.module.css";
+import ButtonVault from "../ButtonVault/ButtonVault";
 
 const mapState = (state) => ({
   tokenStore: state.token,
@@ -30,12 +31,10 @@ function VaultDeposit(props) {
   const dispatch = useDispatch();
   const { account, library, chainId } = useWeb3React();
 
-  const [input1, setInput1] = useState("");
-  const [input2, setInput2] = useState("");
-  const [disable, setDisable] = useState(true);
-  const [messageError, setMessageError] = useState("DEPOSIT");
+  const [input1, setInput1] = useState(0);
+  const [input2, setInput2] = useState(0);
   const [loader, setLoader] = useState(false);
-  const isButtonDisabled = props.fetching;
+  const [validate, setValidate] = useState(false);
 
   const onDepositClick = async () => {
     setLoader(true);
@@ -79,19 +78,7 @@ function VaultDeposit(props) {
             value={input1}
             onChange={(e) => {
               setInput1(e.target.value);
-              setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
-              const validate = validateNumber(
-                e.target.value,
-                e.target.value / tokenStore.ratioToken,
-                fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
-                fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1),
-              );
-              if (validate) {
-                setDisable(true);
-                setMessageError(validate);
-              } else {
-                setDisable(false);
-              }
+              if (validateRatio(tokenStore.ratioToken)) setInput2(truncateNumber(e.target.value / tokenStore.ratioToken, 5));
             }}
           />
         </div>
@@ -112,19 +99,7 @@ function VaultDeposit(props) {
             value={input2}
             onChange={(e) => {
               setInput2(e.target.value);
-              setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
-              const validate = validateNumber(
-                e.target.value * tokenStore.ratioToken,
-                e.target.value,
-                fromUnitsToDecimal(tokenStore.balanceToken0, tokenStore.decimalsToken0),
-                fromUnitsToDecimal(tokenStore.balanceToken1, tokenStore.decimalsToken1),
-              );
-              if (validate) {
-                setDisable(true);
-                setMessageError(validate);
-              } else {
-                setDisable(false);
-              }
+              if (validateRatio(tokenStore.ratioToken)) setInput1(truncateNumber(e.target.value * tokenStore.ratioToken, 5));
             }}
           />
         </div>
@@ -143,34 +118,7 @@ function VaultDeposit(props) {
         <p className={`${s.note}`}>Note thet the deposits are in the same ratio as the vault’s current holdings and are therefore not necessarely in a 1:1 ratio.</p>
       </div>
 
-      <div className={`${s.approveDiv}`}>
-        {tokenStore.allowanceToken0 === "0" && (
-          <button
-            className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
-            onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token0Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken0(r.payload)))}
-            disabled={isButtonDisabled}
-          >
-            APPROVE {tokenStore.symbolToken0}
-          </button>
-        )}
-        {tokenStore.allowanceToken1 === "0" ? (
-          <button
-            className={`search-button ${isButtonDisabled ? "search-button-clicked" : ""} ${s.approveButton}`}
-            onClick={() => dispatch(fetchActionsToken.approve({ vault, contract: token1Contract })).then((r) => dispatch(tokenSlice.actions.allowanceToken1(r.payload)))}
-            disabled={isButtonDisabled}
-          >
-            APPROVE {tokenStore.symbolToken1}
-          </button>
-        ) : (
-          tokenStore.allowanceToken0 !== "0" &&
-          tokenStore.allowanceToken1 !== "0" && (
-            <button className={`col-12 ${s.depositButton}`} onClick={onDepositClick} disabled={disable}>
-              {disable && <span>{messageError}</span>}
-              {!disable && <span>DEPOSIT</span>}
-            </button>
-          )
-        )}
-      </div>
+      <ButtonVault vault={vault} input1={input1} input2={input2} validate={validate} />
       {loader && (
         <div style={{ textAlign: "center", width: "100%" }}>
           <Loader />

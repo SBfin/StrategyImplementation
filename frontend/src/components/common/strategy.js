@@ -10,6 +10,10 @@ const initialState = {
     value: 0,
     status: "idle",
   },
+  tick: {
+    value: 0,
+    status: "idle",
+  },
 };
 
 export const fetchActionsStrategy = {
@@ -18,6 +22,11 @@ export const fetchActionsStrategy = {
     const tickValue = await strategy.getTick();
     const price = tickToPrice(tickValue, decimals0, decimals1).toString();
     return truncateNumber(1 / price, 2);
+  }),
+  tick: createAsyncThunk("strategy/fetchTick", async (data) => {
+    const { strategy } = data;
+    const tickValue = await strategy.getTick();
+    return tickValue;
   }),
 };
 
@@ -33,6 +42,14 @@ export const strategySlice = createSlice({
       .addCase(fetchActionsStrategy.price.fulfilled, (state, action) => {
         state.price.status = "idle";
         state.price.value = action.payload;
+      })
+
+      .addCase(fetchActionsStrategy.tick.pending, (state) => {
+        state.tick.status = "loading";
+      })
+      .addCase(fetchActionsStrategy.tick.fulfilled, (state, action) => {
+        state.tick.status = "idle";
+        state.tick.value = action.payload;
       });
   },
 });
