@@ -13,7 +13,7 @@ from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialSca
 # Depositing [1, 0] --> this will fail as this quantity cannot be swapped to reach the ratio (amount0Desired or amount1Desired will be 0)
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
-    [[0, 1e15], [1e18, 0]]
+    [[0, 1e15], [1e18, 0], [1e12, 1e16]]
 )
 def test_deposit(
     utility,
