@@ -12,8 +12,8 @@ from brownie.network.gas.strategies import GasNowScalingStrategy, ExponentialSca
 # Note that swapping modifies total amounts in the pools
 # Depositing [1, 0] --> this will fail as this quantity cannot be swapped to reach the ratio (amount0Desired or amount1Desired will be 0)
 @pytest.mark.parametrize(
-    "amount0Desired,amount1Desired",
-    [[0, 1e15], [1e18, 0], [1e12, 1e16]]
+    "amount0Desired,amount1Desired, msg_value",
+    [[0, 1e15, 0], [1e18, 0, 0], [1e12, 1e16, 0], [0, 0, 1e12]]
 )
 def test_deposit(
     utility,
@@ -23,7 +23,8 @@ def test_deposit(
     user,
     recipient,
     amount0Desired,
-    amount1Desired
+    amount1Desired,
+    msg_value
 ):
 
     vault = vaultAfterPriceMove
@@ -38,7 +39,7 @@ def test_deposit(
     print(balance1)
 
     # Swap deposit
-    tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, 1e5, {"from" : user})
+    tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, 1e5, {"from" : user, "value" : msg_value})
     shares, amount0, amount1 = tx.return_value
     print(tx.events)
 

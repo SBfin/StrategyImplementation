@@ -168,10 +168,20 @@ contract AlphaVaultUtility is
             uint256 amount1
         )
         {
-            require(amount0Desired > 0 || amount1Desired > 0, "At least one amount has to be gt 0");
-            
+            // User can invest ETH, WETH or the other token
+            require(amount0Desired > 0 || amount1Desired > 0 || msg.value > 0, "At least one amount has to be gt 0");
             // Prevents slippage to be > 50%
             require(priceImpactPercentage < 1e6 && priceImpactPercentage > 0, "PIP");
+
+            // User cannot deposit both ETH and WETH
+            if (msg.value > 0) {
+                if (token0IsWeth) {
+                    require(amount0Desired == 0);
+                    amount0Desired = msg.value; 
+                } else {
+                    require(amount1Desired == 0);
+                    amount1Desired = msg.value;
+            }
 
             // Calculate amounts proportional to vault's holdings
             // Ratio is between the values, not quantity, that's why also price is returned
@@ -179,8 +189,13 @@ contract AlphaVaultUtility is
             (int256 amountToSwap, uint160 sqrtPriceLimitX96) = _getSwapInputs(amount0Desired, amount1Desired, priceImpactPercentage);
              
             // Transfer tokensDesired
-            if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
-            if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+            // Pull in tokens from sender
+            if (msg.value > 0) IWETH9(weth).deposit{value: (token0IsWeth ? amount0Desired : amount1Desired) }();
+            if (token0IsWeth) {
+                if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+                } else { 
+                if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+            }
 
             (int256 amount0Swapped, int256 amount1Swapped) = _swap(amountToSwap, sqrtPriceLimitX96);
             emit SwapAmount(amount0Desired, amount1Desired, amount0Swapped, amount1Swapped);
@@ -190,20 +205,19 @@ contract AlphaVaultUtility is
             amount0Desired = uint256(int256(amount0Desired).sub(amount0Swapped));
             amount1Desired = uint256(int256(amount1Desired).sub(amount1Swapped));
             
-            (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, 
-                                                            amount1Desired, 
+            (shares, amount0, amount1) = alphaVault.deposit(amount0Desired,
+                                                            amount1Desired,
                                                             0,
-                                                            0, 
+                                                            0,
                                                             to);
             // Return any remaining
+            // TODO insert logi to give ETH back
             if (amount0Desired.sub(amount0) > 0) token0.safeTransfer(msg.sender, amount0Desired.sub(amount0));
             if (amount1Desired.sub(amount1) > 0) token1.safeTransfer(msg.sender, amount1Desired.sub(amount1));
-
+    
     }
 
-    function _getSwapInputs(uint256 amount0Desired, 
-                            uint256 amount1Desired,
-                            uint24  priceImpactPercentage) 
+    function _getSwapInputs(uint256 amount0Desired, uint256 amount1Desired, uint24 priceImpactPercentage) 
                             internal 
                             returns(int256 amountToSwap, 
                                     uint160 sqrtPriceLimitX96) {
