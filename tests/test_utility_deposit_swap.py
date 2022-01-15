@@ -38,9 +38,7 @@ def test_deposit(
     print(balance1)
 
     # Swap deposit
-    tx = utility._getSwapInputs(amount0Desired, amount1Desired, 1e1, {"from" : user})
-    print(tx.events)
-    tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, 1e6-1, {"from" : user})
+    tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, 1e5, {"from" : user})
     shares, amount0, amount1 = tx.return_value
     print(tx.events)
 

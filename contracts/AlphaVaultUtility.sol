@@ -36,6 +36,10 @@ contract AlphaVaultUtility is
     IERC20 public immutable token1;
     uint256 public immutable PRECISION = 1e18;
     
+    event SwapCheck(
+        uint sqrtPriceLimitX96
+    );
+
     event SwapAmount(
         uint amount0Desired,
         uint amount1Desired,
@@ -48,7 +52,10 @@ contract AlphaVaultUtility is
         int amountToSwap,
         uint ratio,
         uint price,
-        uint sqrtPriceLimitX96
+        uint sqrtPriceX96,
+        uint sqrtPriceLimitX96,
+        uint minRatio,
+        uint maxRatio
     );
 
     event AmountsPostSwap(
@@ -173,12 +180,12 @@ contract AlphaVaultUtility is
         {
             require(amount0Desired > 0 || amount1Desired > 0, "At least one amount has to be gt 0");
             require(amount0Desired == 0 || amount1Desired == 0, "At least one amount has to be eq 0");
-            require(priceImpactPercentage < 1e6 && priceImpactPercentage > 0, "PIP");
+            // require(priceImpactPercentage < 1e6 && priceImpactPercentage > 0, "PIP");
 
             // Calculate amounts proportional to vault's holdings
             // Ratio is between the values, not quantity, that's why also price is returned
             // Price is later used to compute swap amount
-            (int256 amountToSwap, uint256 price, uint160 sqrtPriceLimitX96) = _getSwapInputs(amount0Desired, amount1Desired, priceImpactPercentage);
+            (int256 amountToSwap, uint160 sqrtPriceLimitX96) = _getSwapInputs(amount0Desired, amount1Desired, priceImpactPercentage);
             // require(uint256(amountToSwap) <= Math.max(amount0Desired, amount1Desired), "amountToSwap gte amountDesired");
              
             // Transfer tokenDesired
@@ -203,6 +210,7 @@ contract AlphaVaultUtility is
             // Return any remaining
             if (amount0Desired.sub(amount0) > 0) token0.safeTransfer(msg.sender, amount0Desired.sub(amount0));
             if (amount1Desired.sub(amount1) > 0) token1.safeTransfer(msg.sender, amount1Desired.sub(amount1));
+
     }
 
     function _getSwapInputs(uint256 amount0Desired, 
@@ -210,7 +218,6 @@ contract AlphaVaultUtility is
                             uint24  priceImpactPercentage) 
                             public 
                             returns(int256 amountToSwap, 
-                                    uint256 price,
                                     uint160 sqrtPriceLimitX96) {
             (uint256 total0, uint256 total1) = alphaVault.getTotalAmounts();
             
@@ -218,7 +225,7 @@ contract AlphaVaultUtility is
             (, tick, , , , , ) = alphaVault.pool().slot0();
             uint160 sqrtPriceX96 = TickMath.getSqrtRatioAtTick(tick);
             
-            price = FullMath.mulDiv(uint256(sqrtPriceX96).mul(uint256(sqrtPriceX96)), PRECISION, 2**(96 * 2)); //token1 / token0
+            uint256 price = FullMath.mulDiv(uint256(sqrtPriceX96).mul(uint256(sqrtPriceX96)), PRECISION, 2**(96 * 2)); //token1 / token0
             uint256 token0in1 = total0.mul(price).div(PRECISION);
             uint256 ratio = token0in1.mul(PRECISION).div(total1.add(token0in1));
             
@@ -239,10 +246,10 @@ contract AlphaVaultUtility is
             }
 
             // 1e6 GLOBAL_DIVISIONER
-            uint160 exactSqrtPriceImpact = sqrtPriceX96.mul160(priceImpactPercentage / 2) / 1e18;
-            uint160 sqrtPriceLimitX96 = (amountToSwap > 0) ?  sqrtPriceX96.sub160(exactSqrtPriceImpact) : sqrtPriceX96.add160(exactSqrtPriceImpact);
+            uint160 exactSqrtPriceImpact = sqrtPriceX96.mul160(priceImpactPercentage / 2) / 1e6;
+            sqrtPriceLimitX96 = (amountToSwap > 0) ?  sqrtPriceX96.sub160(exactSqrtPriceImpact) : sqrtPriceX96.add160(exactSqrtPriceImpact);
 
-            emit SwapInputs(amountTokenDesired, amountToSwap, ratio, price, sqrtPriceLimitX96);
+            emit SwapInputs(amountTokenDesired, amountToSwap, ratio, price, sqrtPriceX96, sqrtPriceLimitX96, TickMath.MIN_SQRT_RATIO, TickMath.MAX_SQRT_RATIO);
     }    
 
     /// @dev Callback for Uniswap V3 pool.
@@ -257,14 +264,13 @@ contract AlphaVaultUtility is
     }
 
     //TODO : compute slippage
-    function _swap(int256 amountToSwap, uint160 sqrtPrice) internal returns(int256 amountSwapped0, int256 amountSwapped1) {
+    function _swap(int256 amountToSwap, uint160 sqrtPriceLimitX96) public returns(int256 amountSwapped0, int256 amountSwapped1) {
+            
             (int256 amount0, int256 amount1) = alphaVault.pool().swap(
                 address(this),
                 amountToSwap > 0,
                 amountToSwap > 0 ? amountToSwap : -amountToSwap,
-                sqrtPrice,
-                //? sqrtPriceLimitX96 < slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 > TickMath.MIN_SQRT_RATIO
-                //: sqrtPriceLimitX96 > slot0Start.sqrtPriceX96 && sqrtPriceLimitX96 < TickMath.MAX_SQRT_RATIO, 
+                sqrtPriceLimitX96,
                 ""
             );
             amountSwapped0 = amount0;
