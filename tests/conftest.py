@@ -38,7 +38,7 @@ def router(TestRouter, gov):
 
 @pytest.fixture(scope="module")
 def wethToken():
-    wethToken = int(bool(random.getrandbits(1)))
+    wethToken = 0 #int(bool(random.getrandbits(1)))
     yield wethToken
 
 

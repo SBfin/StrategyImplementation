@@ -176,11 +176,12 @@ contract AlphaVaultUtility is
             // User cannot deposit both ETH and WETH
             if (msg.value > 0) {
                 if (token0IsWeth) {
-                    require(amount0Desired == 0);
+                    require(amount0Desired == 0, "Both WETH and ETH");
                     amount0Desired = msg.value; 
                 } else {
-                    require(amount1Desired == 0);
+                    require(amount1Desired == 0, "Both WETH and ETH");
                     amount1Desired = msg.value;
+                }
             }
 
             // Calculate amounts proportional to vault's holdings
@@ -190,10 +191,15 @@ contract AlphaVaultUtility is
              
             // Transfer tokensDesired
             // Pull in tokens from sender
-            if (msg.value > 0) IWETH9(weth).deposit{value: (token0IsWeth ? amount0Desired : amount1Desired) }();
-            if (token0IsWeth) {
+            if (msg.value > 0) {
+                IWETH9(weth).deposit{value: (token0IsWeth ? amount0Desired : amount1Desired) }();
+                if (token0IsWeth) {
+                    if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+                    } else { 
+                    if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+                }
+            } else {
                 if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
-                } else { 
                 if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
             }
 
@@ -256,13 +262,11 @@ contract AlphaVaultUtility is
     }    
 
     function _getRatioAndSqrtPriceX96() internal view returns(uint256 ratio, uint160 sqrtPriceX96) {
-
             (uint256 total0, uint256 total1) = alphaVault.getTotalAmounts();
             (sqrtPriceX96, , , , , , ) = alphaVault.pool().slot0();
             uint256 price = FullMath.mulDiv(uint256(sqrtPriceX96).mul(uint256(sqrtPriceX96)), PRECISION, 2**(96 * 2)); //token1 / token0
             uint256 token0in1 = total0.mul(price).div(PRECISION);
             ratio = token0in1.mul(PRECISION).div(total1.add(token0in1));
-
             }
 
     /// @dev Callback for Uniswap V3 pool.
