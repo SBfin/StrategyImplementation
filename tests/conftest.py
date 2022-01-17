@@ -68,7 +68,8 @@ def pool(MockToken, router, pm, gov, users):
 
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
-    router.mint(pool, -max_tick, max_tick, 1e16, {"from": gov})
+    
+    router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
 
     # Increase cardinality and fast forward so TWAP works
     pool.increaseObservationCardinalityNext(100, {"from": gov})
@@ -87,7 +88,6 @@ def vault(AlphaVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, w
     # protocolFee = 10000 (1%)
     # maxTotalSupply = 100e18 (100 tokens)
     vault = gov.deploy(AlphaVault, pool, 10000, 100e18)
-    
     
     for u in users:
         tokens[0].approve(vault, 100e18, {"from": u})
@@ -208,7 +208,6 @@ def createPoolVaultStrategy(
         # Increase cardinality and fast forward so TWAP works
         pool.increaseObservationCardinalityNext(100, {"from": gov})
         chain.sleep(3600)
-        
         
         vault = gov.deploy(AlphaVault, pool, 10000, 100e18)
 

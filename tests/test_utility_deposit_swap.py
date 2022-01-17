@@ -12,15 +12,15 @@ def getPrice(pool):
 # Base case
 # 1) Both tokens in vault
 # 2) Depositing only one token
-# 3) User does not invest eth
 # Note that swapping modifies total amounts in the pools
 # Depositing [1, 0] --> this will fail as this quantity cannot be swapped to reach the ratio (amount0Desired or amount1Desired will be 0)
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
-    [[0, 1e15, 0], [1e3, 0, 0], [1e12, 1e16, 0], [0, 0, 1e12], [0, 1e5, 1e10]]
+    [[0, 1e15, 0], [1e18, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12], [0, 1e5, 1e10]]
 )
 def test_deposit(
     utility,
+    router,
     vaultAfterPriceMove,
     tokens,
     pool,
@@ -32,24 +32,27 @@ def test_deposit(
     msg_value
 ):
 
+    # Adding liquidity to the pool to insure swap amount is consistent
+    max_tick = 400000 // 60 * 60
+    router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
+
     vault = vaultAfterPriceMove
-    slippage_param = 1e4
+    slippage_param = 1e5
 
     # Saving state before swap deposit
-    balance0 = tokens[0].balanceOf(user)      
-    balance1 = tokens[1].balanceOf(user)      
-    balance_eth = user.balance()
-    totalSupply = vault.totalSupply()
     total0, total1 = vault.getTotalAmounts()
+
+    print("total0 ", total0)
+    print("total1 ", total1)
 
     # Get price
     price = getPrice(pool)
+    print(price)
 
     # Swap deposit
     tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, slippage_param, {"from" : user, "value" : msg_value})
     shares, amount0, amount1 = tx.return_value
     print(tx.events)
-
     value_deposited = amount0Desired*price + amount1Desired if msg_value == 0 else msg_value*price + amount1Desired
     value_in_vault  = total0*price + total1
     
@@ -65,14 +68,6 @@ def test_deposit(
 
     # Check paid right amount of tokens or eths
     # Balance after - balance before
-    '''
-    if amount0Desired > 0:
-        assert tokens[0].balanceOf(user) == balance0 - amount0
-    if amount1Desired > 0:
-        assert tokens[1].balanceOf(user) == balance1 - amount1Desired
-    if msg_value      > 0:
-        assert msg_value                 == balance_eth - user.balance()
-    '''
 
     # Check event
     dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]

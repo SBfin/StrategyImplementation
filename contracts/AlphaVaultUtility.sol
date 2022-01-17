@@ -49,9 +49,7 @@ contract AlphaVaultUtility is
         int amountToSwap,
         uint ratio,
         uint sqrtPriceX96,
-        uint sqrtPriceLimitX96,
-        uint minRatio,
-        uint maxRatio
+        uint sqrtPriceLimitX96
     );
 
 
@@ -199,7 +197,6 @@ contract AlphaVaultUtility is
             // this should be very close to amount held in vault
             amount0Desired = uint256(int256(amount0Desired).sub(amount0Swapped));
             amount1Desired = uint256(int256(amount1Desired).sub(amount1Swapped));
-            
             (shares, amount0, amount1) = alphaVault.deposit(amount0Desired,
                                                             amount1Desired,
                                                             0,
@@ -245,8 +242,8 @@ contract AlphaVaultUtility is
             uint160 exactSqrtPriceImpact = sqrtPriceX96.mul160(priceImpactPercentage / 2) / 1e6;
             sqrtPriceLimitX96 = (token0Desired) ?  sqrtPriceX96.sub160(exactSqrtPriceImpact) : sqrtPriceX96.add160(exactSqrtPriceImpact);
 
-            emit SwapInputs(amountTokenDesired, amountToSwap, ratio, sqrtPriceX96, sqrtPriceLimitX96, TickMath.MIN_SQRT_RATIO, TickMath.MAX_SQRT_RATIO);
-    }    
+            emit SwapInputs(amountTokenDesired, amountToSwap, ratio, sqrtPriceX96, sqrtPriceLimitX96);
+    }
 
     function _getRatioAndSqrtPriceX96() internal view returns(uint256 ratio, uint160 sqrtPriceX96) {
             (uint256 total0, uint256 total1) = alphaVault.getTotalAmounts();
