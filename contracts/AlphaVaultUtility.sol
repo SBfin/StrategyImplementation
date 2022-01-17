@@ -29,13 +29,13 @@ contract AlphaVaultUtility is
     using SignedSafeMath for int256;
     using LowGasSafeMath for uint160;
 
-    address public immutable weth;
+    IWETH9 public immutable weth;
     AlphaVault public immutable alphaVault;
     bool token0IsWeth;
     IERC20 public immutable token0;
     IERC20 public immutable token1;
     uint256 public immutable PRECISION = 1e18;
-    
+
 
     event SwapAmount(
         uint amount0Desired,
@@ -58,7 +58,7 @@ contract AlphaVaultUtility is
 
     constructor(address _alphaVault, address wethAddress) {
             alphaVault = AlphaVault(_alphaVault);
-            weth = wethAddress;
+            weth = IWETH9(wethAddress);
             IUniswapV3Pool pool = AlphaVault(_alphaVault).pool();
             token0IsWeth = pool.token0() == wethAddress;
 
@@ -109,7 +109,7 @@ contract AlphaVaultUtility is
         ( , amount0, amount1) = alphaVault._calcSharesAndAmounts(amount0Desired, amount1Desired);
 
         // Pull in tokens from sender
-        IWETH9(weth).deposit{value: (token0IsWeth ? amount0 : amount1) }();
+        weth.deposit{value: (token0IsWeth ? amount0 : amount1) }();
         if (msg.value >  (token0IsWeth ? amount0 : amount1) ) safeTransferETH(msg.sender, msg.value - (token0IsWeth ? amount0 : amount1));
 
         if (token0IsWeth) {
@@ -139,14 +139,14 @@ contract AlphaVaultUtility is
         if (token0IsWeth) {
             if (amount1 > 0) token1.safeTransfer(to, amount1);
             if (amount0 > 0) {
-                IWETH9(weth).withdraw(amount0);
+                weth.withdraw(amount0);
                 safeTransferETH(to, amount0);
             }
         }
         else { 
             if (amount0 > 0) token0.safeTransfer(to, amount0);
             if (amount1 > 0) {
-                IWETH9(weth).withdraw(amount1);
+                weth.withdraw(amount1);
                 safeTransferETH(to, amount1);
             }
         }
@@ -191,18 +191,8 @@ contract AlphaVaultUtility is
              
             // Transfer tokensDesired
             // Pull in tokens from sender
-            if (msg.value > 0) {
-                IWETH9(weth).deposit{value: (token0IsWeth ? amount0Desired : amount1Desired) }();
-                if (token0IsWeth) {
-                    if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
-                    } else { 
-                    if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
-                }
-            } else {
-                if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
-                if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
-            }
-
+            _pull(amount0Desired, amount1Desired, msg.value);
+            
             (int256 amount0Swapped, int256 amount1Swapped) = _swap(amountToSwap, sqrtPriceLimitX96);
             emit SwapAmount(amount0Desired, amount1Desired, amount0Swapped, amount1Swapped);
             
@@ -217,10 +207,10 @@ contract AlphaVaultUtility is
                                                             0,
                                                             to);
             // Return any remaining
-            // TODO insert logi to give ETH back
-            if (amount0Desired.sub(amount0) > 0) token0.safeTransfer(msg.sender, amount0Desired.sub(amount0));
-            if (amount1Desired.sub(amount1) > 0) token1.safeTransfer(msg.sender, amount1Desired.sub(amount1));
-    
+            // TODO insert logic to give ETH back
+            // diff0 = amount0Desired.sub(amount0), diff1 = amount1Desired.sub(amount1)
+            if (Math.max(amount0Desired.sub(amount0), amount1Desired.sub(amount1)) > 0) _giveBack(amount0Desired.sub(amount0), amount1Desired.sub(amount1), msg.value);
+            
     }
 
     function _getSwapInputs(uint256 amount0Desired, uint256 amount1Desired, uint24 priceImpactPercentage) 
@@ -268,6 +258,38 @@ contract AlphaVaultUtility is
             uint256 token0in1 = total0.mul(price).div(PRECISION);
             ratio = token0in1.mul(PRECISION).div(total1.add(token0in1));
             }
+
+    function _pull(uint256 amount0Desired, uint256 amount1Desired, uint256 value) internal {
+        
+        if (value > 0) {
+                weth.deposit{value: (token0IsWeth ? amount0Desired : amount1Desired) }();
+                if (token0IsWeth) {
+                    if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+                    } else { 
+                    if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+                }
+            } else {
+                if (amount1Desired > 0) token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
+                if (amount0Desired > 0) token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+            }
+
+    }
+
+    function _giveBack(uint256 diff0, uint256 diff1, uint256 value) internal {
+            
+            if (value == 0) {
+                if (diff0 > 0) token0.safeTransfer(msg.sender, diff0);
+                if (diff1 > 0) token1.safeTransfer(msg.sender, diff1);
+            } else {
+                if (value >  (token0IsWeth ? diff0 : diff1 )) {
+                    weth.withdraw(token0IsWeth ? diff0 : diff1);
+                    safeTransferETH(msg.sender, (token0IsWeth ? diff0 : diff1));
+                } else {
+                    (token0IsWeth ? token1 : token0).safeTransfer(msg.sender, Math.max(diff0, diff1));
+                }
+            }
+
+    }
 
     /// @dev Callback for Uniswap V3 pool.
     function uniswapV3SwapCallback(
