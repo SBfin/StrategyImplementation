@@ -277,16 +277,17 @@ contract AlphaVaultUtility is
 
     function _giveBack(uint256 diff0, uint256 diff1, uint256 value) internal {
             
-            if (value == 0) {
-                if (diff0 > 0) token0.safeTransfer(msg.sender, diff0);
-                if (diff1 > 0) token1.safeTransfer(msg.sender, diff1);
-            } else {
+            if (value > 0) {
                 if (value >  (token0IsWeth ? diff0 : diff1 )) {
                     weth.withdraw(token0IsWeth ? diff0 : diff1);
                     safeTransferETH(msg.sender, (token0IsWeth ? diff0 : diff1));
                 } else {
                     (token0IsWeth ? token1 : token0).safeTransfer(msg.sender, Math.max(diff0, diff1));
                 }
+                
+            } else {
+                if (diff0 > 0) token0.safeTransfer(msg.sender, diff0);
+                if (diff1 > 0) token1.safeTransfer(msg.sender, diff1);
             }
 
     }
