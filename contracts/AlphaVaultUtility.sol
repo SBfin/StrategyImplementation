@@ -115,7 +115,6 @@ contract AlphaVaultUtility is
         else { 
             token0.safeTransferFrom(msg.sender, address(this), amount0);
         }
-        
         //Deposit in AlphaVault
         (shares, amount0, amount1) = alphaVault.deposit(amount0Desired, amount1Desired, amount0Min, amount1Min, to);
     }
@@ -204,7 +203,6 @@ contract AlphaVaultUtility is
                                                             to);
             // Return any remaining
             if (Math.max(amount0Desired.sub(amount0), amount1Desired.sub(amount1)) > 0) _giveBack(amount0Desired.sub(amount0), amount1Desired.sub(amount1), msg.value);
-            
     }
 
     function _getSwapInputs(uint256 amount0Desired, uint256 amount1Desired, uint24 priceImpactPercentage) 

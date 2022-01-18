@@ -11,9 +11,10 @@ def getPrice(pool):
 # test deposit swap
 # Base case
 # 1) Both tokens in vault
-# 2) Depositing only one token
-# Note that swapping modifies total amounts in the pools
+# 2) Depositing multiple tokens
+# 3) Depositing with WETH / ETH
 # Depositing [1, 0] --> this will fail as this quantity cannot be swapped to reach the ratio (amount0Desired or amount1Desired will be 0)
+# Low quantity swaps
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
     [[0, 1e15, 0], [1e18, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12], [0, 1e5, 1e10]]
@@ -78,4 +79,16 @@ def test_deposit(
         "amount0": amount0,
         "amount1": amount1,
     }
-    
+
+def test_deposit_checks(vault, user, recipient, utility):
+    tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user})
+    shares, _, _ = tx.return_value
+
+    with reverts("At least one amount has to be gt 0"):
+        utility.swapDeposit(0, 0, recipient, 1e4, {"from": user})
+
+    with reverts("PIP"):
+        utility.swapDeposit(0, 1e2, recipient, 1e6+1,  {"from": user})
+
+    with reverts("Both WETH and ETH"):
+        utility.swapDeposit(1e4, 0, recipient, 1e3, {"from" : user, "value" : 1e2})
