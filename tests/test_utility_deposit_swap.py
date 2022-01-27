@@ -17,7 +17,7 @@ def getPrice(pool):
 # Low quantity swaps
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
-    [[0, 1e15, 0], [1e18, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12], [0, 1e5, 1e10]]
+    [[0, 1e15, 0]]#, [1e18, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12], [0, 1e5, 1e10]]
 )
 def test_deposit(
     utility,
@@ -43,9 +43,6 @@ def test_deposit(
     # Saving state before swap deposit
     total0, total1 = vault.getTotalAmounts()
 
-    print("total0 ", total0)
-    print("total1 ", total1)
-
     # Get price
     price = getPrice(pool)
     print(price)
@@ -53,7 +50,7 @@ def test_deposit(
     # Swap deposit
     tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, slippage_param, {"from" : user, "value" : msg_value})
     shares, amount0, amount1 = tx.return_value
-    print(tx.events)
+    print(tx.info())
     value_deposited = amount0Desired*price + amount1Desired if msg_value == 0 else msg_value*price + amount1Desired
     value_in_vault  = total0*price + total1
     
@@ -69,7 +66,7 @@ def test_deposit(
 
     # Check paid right amount of tokens or eths
     # Balance after - balance before
-
+    
     # Check event
     dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
     assert dct == {
