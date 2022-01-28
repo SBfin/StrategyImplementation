@@ -42,13 +42,31 @@ def test_deposit(
 
     # Saving state before swap deposit
     total0, total1 = vault.getTotalAmounts()
+    
 
     # Get price
     price = getPrice(pool)
+    valueInVault = total0*price + total1
+    valueToDeposit = amount0Desired*price + amount1Desired + msg_value
+    qRatio = total0 / total1
+    #depositRatio = amount0Desired / amount1Desired
+
     print(price)
 
+    # Compute amount to swap
+
+
     # Swap deposit
-    tx = utility.swapDeposit(amount0Desired, amount1Desired, recipient, slippage_param, {"from" : user, "value" : msg_value})
+    """
+    uint256 amount0Desired,
+    uint256 amount1Desired,
+    int256  amountToSwap,
+    uint160 sqrtPriceLimitX96,
+    address to,
+    address vault
+    """
+
+    tx = utility.swapDeposit(amount0Desired, amount1Desired, amountToSwap, sqrtPriceLimitX96, recipient, vault.address, {"from" : user, "value" : msg_value})
     shares, amount0, amount1 = tx.return_value
     print(tx.info())
     value_deposited = amount0Desired*price + amount1Desired if msg_value == 0 else msg_value*price + amount1Desired

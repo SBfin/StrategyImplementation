@@ -69,7 +69,7 @@ def pool(MockToken, router, pm, gov, users):
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
     
-    router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
+    router.mint(pool, -max_tick, max_tick, 1e16, {"from": gov})
 
     # Increase cardinality and fast forward so TWAP works
     pool.increaseObservationCardinalityNext(100, {"from": gov})
@@ -104,7 +104,7 @@ def vault(AlphaVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, w
 
 @pytest.fixture
 def utility(AlphaVaultUtility, vault, tokens, wethToken, gov, users):
-    utility = gov.deploy(AlphaVaultUtility, vault, tokens[wethToken])
+    utility = gov.deploy(AlphaVaultUtility, tokens[wethToken])
     for u in users:
         tokens[0].approve(utility, 1<<255, {"from": u})
         tokens[1].approve(utility, 1<<255, {"from": u})
