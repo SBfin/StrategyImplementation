@@ -11,17 +11,23 @@ def getPrice(pool):
 # simulate frontend logic
 def compute_amount_to_swap(amount0, amount1, pool, vault):
     total0, total1 = vault.getTotalAmounts()
-    price = getPrice(pool)
-    ratio = total0*price / (total0*price + total1)
+    price = (getPrice(pool))
+    print("price ", price)
+    ratio = (total0*price / (total0*price + total1))
+    print("ratio ", ratio)
     # Single token case
     if amount0 * amount1 == 0:
-        amountToSwap = ratio*max(amount0, amount1) if amount0 > amount1 else (1 - ratio)*max(amount0, amount1)
+        amountToSwap = ratio*max(amount0, amount1) if amount0 > amount1 else ((1 - ratio)*max(amount0, amount1))
         token0Sell = 1 if amount0 > amount1 else -1
     else:
         token0Sell = 1 if amount0*total1 > amount1*total0 else -1
-        percAmountToSwap = (max(amount1*total0, amount0*total1) - min(amount1*total0, amount0*total1)) / max(amount1*total0, amount0*total1)
-        amountToSwap = (amount1 if token0Sell>0 else amount0) * percAmountToSwap
-    return int(amountToSwap*token0Sell)
+        print("token0Sell ", token0Sell)
+        (_, amount0In, amount1In) = vault._calcSharesAndAmounts(amount0, amount1)
+        amountInExcess = max(amount0 - amount0In, amount1 - amount1In)
+        print("amountInExcess ", amountInExcess)
+        amountToSwap = (ratio*amountInExcess) if amount0 > amount1 else ((1 - ratio)*amountInExcess)
+        print("amountToSwap ", amountToSwap)
+    return round(amountToSwap*token0Sell, 0)
 
 
 # test deposit swap
@@ -35,7 +41,7 @@ def compute_amount_to_swap(amount0, amount1, pool, vault):
     "amount0Desired,amount1Desired, msg_value",
     [[0, 1e5, 1e10], [0, 1e15, 0], [1e18, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12]]
 )
-def test_deposit(
+def test_swapDeposit(
     utility,
     router,
     vaultAfterPriceMove,
@@ -49,9 +55,6 @@ def test_deposit(
     msg_value
 ):
 
-    # Adding liquidity to the pool to insure swap amount is consistent
-    max_tick = 400000 // 60 * 60
-    router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
 
     vault = vaultAfterPriceMove
 
@@ -81,18 +84,17 @@ def test_deposit(
         "amount0": amount0,
         "amount1": amount1,
     }
-"""
+
+
 def test_deposit_checks(vault, user, recipient, utility):
     tx = vault.deposit(1e8, 1e10, 0, 0, user, {"from": user})
     shares, _, _ = tx.return_value
 
-    with reverts("At least one amount has to be gt 0"):
-        utility.swapDeposit(0, 0, recipient, 1e4, {"from": user})
+    with reverts("gt 0"):
+        utility.swapDeposit(0, 0, 1e18, 0, recipient, vault.address, {"from": user})
 
-    with reverts("PIP"):
-        utility.swapDeposit(0, 1e2, recipient, 1e6+1,  {"from": user})
+    with reverts("ne 0"):
+        utility.swapDeposit(1e16, 1e12, 0, 0, recipient, vault.address, {"from": user})
 
-    with reverts("Both WETH and ETH"):
-        utility.swapDeposit(1e4, 0, recipient, 1e3, {"from" : user, "value" : 1e2})
-
-"""
+    with reverts("WETH and ETH"):
+        utility.swapDeposit(1e16, 1e12, 1e1, 0, recipient, vault.address, {"from": user, "value" : 1e15})

@@ -164,18 +164,18 @@ contract AlphaVaultUtility is
         )
         {            
             // User can invest ETH, WETH or the other token
-            require(amount0Desired > 0 || amount1Desired > 0 || msg.value > 0, "At least one amount has to be gt 0");
-            require(amountToSwap != 0);
+            require(amount0Desired > 0 || amount1Desired > 0 || msg.value > 0, "gt 0");
+            require(amountToSwap != 0, "ne 0");
             
             VaultData memory vaultData = _getVault(vault);
 
             // User cannot deposit both ETH and WETH
             if (msg.value > 0) {
                 if (vaultData.token0IsWeth) {
-                    require(amount0Desired == 0, "Both WETH and ETH");
+                    require(amount0Desired == 0, "WETH and ETH");
                     amount0Desired = msg.value; 
                 } else {
-                    require(amount1Desired == 0, "Both WETH and ETH");
+                    require(amount1Desired == 0, "WETH and ETH");
                     amount1Desired = msg.value;
                 }
             }
