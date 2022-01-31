@@ -12,21 +12,15 @@ def getPrice(pool):
 def compute_amount_to_swap(amount0, amount1, pool, vault):
     total0, total1 = vault.getTotalAmounts()
     price = (getPrice(pool))
-    print("price ", price)
     ratio = (total0*price / (total0*price + total1))
-    print("ratio ", ratio)
     # Single token case
     if amount0 * amount1 == 0:
         amountToSwap = (1 - ratio)*amount0 if amount0 > amount1 else (ratio*amount1)
         token0Sell = 1 if amount0 > amount1 else -1
     else:
         token0Sell = 1 if amount0*total1 > amount1*total0 else -1
-        print("token0Sell ", token0Sell)
         (_, amount0In, amount1In) = vault._calcSharesAndAmounts(amount0, amount1)
-        print("amount0In ", amount0In)
-        print("amount1In ", amount1In)
         amountInExcess = max(amount0 - amount0In, amount1 - amount1In)
-        print("amountInExcess ", amountInExcess)
         amountToSwap = (amount0 - ratio*amountInExcess) if token0Sell > 0 else (amount1 - (1 - ratio)*amountInExcess)
     
     return round(amountToSwap*token0Sell, 0)
@@ -42,7 +36,6 @@ def compute_amount_to_swap(amount0, amount1, pool, vault):
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
     [[1e10, 1e5, 0], [0, 1e15, 0], [1e15, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12]]
-    #[[1e18, 0, 0]]
 )
 def test_swapDeposit(
     utility,
@@ -61,7 +54,7 @@ def test_swapDeposit(
     vault = vaultAfterPriceMove
 
     # Adding liquidity to the pool to insure swap amount is consistent (price does not change materially)
-    max_tick = 240000 // 60 * 60
+    max_tick = 120000 // 60 * 60
     router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
 
     # Saving state before swap deposit
@@ -76,7 +69,7 @@ def test_swapDeposit(
     
     # If I sell, price limit is a lower bound
     sqrtPriceX96 = pool.slot0()[0]
-    slippage = 0.2
+    slippage = 0.10
     if amountToSwap > 0:
         sqrtPriceLimitX96 = int(sqrtPriceX96 - sqrtPriceX96*slippage)
     else:
@@ -102,6 +95,7 @@ def test_swapDeposit(
 
     # Check received some shares
     total0, total1 = vault.getTotalAmounts()
+    
     # Check received shares
     assert shares == vault.balanceOf(recipient) > 0
     
