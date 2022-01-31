@@ -18,7 +18,6 @@ import "@uniswap/v3-periphery/contracts/libraries/PositionKey.sol";
 import "../interfaces/IVault.sol";
 import "../interfaces/IOrbitVault.sol";
 import "./AlphaVault.sol";
-import "./libraries/LowGasSafeMath.sol";
 
 contract AlphaVaultUtility is
     ReentrancyGuard,
@@ -29,7 +28,6 @@ contract AlphaVaultUtility is
     using SafeERC20 for IERC20;
     using SafeMath for uint256;
     using SignedSafeMath for int256;
-    using LowGasSafeMath for uint160;
 
     IWETH9 public immutable weth;
     address public governance;
@@ -181,7 +179,7 @@ contract AlphaVaultUtility is
             }
 
             // Approve tokens from this contract to the vault if not already approved
-            if (vaultData.token0.allowance(address(this), vault) == 0 && vaultData.token1.allowance(address(this), vault) == 0) {
+            if (vaultData.token0.allowance(address(this), vault) == 0 || vaultData.token1.allowance(address(this), vault) == 0) {
                 bool approve0 = vaultData.token0.approve(vault,  2**256 - 1);
                 bool approve1 = vaultData.token1.approve(vault,  2**256 - 1);
                 require(approve0 && approve1);
@@ -212,8 +210,8 @@ contract AlphaVaultUtility is
                 weth.deposit{value: (vaultData.token0IsWeth ? amount0Desired : amount1Desired) }();
                 if (vaultData.token0IsWeth) {
                     if (amount1Desired > 0) vaultData.token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
-                    } else { 
-                    if (amount0Desired > 0) vaultData.token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
+                    } else if (amount0Desired > 0) { 
+                        vaultData.token0.safeTransferFrom(msg.sender, address(this), amount0Desired);
                 }
             } else {
                 if (amount1Desired > 0) vaultData.token1.safeTransferFrom(msg.sender, address(this), amount1Desired);
