@@ -35,7 +35,7 @@ def compute_amount_to_swap(amount0, amount1, pool, vault):
 # Low quantity swaps
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
-    [[1e10, 1e5, 0], [0, 1e15, 0], [1e15, 0, 0], [1e20, 1e1, 0], [0, 0, 1e12]]
+    [[1e10, 1e5, 0], [0, 1e15, 0], [1e15, 0, 0], [1e4, 1e12, 0], [0, 0, 1e12], [0, 1e7, 1e10]]
 )
 def test_swapDeposit(
     utility,
@@ -65,27 +65,43 @@ def test_swapDeposit(
 
     # Compute amountToSwap according to frontend logic
     amountToSwap = compute_amount_to_swap(max(amount0Desired, msg_value), amount1Desired, pool, vault)
-    print("amountToSwap ", amountToSwap)
     
     # If I sell, price limit is a lower bound
     sqrtPriceX96 = pool.slot0()[0]
-    slippage = 0.10
+    slippage = 0.05
     if amountToSwap > 0:
         sqrtPriceLimitX96 = int(sqrtPriceX96 - sqrtPriceX96*slippage)
     else:
         sqrtPriceLimitX96 = int(sqrtPriceX96 + sqrtPriceX96*slippage)
 
-    # If I buy, price limit is an upper bound
-    tx = utility.swapDeposit(amount0Desired, amount1Desired, amountToSwap, sqrtPriceLimitX96, recipient, vault.address, {"from" : user, "value" : msg_value})
-    print(tx.events)
-    shares, amount0, amount1 = tx.return_value
+    # compute amount to receive 
+    amountToReceive = -amountToSwap*price if amountToSwap > 0 else -amountToSwap * (1/price)
+    print("amountToSwap ", amountToSwap)
+    print("amountToReceive ", amountToReceive)
 
+    tx = utility.swapDeposit(amount0Desired, amount1Desired, amountToSwap, sqrtPriceLimitX96, recipient, vault.address, {"from" : user, "value" : msg_value})
+    shares, amount0, amount1 = tx.return_value
+    print(tx.events["Swap"])
+
+    # Swap executed correctly
+    # Amount received from swap close to amountToReceive
+    dct = [dct for dct in tx.events["Swap"]][0]
+    assert dct["sender"] == utility.address
+    assert dct["recipient"] == utility.address
+    if amountToSwap > 0:
+        assert dct["amount0"] == amountToSwap
+        assert dct["amount1"] / amountToReceive == approx(1, rel = slippage)
+    else:
+        assert dct["amount0"] / amountToReceive == approx(-1, rel = slippage)
+        assert dct["amount1"] == -amountToSwap
+    
     # Check some amounts and shares have been taken
     assert shares  > 0
     assert amount0 > 0
     assert amount1 > 0
     print("amount0 ", amount0)
     print("amount1 ", amount1)
+    
     
     value_deposited = amount0Desired*price + amount1Desired if msg_value == 0 else msg_value*price + amount1Desired
     value_in_vault  = total0*price + total1
