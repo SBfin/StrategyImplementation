@@ -12,18 +12,13 @@ def getPrice(pool):
 def compute_amount_to_swap(amount0, amount1, pool, vault):
     total0, total1 = vault.getTotalAmounts()
     price = (getPrice(pool))
+    print("price ", price)
+    print("pool slot 0 ", pool.slot0()[0])
     ratio = (total0*price / (total0*price + total1))
+    print("ratio ", ratio)
     # Single token case
-    if amount0 * amount1 == 0:
-        amountToSwap = (1 - ratio)*amount0 if amount0 > amount1 else (ratio*amount1)
-        token0Sell = 1 if amount0 > amount1 else -1
-    else:
-        token0Sell = 1 if amount0*total1 > amount1*total0 else -1
-        (_, amount0In, amount1In) = vault._calcSharesAndAmounts(amount0, amount1)
-        amountInExcess = max(amount0 - amount0In, amount1 - amount1In)
-        amountToSwap = (amount0 - ratio*amountInExcess) if token0Sell > 0 else (amount1 - (1 - ratio)*amountInExcess)
-    
-    return round(amountToSwap*token0Sell, 0)
+    amountToSwap = (1 / price)*((total1*amount0 - total0*amount1) / (total0 + total1/price))
+    return amountToSwap
 
 
 # test deposit swap
@@ -35,13 +30,14 @@ def compute_amount_to_swap(amount0, amount1, pool, vault):
 # Low quantity swaps
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired, msg_value",
-    [[1e10, 1e5, 0], [0, 1e15, 0], [1e15, 0, 0], [1e4, 1e12, 0], [0, 0, 1e12], [0, 1e7, 1e10]]
+    [[1e18, 0, 0], [0, 1e10, 0], [0, 0, 1e18], [1e4, 1e12, 0], [0, 0, 1e12], [0, 1e7, 1e10]]
 )
 def test_swapDeposit(
     utility,
     router,
     vaultAfterPriceMove,
     tokens,
+    wethToken,
     pool,
     gov,
     user,
@@ -54,11 +50,15 @@ def test_swapDeposit(
     vault = vaultAfterPriceMove
 
     # Adding liquidity to the pool to insure swap amount is consistent (price does not change materially)
-    max_tick = 120000 // 60 * 60
-    router.mint(pool, -max_tick, max_tick, 1e19, {"from": gov})
+    max_tick = 240000 // 60 * 60
+    router.mint(pool, -max_tick, max_tick, 1e16, {"from": gov})
 
     # Saving state before swap deposit
     total0, total1 = vault.getTotalAmounts()
+    balance0Before   = tokens[0].balanceOf(user)
+    balance1Before   = tokens[1].balanceOf(user)
+    balanceEthBefore = user.balance()
+
     price = (getPrice(pool))
     print("total0 ", total0)
     print("total1 ", total1)
@@ -68,7 +68,7 @@ def test_swapDeposit(
     
     # If I sell, price limit is a lower bound
     sqrtPriceX96 = pool.slot0()[0]
-    slippage = 0.05
+    slippage = 0.2
     if amountToSwap > 0:
         sqrtPriceLimitX96 = int(sqrtPriceX96 - sqrtPriceX96*slippage)
     else:
@@ -81,6 +81,17 @@ def test_swapDeposit(
 
     tx = utility.swapDeposit(amount0Desired, amount1Desired, amountToSwap, sqrtPriceLimitX96, recipient, vault.address, {"from" : user, "value" : msg_value})
     shares, amount0, amount1 = tx.return_value
+    price = (getPrice(pool))
+    print("price post swap ", price)
+
+    # Check some amounts and shares have been taken
+    assert shares  > 0
+    assert vault.balanceOf(recipient) == shares
+    assert amount0 > 0
+    assert amount1 > 0
+    print("amount0 ", amount0)
+    print("amount1 ", amount1)
+    
     print(tx.events["Swap"])
 
     # Swap executed correctly
@@ -94,15 +105,35 @@ def test_swapDeposit(
     else:
         assert dct["amount0"] / amountToReceive == approx(-1, rel = slippage)
         assert dct["amount1"] == -amountToSwap
-    
-    # Check some amounts and shares have been taken
-    assert shares  > 0
-    assert amount0 > 0
-    assert amount1 > 0
-    print("amount0 ", amount0)
-    print("amount1 ", amount1)
-    
-    
+
+    # Amount desired post swap --> what is left in utility after swapping
+    amount0DesiredSwap = amount0Desired - dct["amount0"]
+    amount1DesiredSwap = amount1Desired - dct["amount1"]
+
+    # Amount - amount0DesiredSwap should be the amount returned to user
+    remainder0 = amount0DesiredSwap - amount0
+    remainder1 = amount1DesiredSwap - amount1
+    print("remainder0 ", remainder0)
+    print("remainder1 ", remainder1)
+
+    print("remainder0 / amount0DesiredSwap ", remainder0 / amount0DesiredSwap)
+    print("remainder1 / amount1DesiredSwap ", remainder1 / amount1DesiredSwap)
+
+    # Check user balance after swap is correct
+    balance0After = tokens[0].balanceOf(user)
+    balance1After = tokens[1].balanceOf(user)
+    balanceEthAfter = user.balance()
+     
+    if msg_value == 0:
+        assert balance0After / (balance0Before - amount0Desired + remainder0) == approx(1, rel = slippage)
+        assert balance1After / (balance1Before - amount1Desired + remainder1) == approx(1, rel = slippage)
+    else:
+        token0isWeth = tokens[0] == tokens[wethToken]
+        amountEthDesired = amount0Desired if token0isWeth else amount1Desired
+        remainderEth = remainder0 if token0isWeth else remainder1
+        assert balanceEthAfter / (balanceEthBefore - amountEthDesired + remainderEth) == approx(1, rel = slippage)
+
+    """
     value_deposited = amount0Desired*price + amount1Desired if msg_value == 0 else msg_value*price + amount1Desired
     value_in_vault  = total0*price + total1
     
@@ -117,7 +148,7 @@ def test_swapDeposit(
     
     # Check amount received is correct according to frontend logic
     assert shares / (shares_minted * vault.totalSupply()) ==  approx(1, rel=(slippage)) 
-
+    """
     # Check event
     dct = [dct for dct in tx.events["Deposit"] if "sender" in dct][0]
     assert dct == {

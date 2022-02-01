@@ -47,7 +47,7 @@ def pool(MockToken, router, pm, gov, users):
     UniswapV3Core = pm(UNISWAP_V3_CORE)
 
     tokenA = gov.deploy(MockToken, "name A", "symbol A", 18)
-    tokenB = gov.deploy(MockToken, "name B", "symbol B", 18)
+    tokenB = gov.deploy(MockToken, "name B", "symbol B", 6)
     fee = 3000
 
     factory = gov.deploy(UniswapV3Core.UniswapV3Factory)
@@ -61,7 +61,7 @@ def pool(MockToken, router, pm, gov, users):
     pool.initialize(price, {"from": gov})
 
     for u in users:
-        token0.mint(u, 100e18, {"from": gov})
+        token0.mint(u, 1000e18, {"from": gov})
         token1.mint(u, 10000e18, {"from": gov})
         token0.approve(router, 100e18, {"from": u})
         token1.approve(router, 10000e18, {"from": u})
