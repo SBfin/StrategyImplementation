@@ -47,7 +47,7 @@ def pool(MockToken, router, pm, gov, users):
     UniswapV3Core = pm(UNISWAP_V3_CORE)
 
     tokenA = gov.deploy(MockToken, "name A", "symbol A", 18)
-    tokenB = gov.deploy(MockToken, "name B", "symbol B", 6)
+    tokenB = gov.deploy(MockToken, "name B", "symbol B", 18)
     fee = 3000
 
     factory = gov.deploy(UniswapV3Core.UniswapV3Factory)
@@ -56,15 +56,15 @@ def pool(MockToken, router, pm, gov, users):
     token0 = MockToken.at(pool.token0())
     token1 = MockToken.at(pool.token1())
 
-    # initialize price to 100
-    price = int(sqrt(100) * (1 << 96))
+    # initialize price to 2
+    price = int(sqrt(0.0005) * (1 << 96))
     pool.initialize(price, {"from": gov})
 
     for u in users:
-        token0.mint(u, 1000e18, {"from": gov})
-        token1.mint(u, 10000e18, {"from": gov})
-        token0.approve(router, 100e18, {"from": u})
-        token1.approve(router, 10000e18, {"from": u})
+        token0.mint(u, 100000e18, {"from": gov})
+        token1.mint(u, 1000000e18, {"from": gov})
+        token0.approve(router, 10000e18, {"from": u})
+        token1.approve(router, 1000000e18, {"from": u})
 
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
