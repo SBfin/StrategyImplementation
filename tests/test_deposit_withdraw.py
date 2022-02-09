@@ -48,7 +48,7 @@ def test_initial_deposit(
 
 @pytest.mark.parametrize(
     "amount0Desired,amount1Desired",
-    [[1, 1e18]] #, [1e18, 1], [1e4, 1e18], [1e18, 1e18]],
+    [[1, 1e18], [1e18, 1], [1e4, 1e18], [1e18, 1e18]],
 )
 def test_deposit(
     vaultAfterPriceMove,
