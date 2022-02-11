@@ -38,7 +38,7 @@ def router(TestRouter, gov):
 
 @pytest.fixture(scope="module")
 def wethToken():
-    wethToken = int(bool(random.getrandbits(1)))
+    wethToken = 0 #int(bool(random.getrandbits(1)))
     yield wethToken
 
 
@@ -56,18 +56,19 @@ def pool(MockToken, router, pm, gov, users):
     token0 = MockToken.at(pool.token0())
     token1 = MockToken.at(pool.token1())
 
-    # initialize price to 100
-    price = int(sqrt(100) * (1 << 96))
+    # initialize price to 2
+    price = int(sqrt(0.0005) * (1 << 96))
     pool.initialize(price, {"from": gov})
 
     for u in users:
-        token0.mint(u, 100e18, {"from": gov})
-        token1.mint(u, 10000e18, {"from": gov})
-        token0.approve(router, 100e18, {"from": u})
-        token1.approve(router, 10000e18, {"from": u})
+        token0.mint(u, 100000e18, {"from": gov})
+        token1.mint(u, 1000000e18, {"from": gov})
+        token0.approve(router, 10000e18, {"from": u})
+        token1.approve(router, 1000000e18, {"from": u})
 
     # Add some liquidity over whole range
     max_tick = 887272 // 60 * 60
+    
     router.mint(pool, -max_tick, max_tick, 1e16, {"from": gov})
 
     # Increase cardinality and fast forward so TWAP works
@@ -88,7 +89,6 @@ def vault(AlphaVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, w
     # maxTotalSupply = 100e18 (100 tokens)
     vault = gov.deploy(AlphaVault, pool, 10000, 100e18)
     
-    
     for u in users:
         tokens[0].approve(vault, 100e18, {"from": u})
         tokens[1].approve(vault, 10000e18, {"from": u})
@@ -104,10 +104,10 @@ def vault(AlphaVault, AlphaStrategy, pool, router, tokens, gov, users, keeper, w
 
 @pytest.fixture
 def utility(AlphaVaultUtility, vault, tokens, wethToken, gov, users):
-    utility = gov.deploy(AlphaVaultUtility, vault, tokens[wethToken])
+    utility = gov.deploy(AlphaVaultUtility, tokens[wethToken])
     for u in users:
-        interface.IERC20(utility.token0()).approve(utility, 1<<255, {"from": u})
-        interface.IERC20(utility.token1()).approve(utility, 1<<255, {"from": u})
+        tokens[0].approve(utility, 1<<255, {"from": u})
+        tokens[1].approve(utility, 1<<255, {"from": u})
     
     yield utility
 
@@ -208,7 +208,6 @@ def createPoolVaultStrategy(
         # Increase cardinality and fast forward so TWAP works
         pool.increaseObservationCardinalityNext(100, {"from": gov})
         chain.sleep(3600)
-        
         
         vault = gov.deploy(AlphaVault, pool, 10000, 100e18)
 

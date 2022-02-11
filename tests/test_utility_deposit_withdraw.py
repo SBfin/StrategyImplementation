@@ -26,7 +26,7 @@ def test_initial_deposit(
     
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, vault.address, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts are same as inputs
@@ -79,7 +79,7 @@ def test_deposit_eth(
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, vault.address, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
     print(tx.events)
     print("0 balance ", tokens[0].balanceOf(utility))
@@ -151,7 +151,7 @@ def test_deposit_when_vault_only_has_token0(
     # Deposit
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
-    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, vault.address, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -211,7 +211,7 @@ def test_deposit_when_vault_only_has_token1(
     # Deposit
     amountTokenDesired = amount0Desired if (tokens[0] != tokens[wethToken]) else amount1Desired
     value = amount0Desired if (tokens[0] == tokens[wethToken]) else amount1Desired
-    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, {"from": user, "value" : value})
+    tx = utility.depositEth(amountTokenDesired, 0, 0, recipient, vault.address, {"from": user, "value" : value})
     shares, amount0, amount1 = tx.return_value
 
     # Check amounts don't exceed desired
@@ -262,10 +262,7 @@ def test_deposit_checks(vault, utility, user, tokens, gov):
         vault.deposit(1e8, 200e18, 0, 0, user, {"from": user})
 
     with reverts("amountTokenDesired or value"):
-        utility.depositEth(0, 0, 0, user, {"from": user, "value" : 0})  
-
-    with reverts("to"):
-        utility.depositEth(1e8, 0, 0, vault, {"from": user, "value" : 1e8})
+        utility.depositEth(0, 0, 0, user, vault, {"from": user, "value" : 0})
 
 
 def test_withdraw_eth(
@@ -300,7 +297,7 @@ def test_withdraw_eth(
     basePos, limitPos = getPositions(vault)
 
     # Withdraw all shares
-    tx = utility.withdrawEth(shares, 0, 0, recipient, {"from": user, "gas_price" : gas_strategy})
+    tx = utility.withdrawEth(shares, 0, 0, recipient, vault.address, {"from": user, "gas_price" : gas_strategy})
     amount0, amount1 = tx.return_value
 
     print(tx.events)
@@ -341,15 +338,17 @@ def test_withdraw_checks(vault, user, recipient, utility):
     shares, _, _ = tx.return_value
 
     with reverts("shares"):
-        utility.withdrawEth(0, 0, 0, recipient, {"from": user})
+        utility.withdrawEth(0, 0, 0, recipient, vault.address, {"from": user})
+    """
     with reverts("to"):
-        utility.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 0, ZERO_ADDRESS, vault.address, {"from": user})
     with reverts("to"):
-        utility.withdrawEth(shares - 1000, 0, 0, vault, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 0, vault.address, {"from": user})
+        """
     with reverts("amount0Min"):
-        utility.withdrawEth(shares - 1000, 1e18, 0, recipient, {"from": user})
+        utility.withdrawEth(shares - 1000, 1e18, 0, recipient, vault.address, {"from": user})
     with reverts("amount1Min"):
-        utility.withdrawEth(shares - 1000, 0, 1e18, recipient, {"from": user})
+        utility.withdrawEth(shares - 1000, 0, 1e18, recipient, vault.address, {"from": user})
 
 
 
